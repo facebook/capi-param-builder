@@ -1,0 +1,7 @@
+services:
+  param_builder.cookie_subscriber:
+    class: \Drupal\param_builder\EventSubscriber\CookieSubscriber
+    arguments:
+     ['@?param_builder.custom_etld_plus_resolver']
+    tags:
+      - { name: event_subscriber }

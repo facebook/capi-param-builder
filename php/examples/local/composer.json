@@ -1,0 +1,7 @@
+{
+    "require": {
+        "php": ">=7.4",
+        "facebook/php-capi-param-builder-php": "*"
+    },
+    "minimum-stability": "dev"
+}

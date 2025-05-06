@@ -1,0 +1,8 @@
+name: Param Builder Module
+description: A custom module for CAPI param builder.
+package: Custom
+version: 1.0.0
+type: module
+core_version_requirement: ^8 || ^9 || ^10
+dependencies:
+  - drupal:system

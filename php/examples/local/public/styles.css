@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+.cookie-consent-container {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #f4f4f4;
+    padding: 10px;
+    text-align: center;
+    display: none; /* Hidden by default */
+  }
+
+  .content p {
+    margin: 10px 0;
+  }
+
+  button {
+    padding: 10px 20px;
+    cursor: pointer;
+  }
