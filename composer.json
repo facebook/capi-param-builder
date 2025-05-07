@@ -1,0 +1,22 @@
+{
+  "name": "facebook/php-capi-param-builder-php",
+  "version": "1.0.0",
+  "description": "Parameter builder SDK for Conversion API events",
+  "require": {
+    "php": ">=7.4"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8.5"
+  },
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "FacebookAds\\": "php/capi-param-builder/src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "FacebookAds\\": "php/capi-param-builder/tests/"
+    }
+  }
+}
