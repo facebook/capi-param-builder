@@ -16,11 +16,13 @@ a demo example.
 
 ### Setup
 
-1. Check the latest version in CHANGELOG. Replace {version} in below examples.
+1. Check the latest version in CHANGELOG.
 
 2. Install the library via pip CLI:
 
-_Uploading working in progress, will update soon_
+```
+pip install capi_param_builder_python
+```
 
 Verify if the library install successfully by run
 
