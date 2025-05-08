@@ -1,13 +1,25 @@
-# Conversions API parameter builder ClientJS SDK
+# Conversions API parameter builder for Client-side JavaScript
 
-This is a quick start guide for client side JS.
-Check the latest update in CHANGELOG: https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/CHANGELOG
+## Introduction
+
+Conversions API parameter builder SDK is a lightweight tool for improving
+Conversions API parameter retrieval and quality.
+
+**We are actively working on further developer documentation.** If you are
+interested in using Conversions API parameter builder earlier, please reach out
+to your account manager to access the developer docs.
+
+## Quick Start
+
+This is the quick start guide to help you integrate parameter builder in Client-side JavaScript.
+You can also find a demo in the next section.
+
+Check the latest update from CHANGELOG.
 
 # Run the demo
 
-Download demo file from https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/example/example.zip
-Unzip the demo, the demo uses npm nodeJS to construct a node server.
-The example/public/index.html is the demo on how to use the library.
+1. Check the updated version from CHANGELOG.
+2. Checkout the demo example from ./example. The example/public/index.html is the demo on how to use the library.
 
 Run `node server.js` in your local, then visit http://localhost:3000. Check console log or cookies to see ```_fbp``` first.
 Manual type the url into http://localhost:3000/?fbclid=test123 or similar, you'll see fbc returned in console log, and the ```_fbc``` cookie is stored
@@ -23,12 +35,13 @@ If you need both libraries, you could integrate with clientParamBuilder only by 
 
 1. In your webpage, add following sentence to your page for clientParamBuilder:
 
+*Note: we are working on refine the URL, this is not the finalized. Please don't use it unless you know how to use.*
 ```
 <script src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/capiParamBuilder/clientParamBuilder.bundle.js"></script>
 ```
 
 clientParamsHelper
-
+*Note: we are working on refine the URL, this is not the finalized. Please don't use it unless you know how to use.*
 ```
 <script
         src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/clientParamsHelper/clientParamsHelper.bundle.js"></script>
@@ -52,7 +65,7 @@ URL is optional. Will start processing the params and save into cookies. This is
 clientParamBuilder.getFbc()
 ```
 
-API to get fbc value from cookie. You need to run processAndCollectParams before getFbc().
+API to get fbc value from cookie. You need to run processAndCollectParams before getFbc.
 
 ```
 clientParamBuilder.getFbp()
