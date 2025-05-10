@@ -16,17 +16,29 @@ You can find a demo in the next section.
 
 ### Setup
 
-1. Check the latest version in CHANGELOG.
+1. Check the latest version in CHANGELOG. Modify below {current_version} into
+   latest version number.
 
-2. Update in your composer.json with the latest version.
+2. Update in your composer.json .
 
-_Uploading working in progress, will update soon_
+```
+ "require": {
+        "php": ">=7.4",
+        "facebook/capi-param-builder-php": "{current_version}"
+    },
+```
 
 3. Install the dependency(if you don't have an application, check #demo section
    for a demo application)
 
 ```
 composer install
+```
+
+or update if you need update the version.
+
+```
+composer update
 ```
 
 Once you finish these steps, your parameter builder integration will be
@@ -37,7 +49,7 @@ complete. You can see a demo in the following section.
 Here is a demo application on your localhost. If you've already familiar with
 the library, feel free to skip this section.
 
-1. Checkout the example. Localhost demo and Drupal demo under ./examples
+1. Checkout the examples for localhost demo and Drupal demo under ./examples
 
 2. Take localhost as an example, go to ./examples/local. Update the dependency
    by running
