@@ -1,0 +1,7 @@
+param_builder.display_cookies:
+  path: '/example/cookies'
+  defaults:
+    _controller: '\Drupal\param_builder\Controller\ExampleController::displayCookies'
+    _title: 'Display Cookies'
+  requirements:
+    _permission: 'access content'

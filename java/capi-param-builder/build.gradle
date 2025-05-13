@@ -1,0 +1,87 @@
+plugins {
+    id 'maven-publish'
+    id 'java-library'
+    id 'signing'
+}
+
+group = 'com.facebook.capi.sdk'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId='capi-param-builder'
+
+            from components.java
+            pom {
+                name = 'capi-param-builder'
+                description = 'Parameter builder for Conversions API'
+                url = 'https://github.com/facebook/capi-param-builder'
+                inceptionYear = '2019'
+
+                licenses {
+                    license {
+                        name = 'Meta platform license'
+                        url = 'https://github.com/facebook/capi-param-builder/blob/main/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'facebook'
+                        name = 'facebook'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/facebook/capi-param-builder.git'
+                    developerConnection = 'scm:git:ssh://github.com/facebook/capi-param-builder.git'
+                    url = 'https://github.com/facebook/capi-param-builder'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username findProperty('ossrhUsername')
+                password findProperty('ossrhPassword')
+            }
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(findProperty("GPG_SIGNING_KEY"), findProperty("GPG_SIGNING_PASSWORD"))
+    sign publishing.publications.mavenJava
+}
+
+dependencies {
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    testImplementation 'org.assertj:assertj-core:3.19.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+test {
+    // Set test logging options
+    testLogging {
+        // Ensure that the output from standard out is shown
+        showStandardStreams = true
+
+        // Optionally, you can set the logging level
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}

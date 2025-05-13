@@ -1,0 +1,14 @@
+  {
+    "name": "node-capi-param-builder-demo",
+    "version": "1.0.0",
+    "description": "Example usage for Conversion API parameter builder",
+    "main": "index.js",
+    "scripts": {},
+    "author": "facebook",
+    "license": "Meta platform",
+    "devDependencies": {},
+    "dependencies": {
+      "psl": "^1.9.0",
+      "capi-param-builder-nodejs": "*"
+    }
+  }

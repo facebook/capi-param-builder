@@ -1,0 +1,15 @@
+{
+  "name": "capi-param-builder-nodejs",
+  "version": "1.0.0",
+  "description": "SDK for building params for Conversion API events",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Facebook",
+  "license": "Platform License",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "dependencies": {}
+}

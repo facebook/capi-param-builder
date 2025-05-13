@@ -1,0 +1,76 @@
+<!-- public/index.html -->
+<!--
+* Copyright (c) Meta Platforms, Inc. and affiliates.
+* All rights reserved.
+*
+* This source code is licensed under the license found in the
+* LICENSE file in the root directory of this source tree.
+ -->
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>My JS Library Test</title>
+</head>
+
+<body>
+  <!-- *Note: we are working on refine the URL, this is not the finalized. Please don't use it unless you know how to use.* -->
+  <script
+    src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/capiParamBuilder/clientParamBuilder.bundle.js"></script>
+  <script>
+    console.log(
+      'You need to get user cookie consent first, below processAndCollectParams will set cookies.'
+    );
+    console.log('return all params:processAndCollectParams');
+    console.log(
+      'If you want one API to cover all. Use clientParamBuilder.processAndCollectAllParams(url). The url is optional and the API is an asyc one to store fbc and fbp cookie'
+    );
+    var processAndCollectParams =
+      clientParamBuilder.processAndCollectParams();
+    console.log(processAndCollectParams);
+    console.log('getFbc:' + clientParamBuilder.getFbc());
+    console.log('getFbp:' + clientParamBuilder.getFbp());
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('clientParamBuilder-lib').textContent =
+        JSON.stringify(processAndCollectParams);
+    });
+    console.log('--------------Line----------------------');
+  </script>
+  <!-- *Note: we are working on refine the URL, this is not the finalized. Please don't use it unless you know how to use.* -->
+  <script
+    src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/clientParamsHelper/clientParamsHelper.bundle.js"></script>
+  <script>
+    console.log('test for clientParamsHelper setup');
+    (async () => {
+      var collectParams = await clientParamsHelper.collectParams();
+      console.log(collectParams);
+      console.log('--------------Line----------------------');
+
+      document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('clientParamsHelper-lib').textContent =
+          collectParams ?? 'No content collect.';
+      });
+    })();
+  </script>
+  <h2>Hello world</h2>
+  <p>
+    <b>Please check onboarding guide for the details how to use these 2
+      libraries.
+    </b>
+  </p>
+  <div>
+    <p>1. Tests example for capiParamsBuilder library:</p>
+    <p>
+      Response from processAndCollectParams:
+      <span id="clientParamBuilder-lib"></span>
+    </p>
+  </div>
+
+  <div>
+    <p>2. Tests examples for clientParamsHelper library:</p>
+    <p>test API response: <span id="clientParamsHelper-lib"></span></p>
+  </div>
+</body>
+
+</html>

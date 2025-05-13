@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'example'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Optional: use Guava as example for DefaultETLDPlusOne
+    implementation 'com.google.guava:guava:24.0-jre'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // If you want to use the local version of capi-param-builder
+    // implementation project(':capi-param-builder')
+    implementation 'com.facebook.capi.sdk:capi-param-builder:1.0.0'
+}
