@@ -1,5 +1,7 @@
 # Conversions API parameter builder for Client-side JavaScript
 
+[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/client_js/LICENSE)
+
 ## Introduction
 
 Conversions API parameter builder SDK is a lightweight tool for improving
