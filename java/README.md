@@ -1,5 +1,8 @@
 # Conversions API parameter builder for Java
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.facebook.capi.sdk/capi-param-builder)](https://mvnrepository.com/artifact/com.facebook.capi.sdk/capi-param-builder)
+[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/java/LICENSE)
+
 ## Introduction
 
 Conversions API parameter builder SDK is a lightweight tool for improving
