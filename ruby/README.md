@@ -1,5 +1,8 @@
 # Conversions API parameter builder for Ruby
 
+[![RubyGem](https://img.shields.io/gem/v/capi_param_builder_ruby)](https://rubygems.org/gems/capi_param_builder_ruby)
+[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/ruby/LICENSE)
+
 ## Introduction
 
 The Conversions API param builder is a light weighted SDK to help improve the
