@@ -1,5 +1,8 @@
 # Conversions API parameter builder for NodeJS
 
+[![npm](https://img.shields.io/npm/v/capi-param-builder-nodejs)](https://www.npmjs.com/package/capi-param-builder-nodejs)
+[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/nodejs/LICENSE)
+
 ## Introduction
 
 Conversions API parameter builder SDK is a lightweight tool for improving
