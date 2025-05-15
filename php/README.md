@@ -1,5 +1,8 @@
 # Conversions API parameter builder for PHP
 
+[![Packagist](https://img.shields.io/packagist/v/facebook/capi-param-builder-php)](https://packagist.org/packages/facebook/capi-param-builder-php)
+[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/php/LICENSE)
+
 ## Introduction
 
 Conversions API parameter builder SDK is a lightweight tool for improving
