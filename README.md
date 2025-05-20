@@ -11,9 +11,10 @@ Parameter builder supports 5 server-side languages and 1 clientside language:
 - Server-side: PHP, Java, NodeJS, Python and Ruby.
 - Client-side: JavaScript.
 
-**We are actively working on further developer documentation.** If you are
-interested in using Conversions API parameter builder earlier, please reach out
-to your account manager to access the developer docs.
+Check
+[Parameter Builder Library Overview](https://developers.facebook.com/docs/marketing-api/conversions-api/parameter-builder-feature-library)
+for more details. In each languages' subfolder, we provide quick start guide and
+examples.
 
 ---
 

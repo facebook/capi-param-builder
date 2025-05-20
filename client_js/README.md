@@ -7,9 +7,7 @@
 Conversions API parameter builder SDK is a lightweight tool for improving
 Conversions API parameter retrieval and quality.
 
-**We are actively working on further developer documentation.** If you are
-interested in using Conversions API parameter builder earlier, please reach out
-to your account manager to access the developer docs.
+[Client-Side Parameter Builder Onboarding Guide](https://developers.facebook.com/docs/marketing-api/conversions-api/parameter-builder-feature-library/client-side-onboarding).
 
 ## Quick Start
 
@@ -37,13 +35,11 @@ If you need both libraries, you could integrate with clientParamBuilder only by 
 
 1. In your webpage, add following sentence to your page for clientParamBuilder:
 
-*Note: we are working on refine the URL, this is not the finalized. Please don't use it unless you know how to use.*
 ```
 <script src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/capiParamBuilder/clientParamBuilder.bundle.js"></script>
 ```
 
 clientParamsHelper
-*Note: we are working on refine the URL, this is not the finalized. Please don't use it unless you know how to use.*
 ```
 <script
         src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/clientParamsHelper/clientParamsHelper.bundle.js"></script>

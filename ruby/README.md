@@ -8,9 +8,7 @@
 The Conversions API param builder is a light weighted SDK to help improve the
 Conversions API params' retrieval and quality.
 
-**We are actively working on further developer documentation.** If you are
-interested in using Conversions API parameter builder earlier, please reach out
-to your account manager to access the developer docs.
+[Server-Side Parameter Builder Onboarding Guide](https://developers.facebook.com/docs/marketing-api/conversions-api/parameter-builder-feature-library/server-side-onboarding)
 
 ## Quick Start
 
