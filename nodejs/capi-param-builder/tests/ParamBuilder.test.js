@@ -18,11 +18,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
 
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain(".abc.Ag");
+        expect(cookie.value).toContain(".abc.BA");
         expect(cookie.domain).toEqual("example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain(".Ag");
+        expect(cookie.value).toContain(".BA");
       }
     }
   });
@@ -34,11 +34,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain(".abcde.Ag");
+        expect(cookie.value).toContain(".abcde.BA");
         expect(cookie.domain).toEqual("example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain(".Ag");
+        expect(cookie.value).toContain(".BA");
       }
     }
   });
@@ -50,11 +50,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain(".abcde.Ag");
+        expect(cookie.value).toContain(".abcde.BA");
         expect(cookie.domain).toEqual("example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain(".Ag");
+        expect(cookie.value).toContain(".BA");
       }
     }
   });
@@ -66,11 +66,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain(".abcde.Ag");
+        expect(cookie.value).toContain(".abcde.BA");
         expect(cookie.domain).toEqual("builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain(".Ag");
+        expect(cookie.value).toContain(".BA");
       }
     }
   });
@@ -89,15 +89,15 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     );
     // fbc not upated
     expect(updated_cookies.length).toEqual(2);
-    expect(builder.getFbc()).toEqual('fb.1.123.abc.Ag');
-    expect(builder.getFbc()).toContain('.Ag');
+    expect(builder.getFbc()).toEqual('fb.1.123.abc.BA');
+    expect(builder.getFbc()).toContain('.BA');
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual('fb.1.123.abc.Ag');
+        expect(cookie.value).toEqual('fb.1.123.abc.BA');
         expect(cookie.domain).toEqual("a.builder.walmart.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain('.Ag');
+        expect(cookie.value).toContain('.BA');
         expect(cookie.domain).toEqual("a.builder.walmart.com");
       }
     }
@@ -117,11 +117,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain('.def.Ag');
+        expect(cookie.value).toContain('.def.BA');
         expect(cookie.domain).toEqual("builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain('.Ag');
+        expect(cookie.value).toContain('.BA');
       }
     }
   });
@@ -138,7 +138,7 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     );
     expect(updated_cookies.length).toEqual(1);
     expect(updated_cookies[0].name).toEqual("_fbp");
-    expect(updated_cookies[0].value).toContain('.Ag');
+    expect(updated_cookies[0].value).toContain('.BA');
   });
 
   test('testProcessRequestWithExistingCookie, contains language token', () => {
@@ -152,7 +152,7 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     );
     expect(updated_cookies.length).toEqual(1);
     expect(updated_cookies[0].name).toEqual("_fbp");
-    expect(updated_cookies[0].value).toContain('.Ag');
+    expect(updated_cookies[0].value).toContain('.BA');
     expect(builder.getFbc()).toContain('fb.1.123.abc');
   });
 
@@ -169,11 +169,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain('.abc.Ag');
+        expect(cookie.value).toContain('.abc.BA');
         expect(cookie.domain).toEqual("127.0.0.1");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain('.Ag');
+        expect(cookie.value).toContain('.BA');
       }
     }
   });
@@ -192,11 +192,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain('.abc.Ag');
+        expect(cookie.value).toContain('.abc.BA');
         expect(cookie.domain).toEqual("[::1]");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain('.Ag');
+        expect(cookie.value).toContain('.BA');
       }
     }
   });
@@ -213,11 +213,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain('.test123.Ag');
+        expect(cookie.value).toContain('.test123.BA');
         expect(cookie.domain).toEqual("[::1]");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain('.Ag');
+        expect(cookie.value).toContain('.BA');
       }
     }
   });
@@ -233,11 +233,11 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toContain('.test123.Ag');
+        expect(cookie.value).toContain('.test123.BA');
         expect(cookie.domain).toEqual("builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toContain('.Ag');
+        expect(cookie.value).toContain('.BA');
       }
     }
   });
@@ -259,7 +259,7 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
         'example.com?fbclid=456test'
     );
     expect(updated_cookies.length).toEqual(2);
-    expect(builder.getFbc()).toContain('.test123_test_placeholder.Ag');
+    expect(builder.getFbc()).toContain('.test123_test_placeholder.BA');
   });
 
   test('testProcessRequestWithParamConfigMixReferrerAndQuery', () => {
@@ -279,7 +279,7 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
         'example.com?fbclid=456test'
     );
     expect(updated_cookies.length).toEqual(2);
-    expect(builder.getFbc()).toContain('.456test_test_placeholder.Ag');
+    expect(builder.getFbc()).toContain('.456test_test_placeholder.BA');
   });
 
   test('testProcessRequestWithParamConfigNoMatched', () => {
@@ -300,5 +300,5 @@ const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').Dummy
     );
     expect(updated_cookies.length).toEqual(1);
     expect(builder.getFbc()).toEqual(null);
-    expect(builder.getFbp()).toContain('.Ag');
+    expect(builder.getFbp()).toContain('.BA');
   });
