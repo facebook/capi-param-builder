@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 const { createServer } = require('node:http');
-const {ParamBuilder} = require('capi-param-builder');
+const {ParamBuilder} = require('capi-param-builder-nodejs');
 const url = require('url');
 
 const hostname = 'localhost';//'127.0.0.1';
