@@ -104,7 +104,7 @@ class ParamBuilder {
         // set fbp if none exists
         if (!this.fbp) {
           const new_fbp_payload = Math.floor(Math.random() * 2147483647);
-          const drop_ts = Math.round(Date.now() * 1000);
+          const drop_ts = Date.now();
           this.fbp = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbp_payload}.${Constants.LANGUAGE_TOKEN}`;
           this.cookies_to_set_dict[Constants.FBP_NAME_STRING] = new CookieSettings(
             Constants.FBP_NAME_STRING,
@@ -118,7 +118,7 @@ class ParamBuilder {
         }
         // check if we should overwrite the fbc
         if (!this.fbc) {
-          const drop_ts = Math.round(Date.now() * 1000);
+          const drop_ts = Date.now();
           this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${Constants.LANGUAGE_TOKEN}`;
           this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
             Constants.FBC_NAME_STRING,
@@ -130,7 +130,7 @@ class ParamBuilder {
           const split = this.fbc.split('.');
           const old_fbc_payload = split[3];
           if (new_fbc_payload !== old_fbc_payload) {
-            const drop_ts = Math.round(Date.now() * 1000);
+            const drop_ts = Date.now();
             this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${Constants.LANGUAGE_TOKEN}`;
             this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
               Constants.FBC_NAME_STRING,
