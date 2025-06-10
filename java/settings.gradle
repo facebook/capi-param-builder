@@ -1,0 +1,3 @@
+rootProject.name = 'java-demo'
+include 'example'
+include 'capi-param-builder'
