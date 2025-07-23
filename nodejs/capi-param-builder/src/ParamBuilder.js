@@ -57,6 +57,15 @@ class ParamBuilder {
           return null;
         }
 
+        // Validation check
+        if (split[0] !== 'fb'
+          || !this.isDigit(split[1]) // sub_domain_index
+          || !this.isDigit(split[2]) // timestamp
+          || !split[3] // payload
+           ) {
+            return null;
+        }
+
         if (split.length == Constants.MIN_PAYLOAD_SPLIT_LENGTH) {
           // Update cookie
           const updated_cookie_value = `${cookie_value}.${Constants.LANGUAGE_TOKEN}`;
@@ -69,6 +78,10 @@ class ParamBuilder {
         }
         // no change
         return cookie_value;
+      }
+
+      isDigit(str) {
+        return /^\d+$/.test(str);
       }
 
       buildParamConfigs(existing_payload, query, prefix, value) {
