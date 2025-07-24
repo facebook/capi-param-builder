@@ -107,7 +107,16 @@ final class ParamBuilder {
         $param_value = '';
         // Get referer queries
         $referer_queries = '';
-        $referer_component = !empty($referer)?parse_url($referer)['query']:null;
+        
+        $referer_component = null;
+        if (!empty($referer)) {
+            $parsed_url = parse_url($referer);
+
+            if (!empty($parsed_url['query'])) {
+                $referer_component = $parsed_url['query'];
+            }
+        }
+        
         if (!empty($referer_component)) {
             parse_str($referer_component, $referer_queries);
         }
