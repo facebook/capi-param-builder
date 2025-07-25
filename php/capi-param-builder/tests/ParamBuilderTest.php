@@ -212,6 +212,19 @@ final class ParamBuilderTest extends TestCase {
         $this->assertStringEndsWith('.AQ', $builder->getFbp());
     }
 
+     public function testProcessRequestWithReferralWithoutQuery() {
+        $builder = new ParamBuilder();
+        $builder->processRequest(
+            'a.b.walmart.com:8080',
+            null,
+            null,
+            'walmart.com'
+        );
+        $this->assertNull($builder->getFbc());
+        $this->assertIsString($builder->getFbp());
+        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+    }
+
     public function testProcessRequestWithRefererAndProtocol() {
         $builder = new ParamBuilder();
         $result = $builder->processRequest(
