@@ -1,0 +1,37 @@
+name: Param builder PHP CI
+
+on:
+  push:
+    paths:
+      - 'php/**'
+  pull_request:
+    paths:
+      - 'php/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: php/capi-param-builder
+    strategy:
+      matrix:
+        php-versions: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+    name: CI Test on PHP with version ${{ matrix.php-versions }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{matrix.php-versions}}
+    - name: Install dependencies
+      uses: php-actions/composer@v6
+      with:
+        php_version: ${{ matrix.php-versions }}
+        dev: yes
+        args: --prefer-source
+    - name: PHPUnit tests
+      run: ./vendor/bin/phpunit ./tests/ --debug
