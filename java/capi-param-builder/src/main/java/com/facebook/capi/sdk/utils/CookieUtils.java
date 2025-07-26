@@ -113,13 +113,13 @@ public class CookieUtils {
         if (queries != null && queries.containsKey(config.query)) {
           buildParamConfigs(
               newFbcPayload, config.query, config.prefix, queries.get(config.query)[0]);
-        } else if (referrer != null && !referrer.isBlank()) {
+        } else if (referrer != null && !referrer.trim().isEmpty()) {
           if (referrer.indexOf("://") == -1) {
             referrer = "http://" + referrer;
           }
           URI referralUrl = new URI(referrer);
           String queryString = referralUrl.getQuery();
-          if (queryString != null && !queryString.isBlank()) {
+          if (queryString != null && !queryString.trim().isEmpty()) {
             String[] queryPairs = queryString.split("&");
             for (String queryPair : queryPairs) {
               // 0 is key, 1 is value
@@ -135,7 +135,7 @@ public class CookieUtils {
       System.err.println("Exception when handling referrer:" + e.getMessage());
     }
 
-    if (!newFbcPayload.isEmpty()) {
+    if (newFbcPayload.length() != 0) {
       return newFbcPayload.toString();
     }
     return null;
@@ -152,7 +152,7 @@ public class CookieUtils {
    */
   public CookieSetting getUpdatedFbpCookie(
       String existingFbp, Map<String, CookieSetting> updatedCookieMap) {
-    if (existingFbp == null || existingFbp.isEmpty() || existingFbp.isBlank()) {
+    if (existingFbp == null || existingFbp.isEmpty() || existingFbp.trim().isEmpty()) {
       // Magic number is < Long. MAX_VALUE
       long newFbpPayload = Double.valueOf(Math.random() * 2147483647).longValue();
       long dropTs = new Date().getTime();
