@@ -1,0 +1,29 @@
+name: Param builder Java CI
+
+on:
+  push:
+    paths:
+      - 'java/**'
+  pull_request:
+    paths:
+      - 'java/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: java/
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Java 8 on Param builder demo example
+      uses: actions/setup-java@v4
+      with:
+          distribution: 'temurin'
+          java-version: 8
+    - name: Change gradlew wrapper permissions
+      run: chmod +x ./gradlew
+    - name: Build with Gradle
+      run: ./gradlew build
