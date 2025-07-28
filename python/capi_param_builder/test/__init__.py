@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 from .test_etld_plus_one_resolver import TestEtldPlusOneResolver
-
-from .test_param_builder import ParamBuilder
+from .test_param_builder import TestParamBuilder
 
 __all__ = ["TestParamBuilder", "TestEtldPlusOneResolver"]
