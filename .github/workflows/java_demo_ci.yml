@@ -1,4 +1,4 @@
-name: Param builder Java CI
+name: Param builder Java demo CI
 
 on:
   push:

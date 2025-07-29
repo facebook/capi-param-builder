@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.facebook.capi.sdk'
-version = '1.0.1'
+version = '1.0.2'
 
 repositories {
     mavenCentral()
@@ -50,15 +50,6 @@ publishing {
                     developerConnection = 'scm:git:ssh://github.com/facebook/capi-param-builder.git'
                     url = 'https://github.com/facebook/capi-param-builder'
                 }
-            }
-        }
-    }
-    repositories {
-        maven {
-            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            credentials {
-                username findProperty('ossrhUsername')
-                password findProperty('ossrhPassword')
             }
         }
     }
