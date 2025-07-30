@@ -1,0 +1,33 @@
+name: Param builder Ruby CI
+
+on:
+  push:
+    paths:
+      - 'ruby/**'
+  pull_request:
+    paths:
+      - 'ruby/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ruby/capi_param_builder
+    strategy:
+      matrix:
+        ruby-versions: [ '3.0', '3.2', '3.3']
+    name: CI Test on Ruby with version ${{ matrix.ruby-versions }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+          ruby-version: ${{ matrix.version }}
+    - name: Install minitest
+      run: gem install minitest
+    - name: Run unit test
+      run: ruby -Ilib:test test/test_param_builder.rb
