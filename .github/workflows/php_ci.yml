@@ -32,7 +32,7 @@ jobs:
       with:
         php_version: ${{ matrix.php-versions }}
         dev: yes
-        args: install --prefer-dist --no-progress --no-suggest
+        args: --prefer-source
     - name: List workspace
       run: ls ${GITHUB_WORKSPACE}
     - name: Debug list vendor/bin
