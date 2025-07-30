@@ -32,6 +32,10 @@ jobs:
       with:
         php_version: ${{ matrix.php-versions }}
         dev: yes
-        args: --prefer-source
+        args: install --prefer-dist --no-progress --no-suggest
+    - name: List workspace
+      run: ls ${GITHUB_WORKSPACE}
+    - name: Debug list vendor/bin
+      run: ls -l vendor/bin
     - name: PHPUnit tests
-      run: ./vendor/bin/phpunit ./tests/ --debug
+      run: vendor/bin/phpunit ./tests/ --debug
