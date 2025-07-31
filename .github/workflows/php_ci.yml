@@ -33,11 +33,5 @@ jobs:
         php_version: ${{ matrix.php-versions }}
         dev: yes
         args: --prefer-source
-    - name: List workspace
-      run: ls ${GITHUB_WORKSPACE}
-    - name: List php subdirectory
-      run: ls ${GITHUB_WORKSPACE}/php
-    - name: List php/capi-param-builder subdirectory
-      run: ls ${GITHUB_WORKSPACE}/php/capi-param-builder
     - name: PHPUnit tests
       run: ../../vendor/bin/phpunit ./tests/ --debug
