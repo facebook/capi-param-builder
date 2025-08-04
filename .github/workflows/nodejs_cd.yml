@@ -1,0 +1,27 @@
+name: Publish NodeJS package to the NPM Repository
+
+on:
+  push:
+    tags:
+      - v*-nodejs
+    workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nodejs/capi-param-builder
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 20
+      - name: Deploy
+        run: |
+          npm install
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+          npm publish
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
