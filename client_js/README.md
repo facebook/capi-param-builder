@@ -21,8 +21,8 @@ Check the latest update from CHANGELOG.
 1. Check the updated version from CHANGELOG.
 2. Checkout the demo example from ./example. The example/public/index.html is the demo on how to use the library.
 
-Run `node server.js` in your local, then visit http://localhost:3000. Check console log or cookies to see ```_fbp``` first.
-Manual type the url into http://localhost:3000/?fbclid=test123 or similar, you'll see fbc returned in console log, and the ```_fbc``` cookie is stored
+Run `node server.js` in your local, then visit http://localhost:3000. Check console log or cookies to see `_fbp` first.
+Manual type the url into http://localhost:3000/?fbclid=test123 or similar, you'll see fbc returned in console log, and the `_fbc` cookie is stored
 
 # Integration
 
@@ -40,6 +40,7 @@ If you need both libraries, you could integrate with clientParamBuilder only by 
 ```
 
 clientParamsHelper
+
 ```
 <script
         src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/clientParamsHelper/clientParamsHelper.bundle.js"></script>
@@ -70,7 +71,6 @@ clientParamBuilder.getFbp()
 ```
 
 API is to get fbc value from cookie. You need run processAndCollectParams before getFbp().
-
 
 (Optional) clientParamsHelper: add-on expansion. Please check the onboarding guide before using this library. This is a more complex advance library to coordinate.
 
