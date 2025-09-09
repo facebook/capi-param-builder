@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'java/**'
+    tags-ignore:
+      - '*'          # Ignores all tag pushes
   pull_request:
     paths:
       - 'java/**'

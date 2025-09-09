@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'ruby/**'
+    tags-ignore:
+      - '*'          # Ignores all tag pushes
   pull_request:
     paths:
       - 'ruby/**'
