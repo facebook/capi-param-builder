@@ -18,6 +18,22 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 20
+      - name: Debug check if secrets.NPM_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "secrets.NPM_TOKEN is not set!"
+            exit 1
+          else
+            echo "secrets.NPM_TOKEN is set."
+          fi
+      - name: Debug check if NPM_TOKEN is set
+        run: |
+          if [ -z "${{ NPM_TOKEN }}" ]; then
+            echo "NPM_TOKEN is not set!"
+            exit 1
+          else
+            echo "NPM_TOKEN is set."
+          fi
       - name: Configure npm authentication
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
       - name: Install dependencies
