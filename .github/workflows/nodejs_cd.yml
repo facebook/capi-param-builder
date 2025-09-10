@@ -4,33 +4,37 @@ on:
   push:
     tags:
       - v*-nodejs
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     defaults:
       run:
         working-directory: nodejs/capi-param-builder
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v5
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Debug check if secrets.NPM_TOKEN is set
-        run: |
-          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "secrets.NPM_TOKEN is not set!"
-            exit 1
-          else
-            echo "secrets.NPM_TOKEN is set."
-          fi
-      - name: Configure npm authentication
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
       - name: Install dependencies
-        run: npm install
-      - name: Publish package
+        run: npm ci
+      - name: Build package
+        run: npm run build
+      - name: Verify npm authentication
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Show npm debug log if publish failed
+        if: failure()
+        run: cat /home/runner/.npm/_logs/*.log || echo "No npm log found"
