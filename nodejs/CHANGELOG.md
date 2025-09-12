@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v1.0.2
+
+### Added
+Add typescript support for NodeJS library.
+
 ## v1.0.1
 
 ### Fixed
