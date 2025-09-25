@@ -1,6 +1,6 @@
 {
   "name": "capi-param-builder-nodejs",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "SDK for building params for Conversion API events",
   "main": "index.js",
   "types": "index.d.ts",

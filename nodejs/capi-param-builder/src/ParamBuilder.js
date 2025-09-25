@@ -8,6 +8,7 @@
 const FbcParamConfig = require('./model/FbcParamConfig');
 const CookieSettings = require('./model/CookieSettings');
 const Constants = require('./model/Constants');
+const {version} = require('../package.json');
 
 class ParamBuilder {
     constructor(input_params) {
@@ -18,7 +19,7 @@ class ParamBuilder {
         if (Array.isArray(input_params)) {
           this.domain_list = [];
           for (const domain of input_params) {
-            this.domain_list.push(ParamBuilder.extractHostFromHttpHost(domain));
+            this.domain_list.push(this._extractHostFromHttpHost(domain));
           }
         } else if (typeof input_params === 'object') {
           this.etld_plus1_resolver = input_params;
@@ -35,56 +36,89 @@ class ParamBuilder {
         // output cookies, an array of CookieSettings
         this.cookies_to_set = [];
         this.cookies_to_set_dict = {};
+        // language token
+        this.appendix_new = this._getAppendixInfo(true);
+        this.appendix_normal = this._getAppendixInfo(false);
       }
 
-      preprocessCookie(cookies, cookie_name) {
-        // cookie_name not exist in cookies
+      _getAppendixInfo(is_new) {
+        const [major, minor, patch] = version.split('.').map(Number);
+        const is_new_byte = is_new === true ? 0x01 : 0x00;
+        const bytes = [Constants.DEFAULT_FORMAT, Constants.LANGUAGE_TOKEN_INDEX, is_new_byte, major.toString(16), minor.toString(16), patch.toString(16)];
+        const buf = Buffer.from(bytes);
+        const base64urlSafe = buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        return base64urlSafe;
+      }
+
+      _preprocessCookie(cookies, cookie_name) {
         if (!cookies || !cookies.hasOwnProperty(cookie_name) || !cookies[cookie_name]) {
           return null;
         }
 
-        // Check paramBuilder language token
         const cookie_value = cookies[cookie_name];
-        const split = cookie_value.split('.');
-        if (split.length < Constants.MIN_PAYLOAD_SPLIT_LENGTH
-          || split.length > Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_SPLIT_LENGTH) {
+        const segments = cookie_value.split('.');
+        if (!this._isValidSegmentCount(segments.length)) {
           return null;
         }
-        // If length is MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_SPLIT_LENGTH w/o language token, invalid.
-        if (split.length == Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_SPLIT_LENGTH
-          && !Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(
-            split[Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_SPLIT_LENGTH - 1])) {
-          return null;
-        }
-
-        // Validation check
-        if (split[0] !== 'fb'
-          || !this.isDigit(split[1]) // sub_domain_index
-          || !this.isDigit(split[2]) // timestamp
-          || !split[3] // payload
-           ) {
+        if (segments.length === Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_SPLIT_LENGTH) {
+          if (!this._validateAppendix(segments[segments.length - 1])) {
             return null;
+          }
         }
-
-        if (split.length == Constants.MIN_PAYLOAD_SPLIT_LENGTH) {
-          // Update cookie
-          const updated_cookie_value = `${cookie_value}.${Constants.LANGUAGE_TOKEN}`;
-          this.cookies_to_set_dict[cookie_name] = new CookieSettings(
-            cookie_name,
-            updated_cookie_value,
-            Constants.DEFAULT_1PC_AGE,
-            this.etld_plus_1);
-          return updated_cookie_value;
+        if (!this._validateCoreStructure(segments)) {
+          return null;
         }
-        // no change
+        if (segments.length === Constants.MIN_PAYLOAD_SPLIT_LENGTH) {
+          return this._updateCookieWithLanguageToken(cookie_value, cookie_name);
+        }
         return cookie_value;
       }
 
-      isDigit(str) {
+      _isValidSegmentCount(length) {
+        return length >= Constants.MIN_PAYLOAD_SPLIT_LENGTH &&
+               length <= Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_SPLIT_LENGTH;
+      }
+
+      _validateAppendix(appendix_value) {
+        const appendix_length = appendix_value.length;
+
+        // Backward compatible V1 format: 2-character language token
+        if (appendix_length === Constants.APPENDIX_LENGTH_V1) {
+          return Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(appendix_value);
+        }
+
+        // V2 format: 8-character appendix
+        if (appendix_length === Constants.APPENDIX_LENGTH_V2) {
+          return true;
+        }
+        return false;
+      }
+
+      _validateCoreStructure(segments) {
+        return segments[0] === 'fb' &&
+               this._isDigit(segments[1]) && // sub_domain_index
+               this._isDigit(segments[2]) && // timestamp
+               segments[3] && segments[3].length > 0; // payload
+      }
+
+      _updateCookieWithLanguageToken(cookie_value, cookie_name) {
+        const updated_cookie_value = `${cookie_value}.${this.appendix_normal}`;
+
+        this.cookies_to_set_dict[cookie_name] = new CookieSettings(
+          cookie_name,
+          updated_cookie_value,
+          Constants.DEFAULT_1PC_AGE,
+          this.etld_plus_1
+        );
+
+        return updated_cookie_value;
+      }
+
+      _isDigit(str) {
         return /^\d+$/.test(str);
       }
 
-      buildParamConfigs(existing_payload, query, prefix, value) {
+      _buildParamConfigs(existing_payload, query, prefix, value) {
         const isClickID = query === Constants.FBCLID_STRING;
         existing_payload += (isClickID?'':'_') + prefix + (isClickID?'':'_') + value;
         return existing_payload;
@@ -95,21 +129,21 @@ class ParamBuilder {
         this.cookies_to_set_dict = {};
         this.etld_plus_1 = null;
         this.sub_domain_index = 0;
-        this.computeETLDPlus1ForHost(host);
+        this._computeETLDPlus1ForHost(host);
 
         // capture existing cookies
-        this.fbc = this.preprocessCookie(cookies, Constants.FBC_NAME_STRING);
-        this.fbp = this.preprocessCookie(cookies, Constants.FBP_NAME_STRING);
+        this.fbc = this._preprocessCookie(cookies, Constants.FBC_NAME_STRING);
+        this.fbp = this._preprocessCookie(cookies, Constants.FBP_NAME_STRING);
 
-        const referer_query = this.getRefererQuery(referer);
+        const referer_query = this._getRefererQuery(referer);
         const new_fbc_payload = this.fbc_param_configs.reduce((acc, param_config) => {
           if (!acc) {
             acc = '';
           }
           if (queries && queries[param_config.query]) {
-            acc = this.buildParamConfigs(acc, param_config.query, param_config.prefix, queries[param_config.query]);
+            acc = this._buildParamConfigs(acc, param_config.query, param_config.prefix, queries[param_config.query]);
           } else if (referer_query && referer_query.get(param_config.query)) {
-            acc = this.buildParamConfigs(acc, param_config.query, param_config.prefix, referer_query.get(param_config.query));
+            acc = this._buildParamConfigs(acc, param_config.query, param_config.prefix, referer_query.get(param_config.query));
           }
           return acc;
         }, '');
@@ -118,7 +152,7 @@ class ParamBuilder {
         if (!this.fbp) {
           const new_fbp_payload = Math.floor(Math.random() * 2147483647);
           const drop_ts = Date.now();
-          this.fbp = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbp_payload}.${Constants.LANGUAGE_TOKEN}`;
+          this.fbp = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbp_payload}.${this.appendix_new}`;
           this.cookies_to_set_dict[Constants.FBP_NAME_STRING] = new CookieSettings(
             Constants.FBP_NAME_STRING,
             this.fbp,
@@ -132,7 +166,7 @@ class ParamBuilder {
         // check if we should overwrite the fbc
         if (!this.fbc) {
           const drop_ts = Date.now();
-          this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${Constants.LANGUAGE_TOKEN}`;
+          this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_new}`;
           this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
             Constants.FBC_NAME_STRING,
             this.fbc,
@@ -144,7 +178,7 @@ class ParamBuilder {
           const old_fbc_payload = split[3];
           if (new_fbc_payload !== old_fbc_payload) {
             const drop_ts = Date.now();
-            this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${Constants.LANGUAGE_TOKEN}`;
+            this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_new}`;
             this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
               Constants.FBC_NAME_STRING,
               this.fbc,
@@ -164,7 +198,7 @@ class ParamBuilder {
       getFbp() {
         return this.fbp;
       }
-      getRefererQuery(referer_url) {
+      _getRefererQuery(referer_url) {
         if (!referer_url) {
           return null;
         }
@@ -175,23 +209,23 @@ class ParamBuilder {
         const query = new URLSearchParams(referer.search);
         return query;
       }
-      computeETLDPlus1ForHost(host) {
+      _computeETLDPlus1ForHost(host) {
         if (this.etld_plus_1 === null || this.host !== host) {
           // in case a new host is passed in for the same request
           this.host = host;
-          const hostname = ParamBuilder.extractHostFromHttpHost(host);
-          if (ParamBuilder.isIPAddress(hostname)) {
-            this.etld_plus_1 = ParamBuilder.maybeBracketIPv6(hostname);
+          const hostname = this._extractHostFromHttpHost(host);
+          if (this._isIPAddress(hostname)) {
+            this.etld_plus_1 = this._maybeBracketIPv6(hostname);
             this.sub_domain_index = 0;
           } else {
-            this.etld_plus_1 = this.getEtldPlus1(hostname);
+            this.etld_plus_1 = this._getEtldPlus1(hostname);
             // https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/fbp-and-fbc/
             this.sub_domain_index = this.etld_plus_1?.split('.').length - 1 ?? 0;
           }
         }
       }
 
-      getEtldPlus1(hostname) {
+      _getEtldPlus1(hostname) {
         try {
           if (this.etld_plus1_resolver) {
             return this.etld_plus1_resolver.resolveETLDPlus1(hostname);
@@ -212,7 +246,7 @@ class ParamBuilder {
         return hostname;
       }
 
-      static extractHostFromHttpHost(value) {
+      _extractHostFromHttpHost(value) {
         if (!value) {
           return null;
         }
@@ -241,19 +275,19 @@ class ParamBuilder {
         return value;
       }
 
-      static maybeBracketIPv6(value) {
+      _maybeBracketIPv6(value) {
         if (value.includes(':')) {
           return '[' + value + ']';
         } else {
           return value;
         }
       }
-      static isIPAddress(value) {
-        return Constants.IPV4_REGEX.test(value) || ParamBuilder.isIPv6Address(value);
+      _isIPAddress(value) {
+        return Constants.IPV4_REGEX.test(value) || this._isIPv6Address(value);
       }
 
       // https://en.wikipedia.org/wiki/IPv6#Address_representation
-      static isIPv6Address(value) {
+      _isIPv6Address(value) {
         const parts = value.split(':');
         if (parts.length > 8) {
           return false;

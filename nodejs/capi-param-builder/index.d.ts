@@ -52,7 +52,7 @@ export declare class ParamBuilder {
    * Create a new ParamBuilder instance
    * @param input_params Either an array of domain strings or an ETLD+1 resolver object
    */
-  constructor(input_params: ParamBuilderInput);
+  constructor(input_params?: ParamBuilderInput);
 
   /**
    * Process an incoming request to extract and build Facebook parameters
@@ -87,31 +87,20 @@ export declare class ParamBuilder {
    */
   getFbp(): string | null;
 
-  /**
-   * Extract hostname from HTTP host header value
-   * @param value The host header value
-   * @returns The extracted hostname or null if invalid
-   */
-  static extractHostFromHttpHost(value: string): string | null;
-
-  /**
-   * Check if a value is an IP address (IPv4 or IPv6)
-   * @param value The value to check
-   * @returns True if the value is an IP address
-   */
-  static isIPAddress(value: string): boolean;
-
-  /**
-   * Add brackets to IPv6 addresses if needed
-   * @param value The IP address value
-   * @returns The bracketed IPv6 address or original value for IPv4
-   */
-  static maybeBracketIPv6(value: string): string;
-
-  /**
-   * Check if a value is a valid IPv6 address
-   * @param value The value to check
-   * @returns True if the value is a valid IPv6 address
-   */
-  static isIPv6Address(value: string): boolean;
+  // Internal used privat methods
+  private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
+  private _getAppendixInfo(is_new: boolean): string;
+  private _preprocessCookie(cookies: Cookies | null, cookie_name: string): string | null;
+  private _isValidSegmentCount(length: number): boolean;
+  private _validateAppendix(appendix_value: string): boolean;
+  private _validateCoreStructure(segments: string[]): boolean;
+  private _updateCookieWithLanguageToken(cookie_value: string, cookie_name: string): string;
+  private _isDigit(str: string): boolean;
+  private _getRefererQuery(referer_url: string | null): URLSearchParams | null;
+  private _computeETLDPlus1ForHost(host: string): void;
+  private _getEtldPlus1(hostname: string): string;
+  private _extractHostFromHttpHost(value: string): string | null;
+  private _isIPAddress(value: string): boolean;
+  private _maybeBracketIPv6(value: string): string;
+  private _isIPv6Address(value: string): boolean;
 }

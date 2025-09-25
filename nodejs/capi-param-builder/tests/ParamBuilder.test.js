@@ -11,14 +11,15 @@ const FbcParamConfig = require('../src/model/FbcParamConfig');
 const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').DummyLocalHostTestResolver;
 const DUMMY_TIMESTAMP = 1234567890;
 const DUMMY_FBP_PAYLOAD = 2147483647;
-const DUMMY_LANGUAGE_TOKEN = 'BA';
-const DUMMY_FBC_VALUE = "fb.1." + DUMMY_TIMESTAMP + ".abcd." + DUMMY_LANGUAGE_TOKEN;
-const DUMMY_FBP_VALUE = "fb.1."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN;
+const DUMMY_APPENDIX_NORMAL = 'AQQAAQAA';
+const DUMMY_APPENDIX_NEW = 'AQQBAQAA';
+const DUMMY_FBC_VALUE = "fb.1." + DUMMY_TIMESTAMP + ".abcd." + DUMMY_APPENDIX_NEW;
+const DUMMY_FBP_VALUE = "fb.1."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW;
+jest.mock('../package.json', () => ({version: '1.0.0'}));
 
 describe('ParamBuilder base unit test', () => {
   beforeAll(() => {
-    const MOCK_TIMESTAMP = 1234567890;
-    jest.spyOn(Date, 'now').mockImplementation(() => MOCK_TIMESTAMP);
+    jest.spyOn(Date, 'now').mockImplementation(() => DUMMY_TIMESTAMP);
     jest.spyOn(Math, 'random').mockImplementation(() => 1);
   });
 
@@ -78,11 +79,13 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual("fb.2." + DUMMY_TIMESTAMP + ".abcde." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.2." + DUMMY_TIMESTAMP + ".abcde." + DUMMY_APPENDIX_NEW);
+        expect(cookie.value).toEqual(builder.getFbc());
         expect(cookie.domain).toEqual("builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
+        expect(cookie.value).toEqual(builder.getFbp());
       }
     }
   });
@@ -101,17 +104,36 @@ describe('ParamBuilder base unit test', () => {
     );
     // fbc not upated
     expect(updated_cookies.length).toEqual(2);
-    expect(builder.getFbc()).toEqual('fb.1.123.abc.BA');
+    expect(builder.getFbc()).toEqual('fb.1.123.abc.' + DUMMY_APPENDIX_NORMAL);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual('fb.1.123.abc.BA');
+        expect(cookie.value).toEqual('fb.1.123.abc.' + DUMMY_APPENDIX_NORMAL);
         expect(cookie.domain).toEqual("a.builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.3."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.3."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
         expect(cookie.domain).toEqual("a.builder.example.com");
       }
     }
+  });
+
+    test('testProcessRequestWithExistingCookie, backward compatible with appendix V1', () => {
+    const sampleEtldPlus1Resolver = new DummyLocalHostTestResolver();
+    const builder = new ParamBuilder(sampleEtldPlus1Resolver);
+    const updated_cookies = builder.processRequest(
+      'a.builder.example.com:8080',
+      {
+        fbclid: 'abc',
+      },
+      {
+        '_fbc': 'fb.1.123.abc.BA',
+        '_fbp': 'fb.1.123.123456.BA',
+      }
+    );
+    // fbc not upated
+    expect(updated_cookies.length).toEqual(0);
+    expect(builder.getFbc()).toEqual('fb.1.123.abc.BA');
+    expect(builder.getFbp()).toEqual('fb.1.123.123456.BA');
   });
 
   test('testProcessRequestWithOutdatedCookie', () => {
@@ -128,11 +150,11 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual('fb.2.' + DUMMY_TIMESTAMP + '.def.BA');
+        expect(cookie.value).toEqual('fb.2.' + DUMMY_TIMESTAMP + '.def.' + DUMMY_APPENDIX_NEW);
         expect(cookie.domain).toEqual("builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
       }
     }
   });
@@ -150,7 +172,7 @@ describe('ParamBuilder base unit test', () => {
     expect(invalid_cookie_1.length).toEqual(1);
     expect(builder.getFbc()).toEqual(null);
     expect(invalid_cookie_1[0].name).toEqual("_fbp");
-    expect(invalid_cookie_1[0].value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(invalid_cookie_1[0].value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
 
      const invalid_cookie_2 = builder.processRequest(
       'a.builder.example.com:8080',
@@ -162,7 +184,7 @@ describe('ParamBuilder base unit test', () => {
     );
     expect(invalid_cookie_2.length).toEqual(1);
     expect(invalid_cookie_2[0].name).toEqual("_fbp");
-    expect(invalid_cookie_2[0].value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(invalid_cookie_2[0].value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
 
     const invalid_cookie_3 = builder.processRequest(
       'a.builder.example.com:8080',
@@ -174,10 +196,10 @@ describe('ParamBuilder base unit test', () => {
     );
     expect(invalid_cookie_3.length).toEqual(1);
     expect(invalid_cookie_3[0].name).toEqual("_fbp");
-    expect(invalid_cookie_3[0].value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(invalid_cookie_3[0].value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
   });
 
-  test('testProcessRequestWithExistingCookie, contains language token', () => {
+  test('testProcessRequestWithExistingCookie, contains v1 language token', () => {
     const builder = new ParamBuilder(['http://example.com:8080', 'https://test.com']);
     const updated_cookies = builder.processRequest(
       'a.builder.example.com:8080',
@@ -188,7 +210,7 @@ describe('ParamBuilder base unit test', () => {
     );
     expect(updated_cookies.length).toEqual(1);
     expect(updated_cookies[0].name).toEqual("_fbp");
-    expect(updated_cookies[0].value).toEqual("fb.1."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(updated_cookies[0].value).toEqual("fb.1."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
     expect(builder.getFbc()).toEqual('fb.1.123.abc.Bg');
   });
 
@@ -205,11 +227,11 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + ".abc." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + ".abc." + DUMMY_APPENDIX_NEW);
         expect(cookie.domain).toEqual("127.0.0.1");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
       }
     }
   });
@@ -228,11 +250,11 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + ".abcd." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + ".abcd." + DUMMY_APPENDIX_NEW);
         expect(cookie.domain).toEqual("[::1]");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
       }
     }
   });
@@ -249,11 +271,11 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + ".test123." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + ".test123." + DUMMY_APPENDIX_NEW);
         expect(cookie.domain).toEqual("[::1]");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.0."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
       }
     }
   });
@@ -269,11 +291,11 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     for (const cookie of updated_cookies) {
       if (cookie.name === '_fbc') {
-        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + ".test123." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + ".test123." + DUMMY_APPENDIX_NEW);
         expect(cookie.domain).toEqual("builder.example.com");
       } else {
         expect(cookie.name).toEqual("_fbp");
-        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+        expect(cookie.value).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
       }
     }
   });
@@ -295,8 +317,8 @@ describe('ParamBuilder base unit test', () => {
         'example.com?fbclid=456test'
     );
     expect(updated_cookies.length).toEqual(2);
-    expect(builder.getFbc()).toEqual("fb.2."+ DUMMY_TIMESTAMP + ".test123_test_placeholder." + DUMMY_LANGUAGE_TOKEN);
-    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(builder.getFbc()).toEqual("fb.2."+ DUMMY_TIMESTAMP + ".test123_test_placeholder." + DUMMY_APPENDIX_NEW);
+    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
   });
 
   test('testProcessRequestWithParamConfigMixReferrerAndQuery', () => {
@@ -316,8 +338,8 @@ describe('ParamBuilder base unit test', () => {
         'example.com?fbclid=456test'
     );
     expect(updated_cookies.length).toEqual(2);
-    expect(builder.getFbc()).toEqual("fb.2."+ DUMMY_TIMESTAMP + ".456test_test_placeholder." + DUMMY_LANGUAGE_TOKEN);
-    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(builder.getFbc()).toEqual("fb.2."+ DUMMY_TIMESTAMP + ".456test_test_placeholder." + DUMMY_APPENDIX_NEW);
+    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
   });
 
   test('testProcessRequestWithParamConfigNoMatched', () => {
@@ -338,6 +360,6 @@ describe('ParamBuilder base unit test', () => {
     );
     expect(updated_cookies.length).toEqual(1);
     expect(builder.getFbc()).toEqual(null);
-    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_LANGUAGE_TOKEN);
+    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
   });
 });
