@@ -354,17 +354,43 @@ final class ParamBuilder {
         return $client_ip_from_cookie;
     }
 
-    private static function removeLanguageToken($input) {
-    // Find the position of the last dot
-    $lastDot = strrpos($input, '.');
-    if ($lastDot !== false) {
-        $suffix = substr($input, $lastDot + 1);
-        if (in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true)) {
-            return substr($input, 0, $lastDot);
+    private static function getClientIpLanguageTokenFromCookie(
+        $cookies
+    ) {
+        $client_ip_language_token_from_cookie = null;
+
+        if (!empty($cookies[FBI_NAME])) {
+                $cookie_value = $cookies[FBI_NAME];
+                $client_ip_language_token_from_cookie =
+                    ParamBuilder::getLanguageToken($cookie_value);
         }
+
+        return $client_ip_language_token_from_cookie;
     }
-    return $input;
-}
+
+    private static function removeLanguageToken($input) {
+        // Find the position of the last dot
+        $lastDot = strrpos($input, '.');
+        if ($lastDot !== false) {
+            $suffix = substr($input, $lastDot + 1);
+            if (in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true)) {
+                return substr($input, 0, $lastDot);
+            }
+        }
+        return $input;
+    }
+
+    private static function getLanguageToken($input) {
+        // Find the position of the last dot
+        $lastDot = strrpos($input, '.');
+        if ($lastDot !== false) {
+            $suffix = substr($input, $lastDot + 1);
+            if (in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true)) {
+                return $suffix;
+            }
+        }
+        return null;
+    }
 
     private static function getClientIpFromRequest(
         $x_forwarded_for,
@@ -387,6 +413,8 @@ final class ParamBuilder {
         $best_client_ip = null;
 
         $client_ip_from_cookie = ParamBuilder::getClientIpFromCookie($cookies);
+        $client_ip_language_token_from_cookie =
+            ParamBuilder::getClientIpLanguageTokenFromCookie($cookies);
 
         $client_ip_from_request =
             ParamBuilder::getClientIpFromRequest(
@@ -408,16 +436,26 @@ final class ParamBuilder {
         );
 
         if($client_ip_from_cookie_is_IPv6){
-            $best_client_ip = $client_ip_from_cookie;
+            $best_client_ip = $client_ip_from_cookie . '.' .
+            (
+                $client_ip_language_token_from_cookie
+                    ? $client_ip_language_token_from_cookie
+                    : LANGUAGE_TOKEN
+            );
         }else if ($client_ip_from_request_is_IPv6) {
-            $best_client_ip = $client_ip_from_request;
+            $best_client_ip = $client_ip_from_request.'.'.LANGUAGE_TOKEN;
         }else if ($client_ip_from_cookie_is_IPv4) {
-            $best_client_ip = $client_ip_from_cookie;
+            $best_client_ip = $client_ip_from_cookie . '.' .
+            (
+                $client_ip_language_token_from_cookie
+                    ? $client_ip_language_token_from_cookie
+                    : LANGUAGE_TOKEN
+            );
         }else if($client_ip_from_request_is_IPv4) {
-            $best_client_ip = $client_ip_from_request;
+            $best_client_ip = $client_ip_from_request.'.'.LANGUAGE_TOKEN;
         }
 
-        return $best_client_ip.'.'.LANGUAGE_TOKEN;
+        return $best_client_ip;
 
     }
 }
