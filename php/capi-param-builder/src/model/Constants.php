@@ -14,6 +14,7 @@ define('PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN', 5);
 define('SUPPORTED_LANGUAGES_TOKEN', array('AQ', 'Ag', 'Aw', 'BA', 'BQ', 'Bg'));
 define('FBC_NAME', '_fbc');
 define('FBP_NAME', '_fbp');
+define('FBI_NAME', '_fbi');
 define('FBCLID', 'fbclid');
 define('CLICK_ID_STRING', 'click_id');
 define('FB_PREFIX', 'fb')

@@ -321,8 +321,33 @@ final class ParamBuilder {
     private static function isIPv6($value) {
         return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)!== false;
     }
+
+    private static function getClientIpFromCookie(
+        $cookies
+    ) {
+        $client_ip_from_cookie = null;
+
+        if (!empty($cookie[FBI_NAME])) {
+                $cookie_value = $cookie[FBI_NAME];
+                $slices = explode(".", $cookie_value);
+                $ip_from_cookie = $slices[0];
+        }
+        return $client_ip_from_cookie;
+    }
+
+    private static function getClientIpFromRequest(
+        $x_forwarded_for,
+        $remote_address
+    ) {
+        if (!empty($x_forwarded_for)) {
+
+            // X-Forwarded-For can contain multiple IPs, take the first one
+            $ips = explode(',', $x_forwarded_for);
+            return trim($ips[0]);
+        }
+        return $remote_address ?? null;
+    }
+
 }
-
-
 
 ?>
