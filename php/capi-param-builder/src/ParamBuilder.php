@@ -107,7 +107,7 @@ final class ParamBuilder {
         $param_value = '';
         // Get referer queries
         $referer_queries = '';
-        
+
         $referer_component = null;
         if (!empty($referer)) {
             $parsed_url = parse_url($referer);
@@ -116,7 +116,7 @@ final class ParamBuilder {
                 $referer_component = $parsed_url['query'];
             }
         }
-        
+
         if (!empty($referer_component)) {
             parse_str($referer_component, $referer_queries);
         }
@@ -310,6 +310,16 @@ final class ParamBuilder {
     private static function isIPAddress($value) {
         return filter_var($value, FILTER_VALIDATE_IP,
             FILTER_FLAG_IPV6 | FILTER_FLAG_IPV4) !== false;
+    }
+
+    // $ip is a valid IPv4 address
+    private static function isIPv4($value){
+        return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)!== false;
+    }
+
+    // $ip is a valid IPv6 address
+    private static function isIPv6($value) {
+        return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)!== false;
     }
 }
 
