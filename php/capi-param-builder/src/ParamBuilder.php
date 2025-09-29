@@ -326,19 +326,28 @@ final class ParamBuilder {
     }
 
     private static function isIPAddress($value) {
-        return filter_var($value, FILTER_VALIDATE_IP,
-            FILTER_FLAG_IPV6 | FILTER_FLAG_IPV4) !== false;
+        return filter_var($value, FILTER_VALIDATE_IP) !== false;
     }
 
     // $ip is a valid IPv4 address
     private static function isIPv4($value){
-        return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)!== false;
+        return filter_var(
+            $value,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_IPV4
+        ) !== false;
     }
+
 
     // $ip is a valid IPv6 address
     private static function isIPv6($value) {
-        return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)!== false;
+        return filter_var(
+            $value,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_IPV6
+        ) !== false;
     }
+
 
     private static function getClientIpFromCookie(
         $cookies
