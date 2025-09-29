@@ -348,6 +348,17 @@ final class ParamBuilder {
         ) !== false;
     }
 
+    // Function to check if an IP address is public
+    // Filtering both private and loopback IPs
+    private static function isPublicIP($value){
+        return filter_var(
+            $value,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) !== false;
+    }
+
+
 
     private static function getClientIpFromCookie(
         $cookies
@@ -409,7 +420,10 @@ final class ParamBuilder {
 
             // X-Forwarded-For can contain multiple IPs, take the first one
             $ips = explode(',', $x_forwarded_for);
-            return trim($ips[0]);
+            $ip = trim($ips[0]);
+            if(ParamBuilder::isPublicIP($ip)){
+                return $ip;
+            }
         }
         return $remote_address ?? null;
     }
@@ -444,23 +458,45 @@ final class ParamBuilder {
             $client_ip_from_request
         );
 
-        if($client_ip_from_cookie_is_IPv6){
+        $client_ip_from_cookie_is_public_ip = ParamBuilder::isPublicIP(
+            $client_ip_from_cookie
+        );
+
+        $client_ip_from_request_is_public_ip = ParamBuilder::isPublicIP(
+            $client_ip_from_request
+        );
+
+        // Prioritize: IPv6 over IPv4, public over private,
+        // and cookie-sourced IPs over request-sourced IPs.
+        if (
+            $client_ip_from_cookie_is_IPv6 &&
+            $client_ip_from_cookie_is_public_ip
+        ){
             $best_client_ip = $client_ip_from_cookie . '.' .
             (
                 $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
                     : LANGUAGE_TOKEN
             );
-        }else if ($client_ip_from_request_is_IPv6) {
+        }else if (
+            $client_ip_from_request_is_IPv6 &&
+            $client_ip_from_request_is_public_ip
+        ) {
             $best_client_ip = $client_ip_from_request.'.'.LANGUAGE_TOKEN;
-        }else if ($client_ip_from_cookie_is_IPv4) {
+        }else if (
+            $client_ip_from_cookie_is_IPv4 &&
+            $client_ip_from_cookie_is_public_ip
+        ) {
             $best_client_ip = $client_ip_from_cookie . '.' .
             (
                 $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
                     : LANGUAGE_TOKEN
             );
-        }else if($client_ip_from_request_is_IPv4) {
+        }else if(
+            $client_ip_from_request_is_IPv4 &&
+            $client_ip_from_request_is_public_ip
+        ) {
             $best_client_ip = $client_ip_from_request.'.'.LANGUAGE_TOKEN;
         }
 
