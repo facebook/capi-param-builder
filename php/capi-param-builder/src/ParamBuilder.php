@@ -18,6 +18,7 @@ final class ParamBuilder {
     // captured values
     private $fbc = null;
     private $fbp = null;
+    private $fbi = null;
 
     // perf optimization - save etld+1
     private $host = null;
@@ -162,7 +163,14 @@ final class ParamBuilder {
     }
 
     // process request and return a list of cookies
-    public function processRequest($host, $queries, $cookies, $referer = null) {
+    public function processRequest(
+        $host,
+        $queries,
+        $cookies,
+        $referer = null,
+        $x_forwarded_for = null,
+        $remote_address = null
+    ) {
         // Reset the default values
         $this->cookies_to_set = [];
         $this->etld_plus_1 = null;
@@ -208,6 +216,12 @@ final class ParamBuilder {
                     $this->etld_plus_1);
         }
 
+        $this->fbi = ParamBuilder::getClientIp(
+            $cookies,
+            $x_forwarded_for,
+            $remote_address
+        );
+
         $this->cookies_to_set_array = array_values($this->cookies_to_set);
         return $this->cookies_to_set_array;
     }
@@ -222,6 +236,10 @@ final class ParamBuilder {
 
     public function getFbp() {
         return $this->fbp;
+    }
+
+     public function getFbi() {
+        return $this->fbi;
     }
 
     // TODO: this needs optimizatino, maybe use a DAFSA format,
@@ -327,13 +345,26 @@ final class ParamBuilder {
     ) {
         $client_ip_from_cookie = null;
 
-        if (!empty($cookie[FBI_NAME])) {
-                $cookie_value = $cookie[FBI_NAME];
-                $slices = explode(".", $cookie_value);
-                $ip_from_cookie = $slices[0];
+        if (!empty($cookies[FBI_NAME])) {
+                $cookie_value = $cookies[FBI_NAME];
+                $client_ip_from_cookie =
+                    ParamBuilder::removeLanguageToken($cookie_value);
         }
+
         return $client_ip_from_cookie;
     }
+
+    private static function removeLanguageToken($input) {
+    // Find the position of the last dot
+    $lastDot = strrpos($input, '.');
+    if ($lastDot !== false) {
+        $suffix = substr($input, $lastDot + 1);
+        if (in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true)) {
+            return substr($input, 0, $lastDot);
+        }
+    }
+    return $input;
+}
 
     private static function getClientIpFromRequest(
         $x_forwarded_for,
@@ -348,6 +379,47 @@ final class ParamBuilder {
         return $remote_address ?? null;
     }
 
+    private static function getClientIp(
+        $cookies,
+        $x_forwarded_for,
+        $remote_address
+    ){
+        $best_client_ip = null;
+
+        $client_ip_from_cookie = ParamBuilder::getClientIpFromCookie($cookies);
+
+        $client_ip_from_request =
+            ParamBuilder::getClientIpFromRequest(
+                $x_forwarded_for,
+                $remote_address
+            );
+
+        $client_ip_from_cookie_is_IPv6 = ParamBuilder::isIPv6(
+            $client_ip_from_cookie
+        );
+        $client_ip_from_cookie_is_IPv4 = ParamBuilder::isIPv4(
+            $client_ip_from_cookie
+        );
+        $client_ip_from_request_is_IPv6 = ParamBuilder::isIPv6(
+            $client_ip_from_request
+        );
+        $client_ip_from_request_is_IPv4 = ParamBuilder::isIPv4(
+            $client_ip_from_request
+        );
+
+        if($client_ip_from_cookie_is_IPv6){
+            $best_client_ip = $client_ip_from_cookie;
+        }else if ($client_ip_from_request_is_IPv6) {
+            $best_client_ip = $client_ip_from_request;
+        }else if ($client_ip_from_cookie_is_IPv4) {
+            $best_client_ip = $client_ip_from_cookie;
+        }else if($client_ip_from_request_is_IPv4) {
+            $best_client_ip = $client_ip_from_request;
+        }
+
+        return $best_client_ip.'.'.LANGUAGE_TOKEN;
+
+    }
 }
 
 ?>

@@ -38,7 +38,10 @@ final class FacebookParamManager {
             $_SERVER['HTTP_HOST'],
             $_GET,
             $_COOKIE,
-            $_SERVER['HTTP_REFERER'] ?? null
+            $_SERVER['HTTP_REFERER'] ?? null,
+            //$_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
+            '203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348',
+            $_SERVER['REMOTE_ADDR'] ?? null
         );
         // Optional:
         // $this->paramBuilder->processRequest(
@@ -62,7 +65,8 @@ final class FacebookParamManager {
         }
         echo 'ParamBuilder output: <br/>'
             . 'getFbc: ' . $this->paramBuilder->getFbc() . '<br/>'
-            . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>';
+            . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>'
+            . 'getFbi: ' . $this->paramBuilder->getFbi() . '<br/>';
     }
 
     public function getParamBuilder() {
