@@ -362,4 +362,67 @@ describe('ParamBuilder base unit test', () => {
     expect(builder.getFbc()).toEqual(null);
     expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
   });
+
+  test('testProcessRequestWithParamConfigPartiallyMatched', () => {
+    const builder = new ParamBuilder();
+    // Override existing value for unit test only
+    builder.fbc_param_configs = [
+      new FbcParamConfig('fbclid', '', 'clickID'),
+      new FbcParamConfig('query', 'test', 'test123')
+    ];
+    const updated_cookies = builder.processRequest(
+        'https://a.builder.example.com:8080',
+        {
+          'balabala': 'test123',
+          'query': 'placeholder'
+        },
+        null,
+        'example.com?fbclidtest=456test'
+    );
+    expect(updated_cookies.length).toEqual(2);
+    expect(builder.getFbc()).toEqual("fb.2." + DUMMY_TIMESTAMP + ".test_placeholder." + DUMMY_APPENDIX_NEW);
+    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
+  });
+
+    test('testProcessRequestWithParamConfig all matched', () => {
+    const builder = new ParamBuilder();
+    // Override existing value for unit test only
+    builder.fbc_param_configs = [
+      new FbcParamConfig('fbclid', '', 'clickID'),
+      new FbcParamConfig('query', 'test', 'test123')
+    ];
+    const updated_cookies = builder.processRequest(
+        'https://a.builder.example.com:8080',
+        {
+          'fbclid': 'test123',
+          'query': 'placeholder'
+        },
+        null,
+        'example.com?fbclidtest=456test'
+    );
+    expect(updated_cookies.length).toEqual(2);
+    expect(builder.getFbc()).toEqual("fb.2." + DUMMY_TIMESTAMP + ".test123_test_placeholder." + DUMMY_APPENDIX_NEW);
+    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
+  });
+
+   test('testProcessRequestWithParamConfig all matched with duplication, only keep the first one', () => {
+    const builder = new ParamBuilder();
+    // Override existing value for unit test only
+    builder.fbc_param_configs = [
+      new FbcParamConfig('fbclid', '', 'clickID'),
+      new FbcParamConfig('query', 'test', 'test123')
+    ];
+    const updated_cookies = builder.processRequest(
+        'https://a.builder.example.com:8080',
+        {
+          'abcd': 'efg',
+          'query': 'placeholder2'
+        },
+        null,
+        'example.com?fbclid=test123_test_balabala'
+    );
+    expect(updated_cookies.length).toEqual(2);
+    expect(builder.getFbc()).toEqual("fb.2." + DUMMY_TIMESTAMP + ".test123_test_balabala." + DUMMY_APPENDIX_NEW);
+    expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
+  });
 });

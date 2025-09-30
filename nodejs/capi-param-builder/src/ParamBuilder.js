@@ -120,8 +120,15 @@ class ParamBuilder {
 
       _buildParamConfigs(existing_payload, query, prefix, value) {
         const isClickID = query === Constants.FBCLID_STRING;
-        existing_payload += (isClickID?'':'_') + prefix + (isClickID?'':'_') + value;
-        return existing_payload;
+        const separator = isClickID ? '' : '_';
+
+        // Prevent duplication
+        if (!isClickID && existing_payload.includes(`${separator}${prefix}${separator}`)) {
+          return existing_payload;
+        }
+
+        const newSegment = `${prefix}${separator}${value}`;
+        return existing_payload !== '' ? `${existing_payload}${separator}${newSegment}` : newSegment;
       }
 
       processRequest(host, queries, cookies, referer = null) {
