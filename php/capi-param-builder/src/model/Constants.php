@@ -7,6 +7,34 @@
  */
 namespace FacebookAds;
 
+class PII_DATA_TYPE {
+    const EMAIL = 'email';
+    const PHONE = 'phone';
+    const DATE_OF_BIRTH = 'date_of_birth';
+    const GENDER = 'gender';
+    const FIRST_NAME = 'first_name';
+    const LAST_NAME = 'last_name';
+    const CITY = 'city';
+    const STATE = 'state';
+    const COUNTRY = 'country';
+    const EXTERNAL_ID = 'external_id';
+
+    public static function values() {
+        return [
+            self::EMAIL,
+            self::PHONE,
+            self::DATE_OF_BIRTH,
+            self::GENDER,
+            self::FIRST_NAME,
+            self::LAST_NAME,
+            self::CITY,
+            self::STATE,
+            self::COUNTRY,
+            self::EXTERNAL_ID,
+        ];
+    }
+}
+
 define('DEFAULT_1PC_AGE', 90 *  24 * 3600);
 define('LANGUAGE_TOKEN', 'AQ');
 define('MIN_PAYLOAD_SPLIT_LENGTH', 4);
