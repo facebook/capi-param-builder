@@ -9,8 +9,8 @@
 namespace FacebookAds;
 
 require_once __DIR__ . '/../model/Constants.php';
-require_once __DIR__ . '/EmailUtils.php';
-require_once __DIR__ . '/PhoneUtils.php';
+require_once __DIR__ . '/EmailUtil.php';
+require_once __DIR__ . '/PhoneUtil.php';
 
 class PIIUtil
 {

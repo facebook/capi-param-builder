@@ -9,7 +9,7 @@
 use PHPUnit\Framework\TestCase;
 use FacebookAds\EmailUtil;
 
-require_once __DIR__ . '/../src/piiUtil/EmailUtils.php';
+require_once __DIR__ . '/../src/piiUtil/EmailUtil.php';
 
 final class EmailUtilTest extends TestCase
 {

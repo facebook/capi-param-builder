@@ -9,7 +9,7 @@
 use PHPUnit\Framework\TestCase;
 use FacebookAds\PhoneUtil;
 
-require_once __DIR__ . '/../src/piiUtil/PhoneUtils.php';
+require_once __DIR__ . '/../src/piiUtil/PhoneUtil.php';
 
 final class PhoneUtilTest extends TestCase
 {
