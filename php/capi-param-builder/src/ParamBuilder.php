@@ -11,7 +11,6 @@ namespace FacebookAds;
 require 'model/Constants.php';
 require 'model/FbcParamConfig.php';
 require 'model/CookieSettings.php';
-require 'piiUtil/piiUtil.php';
 
 final class ParamBuilder
 {

@@ -9,6 +9,7 @@
 namespace FacebookAds;
 
 require_once __DIR__ . '/../model/Constants.php';
+require_once __DIR__ . '/EmailUtil.php';
 
 class PIIUtil
 {
@@ -25,6 +26,10 @@ class PIIUtil
     }
 
     $normalizedPII = $piiValue;
+
+    if ($dataType === PII_DATA_TYPE::EMAIL) {
+      $normalizedPII = EmailUtil::getNormalizedEmail($piiValue);
+    }
 
     return $normalizedPII;
   }
