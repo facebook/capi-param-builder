@@ -44,8 +44,17 @@ public class CookieUtils {
   }
 
   private void buildParamConfigs(StringBuilder builder, String query, String prefix, String value) {
-    boolean isClickID = query == Constants.FBCLID_STRING ? true : false;
-    builder.append(isClickID ? "" : "_").append(prefix).append(isClickID ? "" : "_").append(value);
+    boolean isClickID = Constants.FBCLID_STRING.equals(query);
+    String separator = isClickID ? "" : "_";
+
+    // Prevent duplication
+    if (!isClickID && builder.indexOf(separator + prefix + separator) != -1) {
+      return;
+    }
+    if (builder.length() != 0) {
+      builder.append(separator);
+    }
+    builder.append(prefix).append(separator).append(value);
   }
 
   /**

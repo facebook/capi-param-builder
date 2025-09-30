@@ -155,4 +155,35 @@ public class CookieUtilsTest {
     CookieSetting result = cookieUtils.getUpdatedFbpCookie("fbp_test", updatedCookiesMap);
     assertThat(result).isNull();
   }
+
+  @Test
+  @DisplayName("Testing getNewFbcPayloadFromQuery with customized params config")
+  void testGetNewFbcPayloadWithCustomizedParamsConfig() {
+    CookieUtils cookieUtilsWithParamsConfig =
+        new CookieUtils(
+            new ArrayList<FbcParamConfig>(
+                Arrays.asList(
+                    new FbcParamConfig(Constants.FBCLID_STRING, "", Constants.CLICK_ID_STRING),
+                    new FbcParamConfig("example", "test", "placeholder"))));
+    // Not needed query
+    queryMap.put("whatevertest", new String[] {"test123"});
+    assertThat(cookieUtilsWithParamsConfig.getNewFbcPayloadFromQuery(queryMap, null)).isNull();
+    // Matched the customized params config
+    queryMap.put("example", new String[] {"test123"});
+    assertThat(cookieUtilsWithParamsConfig.getNewFbcPayloadFromQuery(queryMap, null))
+        .isEqualTo("test_test123");
+    // with fbclid
+    assertThat(
+            cookieUtilsWithParamsConfig.getNewFbcPayloadFromQuery(queryMap, "test.com?fbclid=bar"))
+        .isEqualTo("bar_test_test123");
+    queryMap.put(Constants.FBCLID_STRING, new String[] {"test456"});
+    assertThat(
+            cookieUtilsWithParamsConfig.getNewFbcPayloadFromQuery(queryMap, "test.com?fbclid=bar"))
+        .isEqualTo("test456_test_test123");
+    // duplication name
+    queryMap.put(Constants.FBCLID_STRING, new String[] {"test456_test_abc"});
+    assertThat(
+            cookieUtilsWithParamsConfig.getNewFbcPayloadFromQuery(queryMap, "test.com?fbclid=bar"))
+        .isEqualTo("test456_test_abc");
+  }
 }

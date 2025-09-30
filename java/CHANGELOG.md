@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### v1.0.3
+- Improve paramConfigs quality by removing leading separator and add duplication check
+
 ## v1.0.2
 - Modify existing APIs for source code to compatible with Java 8.
 
