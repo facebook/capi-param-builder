@@ -11,12 +11,12 @@
 // Ideally how it works,
 // Eg. input:www.example.com. output: example.com
 // Eg. Input: www.this.is.an.example.co.uk. Output: example.co.uk.
-class ETLDPlus1ResolverForTest implements FacebookAds\ETLDPlus1Resolver {
+class ETLDPlus1ResolverForTest implements FacebookAds\ETLDPlus1Resolver
+{
 
-    public function resolveETLDPlus1($domain) {
+    public function resolveETLDPlus1($domain)
+    {
         // Your implementation
         return $domain;
     }
 }
-
-?>

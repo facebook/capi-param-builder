@@ -40,4 +40,3 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 // TODO: send the request
 
 echo json_encode(['status' => 'success', 'data' => $data]);
-?>

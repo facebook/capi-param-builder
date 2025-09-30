@@ -15,34 +15,41 @@ FacebookParamManager::getInstance()->processThisRequest();
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cookie Consent</title>
-<link rel="stylesheet" href="/public/styles.css">
-</head>
-<body>
-<div id="cookieConsentContainer" class="cookie-consent-container">
-  <div class="content">
-    <p>This website uses cookies to ensure you get the best experience on our website.</p>
-    <button onclick="onAcceptCookieConsentClick()">Accept</button>
-  </div>
-</div>
 
-<script src="/public/cookie-consent.js"></script>
-<script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Consent</title>
+  <link rel="stylesheet" href="/public/styles.css">
+</head>
+
+<body>
+  <div id="cookieConsentContainer" class="cookie-consent-container">
+    <div class="content">
+      <p>
+        This website uses cookies to ensure you get the best experience on our
+        website.
+      </p>
+      <button onclick="onAcceptCookieConsentClick()">Accept</button>
+
+    </div>
+  </div>
+
+  <script src="/public/cookie-consent.js"></script>
+  <script>
     if (getCookie("cookiesAccepted") == 'true') {
-        logPageViewEvent();
+      logPageViewEvent();
     }
 
     function onAcceptCookieConsentClick() {
-        acceptCookies();
-        logPageViewEvent();
+      acceptCookies();
+      logPageViewEvent();
     }
 
     function logPageViewEvent() {
-        fetch('/log_event.php?event_name=PageView');
+      fetch('/log_event.php?event_name=PageView');
     }
-</script>
+  </script>
 </body>
+
 </html>

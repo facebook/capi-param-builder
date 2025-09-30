@@ -5,9 +5,11 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 namespace FacebookAds;
 
-class PII_DATA_TYPE {
+class PII_DATA_TYPE
+{
     const EMAIL = 'email';
     const PHONE = 'phone';
     const DATE_OF_BIRTH = 'date_of_birth';
@@ -19,7 +21,8 @@ class PII_DATA_TYPE {
     const COUNTRY = 'country';
     const EXTERNAL_ID = 'external_id';
 
-    public static function values() {
+    public static function values()
+    {
         return [
             self::EMAIL,
             self::PHONE,
@@ -45,5 +48,4 @@ define('FBP_NAME', '_fbp');
 define('FBI_NAME', '_fbi');
 define('FBCLID', 'fbclid');
 define('CLICK_ID_STRING', 'click_id');
-define('FB_PREFIX', 'fb')
-?>
+define('FB_PREFIX', 'fb');

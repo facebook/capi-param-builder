@@ -5,12 +5,16 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 namespace FacebookAds;
+
 require 'model/Constants.php';
 require 'model/FbcParamConfig.php';
 require 'model/CookieSettings.php';
+require 'piiUtil/piiUtil.php';
 
-final class ParamBuilder {
+final class ParamBuilder
+{
     private $fbc_param_configs;
     private $etld_plus1_resolver;
     private $domain_list;
@@ -30,7 +34,8 @@ final class ParamBuilder {
     private $cookies_to_set_array = [];
 
     public function __construct(
-            $params = null) {
+        $params = null
+    ) {
         $this->fbc_param_configs = array(
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING)
         );
@@ -42,13 +47,15 @@ final class ParamBuilder {
             foreach ($params as $domain) {
                 array_push(
                     $this->domain_list,
-                    ParamBuilder::extractHostFromHttpHost($domain));
+                    ParamBuilder::extractHostFromHttpHost($domain)
+                );
             }
         }
     }
 
     // pre-process cookie if it exists
-    private function preProcess($cookie, $cookie_name, $host) {
+    private function preProcess($cookie, $cookie_name, $host)
+    {
         if (empty($cookie[$cookie_name])) {
             return null;
         }
@@ -58,8 +65,10 @@ final class ParamBuilder {
         $updated_cookie = null;
 
         // Invalid length
-        if ($slice_length > PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN
-            || $slice_length < MIN_PAYLOAD_SPLIT_LENGTH) {
+        if (
+            $slice_length > PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN
+            || $slice_length < MIN_PAYLOAD_SPLIT_LENGTH
+        ) {
             return null;
         }
 
@@ -67,25 +76,29 @@ final class ParamBuilder {
         if ($slice_length == MIN_PAYLOAD_SPLIT_LENGTH) {
             $contains_extra_dot = empty($slices[MIN_PAYLOAD_SPLIT_LENGTH - 1]);
             $updated_cookie = $cookie_value
-                .($contains_extra_dot?'':'.')
-                .LANGUAGE_TOKEN;
+                . ($contains_extra_dot ? '' : '.')
+                . LANGUAGE_TOKEN;
         }
 
         // Cookie exist, contains language token. Validate it
-        if ($slice_length == PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN &&
+        if (
+            $slice_length == PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN &&
             !in_array(
-                    $slices[PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN - 1],
-                    SUPPORTED_LANGUAGES_TOKEN)) {
+                $slices[PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN - 1],
+                SUPPORTED_LANGUAGES_TOKEN
+            )
+        ) {
             return null;
         }
         // Update cookie
         if (!empty($updated_cookie)) {
             $this->computeETLDPlus1ForHost($host);
             $this->cookies_to_set[$cookie_name] = new CookieSettings(
-                    $cookie_name,
-                    $updated_cookie,
-                    DEFAULT_1PC_AGE,
-                    $this->etld_plus_1);
+                $cookie_name,
+                $updated_cookie,
+                DEFAULT_1PC_AGE,
+                $this->etld_plus_1
+            );
             return $updated_cookie;
         }
 
@@ -96,15 +109,17 @@ final class ParamBuilder {
         $existing_payload,
         $query,
         $prefix,
-        $value) {
+        $value
+    ) {
 
         $isClickID = $query == FBCLID;
         return
-            $existing_payload.($isClickID ? "" : "_")
-                .$prefix.($isClickID ? "" : "_").$value;
+            $existing_payload . ($isClickID ? "" : "_")
+            . $prefix . ($isClickID ? "" : "_") . $value;
     }
 
-    private function getNewFbcPayloadFromQuery($queries, $referer = null) {
+    private function getNewFbcPayloadFromQuery($queries, $referer = null)
+    {
         $param_value = '';
         // Get referer queries
         $referer_queries = '';
@@ -123,18 +138,20 @@ final class ParamBuilder {
         }
 
         foreach ($this->fbc_param_configs as $param_config) {
-            if(!empty($queries[$param_config->query])) {
+            if (!empty($queries[$param_config->query])) {
                 $param_value = ParamBuilder::buildParamConfigs(
                     $param_value,
                     $param_config->query,
                     $param_config->prefix,
-                    $queries[$param_config->query]);
+                    $queries[$param_config->query]
+                );
             } else if (!empty($referer_queries[$param_config->query])) {
                 $param_value = ParamBuilder::buildParamConfigs(
                     $param_value,
                     $param_config->query,
                     $param_config->prefix,
-                    $referer_queries[$param_config->query]);
+                    $referer_queries[$param_config->query]
+                );
             }
         }
         if (!empty($param_value)) {
@@ -143,7 +160,8 @@ final class ParamBuilder {
         return null;
     }
 
-    private function shouldUpdateFbc($new_fbc_payload) {
+    private function shouldUpdateFbc($new_fbc_payload)
+    {
         if (empty($new_fbc_payload)) {
             return false;
         }
@@ -154,8 +172,10 @@ final class ParamBuilder {
         $slices = explode(".", $this->fbc);
         $slices_length = count($slices);
         // Length validation
-        if ($slices_length >= MIN_PAYLOAD_SPLIT_LENGTH
-            && $slices_length <= PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN) {
+        if (
+            $slices_length >= MIN_PAYLOAD_SPLIT_LENGTH
+            && $slices_length <= PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN
+        ) {
             return $new_fbc_payload != $slices[MIN_PAYLOAD_SPLIT_LENGTH - 1];
         }
         // Invalid length
@@ -181,7 +201,9 @@ final class ParamBuilder {
         $this->fbp = ParamBuilder::preProcess($cookies, FBP_NAME, $host);
 
         $new_fbc_payload = ParamBuilder::getNewFbcPayloadFromQuery(
-            $queries, $referer);
+            $queries,
+            $referer
+        );
 
         // Set payload if it's not empty
         if (ParamBuilder::shouldUpdateFbc($new_fbc_payload)) {
@@ -193,10 +215,11 @@ final class ParamBuilder {
                 '.' . $new_fbc_payload .
                 '.' . LANGUAGE_TOKEN;
             $this->cookies_to_set[FBC_NAME] = new CookieSettings(
-                    FBC_NAME,
-                    $this->fbc,
-                    DEFAULT_1PC_AGE,
-                    $this->etld_plus_1);
+                FBC_NAME,
+                $this->fbc,
+                DEFAULT_1PC_AGE,
+                $this->etld_plus_1
+            );
         }
 
         // set fbp if none exists
@@ -208,12 +231,13 @@ final class ParamBuilder {
                 '.' . $this->sub_domain_index .
                 '.' . $drop_ts .
                 '.' . $new_fbp_payload .
-                '.'.LANGUAGE_TOKEN;
+                '.' . LANGUAGE_TOKEN;
             $this->cookies_to_set[FBP_NAME] = new CookieSettings(
-                    FBP_NAME,
-                    $this->fbp,
-                    DEFAULT_1PC_AGE,
-                    $this->etld_plus_1);
+                FBP_NAME,
+                $this->fbp,
+                DEFAULT_1PC_AGE,
+                $this->etld_plus_1
+            );
         }
 
         $this->fbi = ParamBuilder::getClientIp(
@@ -226,32 +250,39 @@ final class ParamBuilder {
         return $this->cookies_to_set_array;
     }
 
-    public function getCookiesToSet() {
+    public function getCookiesToSet()
+    {
         return $this->cookies_to_set_array;
     }
 
-    public function getFbc() {
+    public function getFbc()
+    {
         return $this->fbc;
     }
 
-    public function getFbp() {
+    public function getFbp()
+    {
         return $this->fbp;
     }
 
-     public function getFbi() {
+    public function getFbi()
+    {
         return $this->fbi;
     }
 
     // TODO: this needs optimizatino, maybe use a DAFSA format,
     // or some type of x-request cache
-    private function computeETLDPlus1ForHost($host) {
+    private function computeETLDPlus1ForHost($host)
+    {
         if ($this->etld_plus_1 === null || $this->host !== $host) {
             // in case a new host is passed in for the same request
             $this->host = $host;
             $host = ParamBuilder::extractHostFromHttpHost($host);
 
-            if (ParamBuilder::isIPAddress($host)
-                || strpos($host, '.') === false) {
+            if (
+                ParamBuilder::isIPAddress($host)
+                || strpos($host, '.') === false
+            ) {
                 $this->etld_plus_1 = ParamBuilder::maybeBracketIPv6($host);
                 $this->sub_domain_index = 0;
             } else {
@@ -262,15 +293,18 @@ final class ParamBuilder {
         }
     }
 
-    private function getEtldPlusOne($host) {
+    private function getEtldPlusOne($host)
+    {
         if ($this->etld_plus1_resolver !== null) {
             return $this->etld_plus1_resolver->resolveETLDPlus1($host);
         } else if ($this->domain_list !== null) {
             foreach ($this->domain_list as $domain_candidate) {
                 $lastOccurrence = strpos($host, $domain_candidate);
-                if ($lastOccurrence !== false
+                if (
+                    $lastOccurrence !== false
                     && $lastOccurrence ===
-                        strlen($host) - strlen($domain_candidate)) {
+                    strlen($host) - strlen($domain_candidate)
+                ) {
                     if ($host[$lastOccurrence - 1] === '.') {
                         return $domain_candidate;
                     }
@@ -287,7 +321,8 @@ final class ParamBuilder {
     }
 
     // extract real host from HTTP 'Host' header, it may contain :port section
-    private static function extractHostFromHttpHost($value) {
+    private static function extractHostFromHttpHost($value)
+    {
         // check and strip protocol
         if (strpos($value, '://') !== false) {
             $value = substr($value, strpos($value, '://') + 3);
@@ -317,7 +352,8 @@ final class ParamBuilder {
         return $value;
     }
 
-    private static function maybeBracketIPv6($value) {
+    private static function maybeBracketIPv6($value)
+    {
         if (strpos($value, ':') !== false) {
             return '[' . $value . ']';
         } else {
@@ -325,12 +361,14 @@ final class ParamBuilder {
         }
     }
 
-    private static function isIPAddress($value) {
+    private static function isIPAddress($value)
+    {
         return filter_var($value, FILTER_VALIDATE_IP) !== false;
     }
 
     // $ip is a valid IPv4 address
-    private static function isIPv4($value){
+    private static function isIPv4($value)
+    {
         return filter_var(
             $value,
             FILTER_VALIDATE_IP,
@@ -340,7 +378,8 @@ final class ParamBuilder {
 
 
     // $ip is a valid IPv6 address
-    private static function isIPv6($value) {
+    private static function isIPv6($value)
+    {
         return filter_var(
             $value,
             FILTER_VALIDATE_IP,
@@ -350,7 +389,8 @@ final class ParamBuilder {
 
     // Function to check if an IP address is public
     // Filtering both private and loopback IPs
-    private static function isPublicIP($value){
+    private static function isPublicIP($value)
+    {
         return filter_var(
             $value,
             FILTER_VALIDATE_IP,
@@ -366,9 +406,9 @@ final class ParamBuilder {
         $client_ip_from_cookie = null;
 
         if (!empty($cookies[FBI_NAME])) {
-                $cookie_value = $cookies[FBI_NAME];
-                $client_ip_from_cookie =
-                    ParamBuilder::removeLanguageToken($cookie_value);
+            $cookie_value = $cookies[FBI_NAME];
+            $client_ip_from_cookie =
+                ParamBuilder::removeLanguageToken($cookie_value);
         }
 
         return $client_ip_from_cookie;
@@ -380,15 +420,16 @@ final class ParamBuilder {
         $client_ip_language_token_from_cookie = null;
 
         if (!empty($cookies[FBI_NAME])) {
-                $cookie_value = $cookies[FBI_NAME];
-                $client_ip_language_token_from_cookie =
-                    ParamBuilder::getLanguageToken($cookie_value);
+            $cookie_value = $cookies[FBI_NAME];
+            $client_ip_language_token_from_cookie =
+                ParamBuilder::getLanguageToken($cookie_value);
         }
 
         return $client_ip_language_token_from_cookie;
     }
 
-    private static function removeLanguageToken($input) {
+    private static function removeLanguageToken($input)
+    {
         // Find the position of the last dot
         $lastDot = strrpos($input, '.');
         if ($lastDot !== false) {
@@ -400,7 +441,8 @@ final class ParamBuilder {
         return $input;
     }
 
-    private static function getLanguageToken($input) {
+    private static function getLanguageToken($input)
+    {
         // Find the position of the last dot
         $lastDot = strrpos($input, '.');
         if ($lastDot !== false) {
@@ -421,7 +463,7 @@ final class ParamBuilder {
             // X-Forwarded-For can contain multiple IPs, take the first one
             $ips = explode(',', $x_forwarded_for);
             $ip = trim($ips[0]);
-            if(ParamBuilder::isPublicIP($ip)){
+            if (ParamBuilder::isPublicIP($ip)) {
                 return $ip;
             }
         }
@@ -432,7 +474,7 @@ final class ParamBuilder {
         $cookies,
         $x_forwarded_for,
         $remote_address
-    ){
+    ) {
         $best_client_ip = null;
 
         $client_ip_from_cookie = ParamBuilder::getClientIpFromCookie($cookies);
@@ -471,38 +513,35 @@ final class ParamBuilder {
         if (
             $client_ip_from_cookie_is_IPv6 &&
             $client_ip_from_cookie_is_public_ip
-        ){
+        ) {
             $best_client_ip = $client_ip_from_cookie . '.' .
-            (
-                $client_ip_language_token_from_cookie
+                (
+                    $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
                     : LANGUAGE_TOKEN
-            );
-        }else if (
+                );
+        } else if (
             $client_ip_from_request_is_IPv6 &&
             $client_ip_from_request_is_public_ip
         ) {
-            $best_client_ip = $client_ip_from_request.'.'.LANGUAGE_TOKEN;
-        }else if (
+            $best_client_ip = $client_ip_from_request . '.' . LANGUAGE_TOKEN;
+        } else if (
             $client_ip_from_cookie_is_IPv4 &&
             $client_ip_from_cookie_is_public_ip
         ) {
             $best_client_ip = $client_ip_from_cookie . '.' .
-            (
-                $client_ip_language_token_from_cookie
+                (
+                    $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
                     : LANGUAGE_TOKEN
-            );
-        }else if(
+                );
+        } else if (
             $client_ip_from_request_is_IPv4 &&
             $client_ip_from_request_is_public_ip
         ) {
-            $best_client_ip = $client_ip_from_request.'.'.LANGUAGE_TOKEN;
+            $best_client_ip = $client_ip_from_request . '.' . LANGUAGE_TOKEN;
         }
 
         return $best_client_ip;
-
     }
 }
-
-?>
