@@ -132,6 +132,51 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
+    def test_process_request_with_param_config_override_partially_exist(self) -> None:
+        builder = ParamBuilder(["example.com"])
+        builder.fbc_param_configs: List[FbcParamConfigs] = [
+            FbcParamConfigs("fbclid", "", "clickID"),
+            FbcParamConfigs("query", "test", "placeholder"),
+        ]
+        res = builder.process_request(
+            "https://balabala.test.example.com",
+            {"query": "anotherTest"},
+            None,
+        )
+        self.assertEqual(2, len(res))
+        for cookie in res:
+            if cookie.name == "_fbc":
+                self.assertTrue((cookie.value).endswith(".test_anotherTest.Ag"))
+                self.assertEqual("example.com", cookie.domain)
+            else:
+                self.assertEqual("_fbp", cookie.name)
+                self.assertTrue((cookie.value).endswith(".Ag"))
+        self.assertEqual(res, builder.get_cookies_to_set())
+        pass
+
+    def test_process_request_with_param_config_override_duplication(self) -> None:
+        builder = ParamBuilder(["example.com"])
+        builder.fbc_param_configs: List[FbcParamConfigs] = [
+            FbcParamConfigs("fbclid", "", "clickID"),
+            FbcParamConfigs("query", "test", "placeholder"),
+        ]
+        res = builder.process_request(
+            "https://balabala.test.example.com",
+            {"query": "anotherTest"},
+            None,
+            "https://balabala.test.example.com?fbclid=testReferral_test_sample",
+        )
+        self.assertEqual(2, len(res))
+        for cookie in res:
+            if cookie.name == "_fbc":
+                self.assertTrue((cookie.value).endswith(".testReferral_test_sample.Ag"))
+                self.assertEqual("example.com", cookie.domain)
+            else:
+                self.assertEqual("_fbp", cookie.name)
+                self.assertTrue((cookie.value).endswith(".Ag"))
+        self.assertEqual(res, builder.get_cookies_to_set())
+        pass
+
     def test_process_request_domain_list_constructor_with_fbclid(self) -> None:
         builder = ParamBuilder(["example.com"])
         res = builder.process_request(

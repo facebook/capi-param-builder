@@ -23,6 +23,7 @@ IPV4_REGEX: Final[str] = "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$"
 IPV6_SEG_REGEX: Final[str] = "^([0-9a-fA-F]{0,4}:)+"
 FBC_COOKIE_NAME: Final[str] = "_fbc"
 FBP_COOKIE_NAME: Final[str] = "_fbp"
+FBCLID_QUERY_PARAMS: Final[str] = "fbclid"
 
 
 class ParamBuilder:
@@ -35,7 +36,7 @@ class ParamBuilder:
         Initial the params
         """
         self.fbc_param_configs: List[FbcParamConfigs] = [
-            FbcParamConfigs("fbclid", "", "clickID")
+            FbcParamConfigs(FBCLID_QUERY_PARAMS, "", "clickID")
         ]
         self.fbc: Optional[str] = None
         self.fbp: Optional[str] = None
@@ -128,15 +129,22 @@ class ParamBuilder:
         prefix: str,
         value: str,
     ) -> str:
-        is_click_id = current_query == "fbclid"
-        existing_payload = (
-            (existing_payload or "")
-            + ("" if is_click_id else "_")
-            + prefix
-            + ("" if is_click_id else "_")
-            + value
+        is_click_id = current_query == FBCLID_QUERY_PARAMS
+        separator = "" if is_click_id else "_"
+        # Prevent duplication
+        if (
+            existing_payload is not None
+            and f"{separator}{prefix}{separator}" in existing_payload
+        ):
+            return existing_payload
+
+        new_segment = f"{prefix}{separator}{value}"
+
+        return (
+            f"{existing_payload}{separator}{new_segment}"
+            if existing_payload
+            else new_segment
         )
-        return existing_payload
 
     def process_request(
         self,
