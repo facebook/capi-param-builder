@@ -8,7 +8,7 @@
 
 namespace FacebookAds;
 
-require_once __DIR__ . '/sharedUtil.php';
+require_once __DIR__ . '/SharedUtils.php';
 
 class EmailUtil
 {
