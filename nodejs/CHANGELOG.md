@@ -4,11 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### v1.1.0
-Improve appendix with more details: adding current SDK version number, is_new and language token.
-Minor improvement on paramConfig
+## v1.1.0
 
----
+### Improve
+- Improve appendix with more details: adding current SDK version number, is_new and language token.
+- Minor improvement on paramConfig
 
 ## v1.0.2
 
