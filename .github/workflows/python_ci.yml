@@ -5,7 +5,9 @@ on:
     paths:
       - 'python/**'
     tags-ignore:
-      - '*'          # Ignores all tag pushes
+      - 'v*'          # Ignores all tag pushes
+    branches:
+      - '**'
   pull_request:
     paths:
       - 'python/**'

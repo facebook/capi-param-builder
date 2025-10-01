@@ -6,6 +6,8 @@ on:
       - 'nodejs/**'
     tags-ignore:
       - 'v*'          # Ignores version tag pushes
+    branches:
+      - '**'
   pull_request:
     paths:
       - 'nodejs/**'
