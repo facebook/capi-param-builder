@@ -110,11 +110,16 @@ final class ParamBuilder
         $prefix,
         $value
     ) {
-
         $isClickID = $query == FBCLID;
-        return
-            $existing_payload . ($isClickID ? "" : "_")
-            . $prefix . ($isClickID ? "" : "_") . $value;
+        $separator = $isClickID ? "" : "_";
+        // Remove duplication
+        if (!empty($existing_payload)
+            && strpos($existing_payload, $separator.$prefix.$separator)) {
+            return $existing_payload;
+        }
+        $new_segments = $prefix.$separator.$value;
+        return empty($existing_payload) ?
+            $new_segments: $existing_payload.$separator.$new_segments;
     }
 
     private function getNewFbcPayloadFromQuery($queries, $referer = null)

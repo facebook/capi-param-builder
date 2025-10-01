@@ -1,6 +1,6 @@
 {
   "name": "facebook/capi-param-builder-php",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Parameter builder SDK for Conversion API events",
   "require": {
     "php": ">=7.4"

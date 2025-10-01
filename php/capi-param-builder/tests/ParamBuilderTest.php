@@ -204,6 +204,60 @@ final class ParamBuilderTest extends TestCase
         $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
     }
 
+     public function testConstructorWithParamConfigsWithCustomizedConfigOnly() {
+        // Mock param configs
+        $builderWithParamConfig = new ParamBuilder();
+        $reflector = new ReflectionClass($builderWithParamConfig);
+        // Update params configs
+        $property = $reflector->getProperty('fbc_param_configs');
+        $property->setAccessible(true);
+        $property->setValue($builderWithParamConfig, array(
+            new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
+            new FbcParamConfig("query", 'test', "test_string"),
+        ));
+        $result = $builderWithParamConfig->processRequest(
+            'a.b.walmart.com:8080',
+            array(
+                'test' => 'balabala',
+                'query' => 'test123',
+            ),
+            [],
+            "https://walmart.com?invalid=rabc&query=rtest123"
+        );
+        $this->assertIsString($builderWithParamConfig->getFbc());
+        $this->assertStringEndsWith('.test_test123.AQ',
+            $builderWithParamConfig->getFbc());
+        $this->assertIsString($builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+    }
+
+    public function testConstructorWithParamConfigsWithDuplication() {
+        // Mock param configs
+        $builderWithParamConfig = new ParamBuilder();
+        $reflector = new ReflectionClass($builderWithParamConfig);
+        // Update params configs
+        $property = $reflector->getProperty('fbc_param_configs');
+        $property->setAccessible(true);
+        $property->setValue($builderWithParamConfig, array(
+            new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
+            new FbcParamConfig("query", 'test', "test_string"),
+        ));
+        $result = $builderWithParamConfig->processRequest(
+            'a.b.walmart.com:8080',
+            array(
+                'fbclid' => 'sample456_test_123',
+                'query' => 'test123',
+            ),
+            [],
+            "https://walmart.com?fbclid=rabc&query=rtest123"
+        );
+        $this->assertIsString($builderWithParamConfig->getFbc());
+        $this->assertStringEndsWith('.sample456_test_123.AQ',
+            $builderWithParamConfig->getFbc());
+        $this->assertIsString($builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+    }
+
     public function testProcessRequest()
     {
         $builder = new ParamBuilder();
