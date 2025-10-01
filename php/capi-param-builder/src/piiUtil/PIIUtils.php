@@ -11,6 +11,7 @@ namespace FacebookAds;
 require_once __DIR__ . '/../model/Constants.php';
 require_once __DIR__ . '/EmailUtils.php';
 require_once __DIR__ . '/PhoneUtils.php';
+require_once __DIR__ . '/DOBUtils.php';
 
 class PIIUtils
 {
@@ -32,6 +33,8 @@ class PIIUtils
       $normalizedPII = EmailUtils::getNormalizedEmail($piiValue);
     } else if ($dataType === PII_DATA_TYPE::PHONE) {
       $normalizedPII = PhoneUtils::getNormalizedPhone($piiValue);
+    } else if ($dataType === PII_DATA_TYPE::DATE_OF_BIRTH) {
+      $normalizedPII = DOBUtils::getNormalizedDOB($piiValue);
     }
 
     return $normalizedPII;
