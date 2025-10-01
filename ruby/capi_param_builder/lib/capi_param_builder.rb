@@ -68,10 +68,18 @@ class ParamBuilder
   private def build_param_configs(
       existing_payload, current_query, prefix, value)
     is_click_id = current_query == "fbclid"
-    existing_payload ||= ""
-    existing_payload += \
-      [is_click_id ? "" : "_", prefix, is_click_id ? "" : "_", value].join
-    return existing_payload
+    separator = is_click_id ? "" : "_"
+
+    # Prevent duplication
+    duplication_pattern = "#{separator}#{prefix}#{separator}"
+    if !existing_payload.nil? && existing_payload.include?(duplication_pattern)
+      return existing_payload
+    end
+
+    new_segment = "#{prefix}#{separator}#{value}"
+
+    return existing_payload && !existing_payload.empty? ?
+      "#{existing_payload}#{separator}#{new_segment}" : new_segment
   end
 
   private def get_new_fbc_payload_from_url(queries, referer=nil)

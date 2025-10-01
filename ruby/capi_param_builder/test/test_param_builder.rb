@@ -190,6 +190,59 @@ class TestParamBuilder < Minitest::Test
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
     end
 
+    def test_process_request_with_param_config_with_customized_config_only
+        builder = ParamBuilder.new(["https://example.com"])
+        builder.instance_variable_set(:@fbc_params_configs,
+            [
+                FbcParamConfigs.new("query", "test1", "placeholder")
+            ])
+        cookie_to_update = builder.process_request(
+            "this.is.a.test.example.com:9000",
+            {"fbclid"=>"test123", "query"=>"test2"},
+            {},
+        )
+        assert_equal(2, cookie_to_update.size())
+        for cookie in cookie_to_update do
+            if cookie.name == ParamBuilder::FBC_NAME
+                assert_contains(".test1_test2.BQ", cookie.value)
+                assert_contains("fb.1.", cookie.value)
+                assert_equal("example.com", cookie.domain)
+            else
+                assert_equal(ParamBuilder::FBP_NAME, cookie.name)
+                assert_contains("fb.1.", cookie.value)
+                assert_contains(".BQ", cookie.value)
+            end
+        end
+        assert_equal(cookie_to_update, builder.get_cookies_to_set())
+    end
+
+    def test_process_request_with_param_config_with_duplication
+        builder = ParamBuilder.new(["https://example.com"])
+        builder.instance_variable_set(:@fbc_params_configs,
+            [
+                FbcParamConfigs.new("fbclid", "", "clickID"),
+                FbcParamConfigs.new("query", "test1", "placeholder")
+            ])
+        cookie_to_update = builder.process_request(
+            "this.is.a.test.example.com:9000",
+            {"fbclid"=>"test123_test1_test456", "query"=>"test2"},
+            {},
+        )
+        assert_equal(2, cookie_to_update.size())
+        for cookie in cookie_to_update do
+            if cookie.name == ParamBuilder::FBC_NAME
+                assert_contains(".test123_test1_test456.BQ", cookie.value)
+                assert_contains("fb.1.", cookie.value)
+                assert_equal("example.com", cookie.domain)
+            else
+                assert_equal(ParamBuilder::FBP_NAME, cookie.name)
+                assert_contains("fb.1.", cookie.value)
+                assert_contains(".BQ", cookie.value)
+            end
+        end
+        assert_equal(cookie_to_update, builder.get_cookies_to_set())
+    end
+
 
     def test_process_request_with_param_config_update_referer
         builder = ParamBuilder.new(["https://example.com"])
@@ -200,14 +253,14 @@ class TestParamBuilder < Minitest::Test
             ])
         cookie_to_update = builder.process_request(
             "this.is.a.test.example.com:9000",
-            {"utm"=>"test"},
+            {"query"=>"placeholder"},
             {},
             "https://example.com?fbclid=wer&query=test3"
         )
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".wer_test1_test3.BQ", cookie.value)
+                assert_contains(".wer_test1_placeholder.BQ", cookie.value)
                 assert_contains("fb.1.", cookie.value)
                 assert_equal("example.com", cookie.domain)
             else
