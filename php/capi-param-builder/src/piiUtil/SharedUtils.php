@@ -8,7 +8,7 @@
 
 namespace FacebookAds;
 
-class SharedUtil
+class SharedUtils
 {
   public static function looksLikeHashed($input)
   {

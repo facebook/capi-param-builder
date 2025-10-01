@@ -7,17 +7,17 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use FacebookAds\PhoneUtil;
+use FacebookAds\PhoneUtils;
 
-require_once __DIR__ . '/../src/piiUtil/PhoneUtil.php';
+require_once __DIR__ . '/../src/piiUtil/PhoneUtils.php';
 
-final class PhoneUtilTest extends TestCase
+final class PhoneUtilsTest extends TestCase
 {
   public function testGetNormalizedPhoneWithExampleData1()
   {
     $phone = '8df99a46f811595e1a1de5016e2445bc202f72b946482032a75aec528a0a350d';
     $expected = '8df99a46f811595e1a1de5016e2445bc202f72b946482032a75aec528a0a350d';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -25,7 +25,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+1 (616) 954-78 88';
     $expected = '16169547888';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -33,7 +33,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '1(650)123-4567';
     $expected = '16501234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -41,7 +41,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+001 (616) 954-78 88';
     $expected = '16169547888';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -49,7 +49,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '01(650)123-4567';
     $expected = '16501234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -57,7 +57,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '  4792813113';
     $expected = '4792813113';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -65,7 +65,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '  3227352263';
     $expected = '3227352263';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -73,7 +73,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = "alreadyHasPhoneCode: false; countryCode: 'US'; phoneCode: '1'; phoneNumber: '(650)123-4567'";
     $expected = '16501234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -81,7 +81,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = "alreadyHasPhoneCode: false; phoneCode: '+86'; phoneNumber: '12345678'";
     $expected = '8612345678';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -89,7 +89,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = "alreadyHasPhoneCode: true; phoneNumber: '322-735-2263'";
     $expected = '3227352263';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -97,7 +97,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '(555) 123-4567';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -105,7 +105,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '555-123-4567';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -113,7 +113,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '555 123 4567';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -121,7 +121,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '555.123.4567';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -129,7 +129,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+1 (555) 123-4567';
     $expected = '15551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -137,7 +137,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+15551234567';
     $expected = '15551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -145,7 +145,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '0015551234567';
     $expected = '15551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -153,7 +153,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '0000015551234567';
     $expected = '15551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -161,7 +161,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '05551234567';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -169,7 +169,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '5551234567';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -177,7 +177,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+1-(555)-123-4567 ext. 123';
     $expected = '15551234567123';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -185,7 +185,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+44 20 1234 5678';
     $expected = '442012345678';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -193,7 +193,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '555-123-4567 x123';
     $expected = '5551234567123';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -201,7 +201,7 @@ final class PhoneUtilTest extends TestCase
   {
     // SHA256 hash (64 hex characters)
     $hashedPhone = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
-    $result = PhoneUtil::getNormalizedPhone($hashedPhone);
+    $result = PhoneUtils::getNormalizedPhone($hashedPhone);
     $this->assertEquals($hashedPhone, $result);
   }
 
@@ -209,7 +209,7 @@ final class PhoneUtilTest extends TestCase
   {
     // MD5 hash (32 hex characters)
     $hashedPhone = 'd41d8cd98f00b204e9800998ecf8427e';
-    $result = PhoneUtil::getNormalizedPhone($hashedPhone);
+    $result = PhoneUtils::getNormalizedPhone($hashedPhone);
     $this->assertEquals($hashedPhone, $result);
   }
 
@@ -217,7 +217,7 @@ final class PhoneUtilTest extends TestCase
   {
     // SHA256 hash with mixed case
     $hashedPhone = 'A665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
-    $result = PhoneUtil::getNormalizedPhone($hashedPhone);
+    $result = PhoneUtils::getNormalizedPhone($hashedPhone);
     $this->assertEquals($hashedPhone, $result);
   }
 
@@ -225,7 +225,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '';
     $expected = '';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -233,7 +233,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '   ';
     $expected = '';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -241,7 +241,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '()- +.';
     $expected = '';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -249,7 +249,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '0000';
     $expected = '';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -257,7 +257,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '000123';
     $expected = '123';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -265,7 +265,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = 5551234567;
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -274,7 +274,7 @@ final class PhoneUtilTest extends TestCase
     // PHP interprets numbers with leading zeros as octal, so use a string
     $phone = '0015551234567';
     $expected = '15551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -282,7 +282,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '✆ 555-123-4567 📞';
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -290,7 +290,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '1-800-FLOWERS';
     $expected = '1800';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -298,7 +298,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = 'Call 555-HELP (4357) now!';
     $expected = '5554357';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -306,7 +306,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = "  \t 555 \n 123 \r 4567  \t ";
     $expected = '5551234567';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -314,7 +314,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '+1-555-123-4567-890-123-456-789';
     $expected = '15551234567890123456789';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -322,7 +322,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '123';
     $expected = '123';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -330,7 +330,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '5';
     $expected = '5';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 
@@ -338,7 +338,7 @@ final class PhoneUtilTest extends TestCase
   {
     $phone = '05';
     $expected = '5';
-    $result = PhoneUtil::getNormalizedPhone($phone);
+    $result = PhoneUtils::getNormalizedPhone($phone);
     $this->assertEquals($expected, $result);
   }
 }

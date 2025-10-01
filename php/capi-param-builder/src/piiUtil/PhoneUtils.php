@@ -8,13 +8,13 @@
 
 namespace FacebookAds;
 
-require_once __DIR__ . '/SharedUtil.php';
+require_once __DIR__ . '/SharedUtils.php';
 
-class PhoneUtil
+class PhoneUtils
 {
   public static function getNormalizedPhone($phone)
   {
-    if (SharedUtil::looksLikeHashed($phone)) {
+    if (SharedUtils::looksLikeHashed($phone)) {
       return $phone;
     }
     // Remove all non-digit characters

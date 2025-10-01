@@ -8,9 +8,9 @@
 
 namespace FacebookAds;
 
-require_once __DIR__ . '/SharedUtil.php';
+require_once __DIR__ . '/SharedUtils.php';
 
-class EmailUtil
+class EmailUtils
 {
   private static function isEmail($email)
   {
@@ -19,10 +19,10 @@ class EmailUtil
 
   public static function getNormalizedEmail($email)
   {
-    if (SharedUtil::looksLikeHashed($email)) {
+    if (SharedUtils::looksLikeHashed($email)) {
       return $email;
     }
     $normalizedEmail = trim(strtolower($email));
-    return EmailUtil::isEmail($normalizedEmail) ? $normalizedEmail : null;
+    return EmailUtils::isEmail($normalizedEmail) ? $normalizedEmail : null;
   }
 }
