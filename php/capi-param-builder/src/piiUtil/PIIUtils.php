@@ -44,6 +44,10 @@ class PIIUtils
       $dataType === PII_DATA_TYPE::LAST_NAME
     ) {
       $normalizedPII = StringUtils::getNormalizedName($piiValue);
+    } else if ($dataType === PII_DATA_TYPE::CITY) {
+      $normalizedPII = StringUtils::getNormalizedCity($piiValue);
+    } else if ($dataType === PII_DATA_TYPE::STATE) {
+      $normalizedPII = StringUtils::getNormalizedState($piiValue);
     }
 
     return $normalizedPII;
