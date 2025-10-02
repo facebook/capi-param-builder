@@ -48,6 +48,8 @@ class PIIUtils
       $normalizedPII = StringUtils::getNormalizedCity($piiValue);
     } else if ($dataType === PII_DATA_TYPE::STATE) {
       $normalizedPII = StringUtils::getNormalizedState($piiValue);
+    } else if ($dataType === PII_DATA_TYPE::COUNTRY) {
+      $normalizedPII = StringUtils::getNormalizedCountry($piiValue);
     }
 
     return $normalizedPII;
