@@ -402,7 +402,7 @@ class StringUtils
         return $abbreviation;
       }
     }
-    return strtolower($input);
+    return mb_strtolower($input);
   }
 
   // Helper: Normalize two-letter abbreviations
@@ -411,7 +411,7 @@ class StringUtils
     if (SharedUtils::looksLikeHashed($input) || !is_string($input)) {
       return $input;
     }
-    $inputStr = strtolower(trim($input));
+    $inputStr = mb_strtolower(trim($input));
     $inputStr = preg_replace('/[^a-z]/', '', $inputStr);
     $inputStr = StringUtils::getFromMap($inputStr, $mappings);
     switch (strlen($inputStr)) {
@@ -439,7 +439,7 @@ class StringUtils
           $str = SharedUtils::strip($str, $params['strip']);
         }
         if (!empty($params['lowercase'])) {
-          $str = strtolower($str);
+          $str = mb_strtolower($str);
         } elseif (!empty($params['uppercase'])) {
           $str = strtoupper($str);
         }
