@@ -13,6 +13,7 @@ require_once __DIR__ . '/EmailUtils.php';
 require_once __DIR__ . '/PhoneUtils.php';
 require_once __DIR__ . '/DOBUtils.php';
 require_once __DIR__ . '/GenderUtils.php';
+require_once __DIR__ . '/StringUtils.php';
 
 class PIIUtils
 {
@@ -38,6 +39,11 @@ class PIIUtils
       $normalizedPII = DOBUtils::getNormalizedDOB($piiValue);
     } else if ($dataType === PII_DATA_TYPE::GENDER) {
       $normalizedPII = GenderUtils::getNormalizedGender($piiValue);
+    } else if (
+      $dataType === PII_DATA_TYPE::FIRST_NAME ||
+      $dataType === PII_DATA_TYPE::LAST_NAME
+    ) {
+      $normalizedPII = StringUtils::getNormalizedName($piiValue);
     }
 
     return $normalizedPII;
