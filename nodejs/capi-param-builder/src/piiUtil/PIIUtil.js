@@ -9,6 +9,7 @@
 const Constants = require('../model/Constants');
 const { getNormalizedEmail } = require('./emailUtil');
 const { getNormalizedPhone } = require('./phoneUtil');
+const { getNormalizedDOB } = require('./dobUtil');
 
 function getNormalizedPII(piiValue, dataType) {
     if (
@@ -25,6 +26,8 @@ function getNormalizedPII(piiValue, dataType) {
         normalizedPII = getNormalizedEmail(piiValue);
     } else if (dataType === Constants.PII_DATA_TYPE.PHONE) {
         normalizedPII = getNormalizedPhone(piiValue);
+    } else if (dataType === Constants.PII_DATA_TYPE.DATE_OF_BIRTH) {
+        normalizedPII = getNormalizedDOB(piiValue);
     }
 
     return normalizedPII;
