@@ -730,7 +730,7 @@ final class CountryUtilsTest extends TestCase
         // If we get a 2-letter result, it should match expected if mapped
         // If not mapped, it will be truncated version
         $this->assertTrue(
-          $result === $expected || $result === strtolower(substr($input, 0, 2)),
+          $result === $expected || $result === mb_strtolower(substr($input, 0, 2)),
           "Failed for alternative name: $input, expected: $expected, got: $result"
         );
       }

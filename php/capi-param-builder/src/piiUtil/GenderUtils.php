@@ -102,7 +102,7 @@ class GenderUtils
     if (SharedUtils::looksLikeHashed($gender)) {
       return $gender;
     }
-    $normalizedGender = trim(strtolower($gender));
+    $normalizedGender = trim(mb_strtolower($gender));
     if (in_array($normalizedGender, GenderUtils::$MALE_SET, true)) {
       return GenderUtils::MALE;
     } elseif (in_array($normalizedGender, GenderUtils::$FEMALE_SET, true)) {

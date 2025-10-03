@@ -22,7 +22,7 @@ class EmailUtils
     if (SharedUtils::looksLikeHashed($email)) {
       return $email;
     }
-    $normalizedEmail = trim(strtolower($email));
+    $normalizedEmail = trim(mb_strtolower($email));
     return EmailUtils::isEmail($normalizedEmail) ? $normalizedEmail : null;
   }
 }
