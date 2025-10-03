@@ -18,6 +18,7 @@ class PII_DATA_TYPE
     const LAST_NAME = 'last_name';
     const CITY = 'city';
     const STATE = 'state';
+    const ZIP_CODE = 'zip_code';
     const COUNTRY = 'country';
     const EXTERNAL_ID = 'external_id';
 
@@ -32,6 +33,7 @@ class PII_DATA_TYPE
             self::LAST_NAME,
             self::CITY,
             self::STATE,
+            self::ZIP_CODE,
             self::COUNTRY,
             self::EXTERNAL_ID,
         ];

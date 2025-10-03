@@ -14,6 +14,7 @@ require_once __DIR__ . '/PhoneUtils.php';
 require_once __DIR__ . '/DOBUtils.php';
 require_once __DIR__ . '/GenderUtils.php';
 require_once __DIR__ . '/StringUtils.php';
+require_once __DIR__ . '/ZipCodeUtils.php';
 
 class PIIUtils
 {
@@ -50,6 +51,8 @@ class PIIUtils
       $normalizedPII = StringUtils::getNormalizedState($piiValue);
     } else if ($dataType === PII_DATA_TYPE::COUNTRY) {
       $normalizedPII = StringUtils::getNormalizedCountry($piiValue);
+    } else if ($dataType === PII_DATA_TYPE::ZIP_CODE) {
+      $normalizedPII = ZipCodeUtils::getNormalizedZipCode($piiValue);
     }
 
     return $normalizedPII;
