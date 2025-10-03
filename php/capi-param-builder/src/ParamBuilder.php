@@ -8,9 +8,9 @@
 
 namespace FacebookAds;
 
-require 'model/Constants.php';
-require 'model/FbcParamConfig.php';
-require 'model/CookieSettings.php';
+require_once 'model/Constants.php';
+require_once 'model/FbcParamConfig.php';
+require_once 'model/CookieSettings.php';
 
 final class ParamBuilder
 {
