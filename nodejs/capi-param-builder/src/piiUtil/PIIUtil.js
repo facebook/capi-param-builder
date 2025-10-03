@@ -11,6 +11,9 @@ const { getNormalizedEmail } = require('./emailUtil');
 const { getNormalizedPhone } = require('./phoneUtil');
 const { getNormalizedDOB } = require('./dobUtil');
 const { getNormalizedGender } = require('./genderUtil');
+const {
+    getNormalizedName,
+} = require('./stringUtil');
 
 function getNormalizedPII(piiValue, dataType) {
     if (
@@ -31,6 +34,11 @@ function getNormalizedPII(piiValue, dataType) {
         normalizedPII = getNormalizedDOB(piiValue);
     } else if (dataType === Constants.PII_DATA_TYPE.GENDER) {
         normalizedPII = getNormalizedGender(piiValue);
+    } else if (
+        dataType === Constants.PII_DATA_TYPE.FIRST_NAME ||
+        dataType === Constants.PII_DATA_TYPE.LAST_NAME
+    ) {
+        normalizedPII = getNormalizedName(piiValue);
     }
 
     return normalizedPII;
