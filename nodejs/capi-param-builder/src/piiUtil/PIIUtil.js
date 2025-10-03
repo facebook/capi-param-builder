@@ -19,6 +19,10 @@ function getNormalizedPII(piiValue, dataType) {
     }
     let normalizedPII = piiValue;
 
+    if (dataType === Constants.PII_DATA_TYPE.EMAIL) {
+        normalizedPII = getNormalizedEmail(piiValue);
+    }
+
     return normalizedPII;
 }
 
