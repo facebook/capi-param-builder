@@ -20,5 +20,20 @@ class Constants {
     static DEFAULT_FORMAT = 0x01;
     static APPENDIX_LENGTH_V1 = 2;
     static APPENDIX_LENGTH_V2 = 8;
+
+    static PII_DATA_TYPE = Object.freeze({
+        PHONE: 'phone',
+        EMAIL: 'email',
+        FIRST_NAME: 'first_name',
+        LAST_NAME: 'last_name',
+        DATE_OF_BIRTH: 'date_of_birth',
+        GENDER: 'gender',
+        CITY: 'city',
+        STATE: 'state',
+        ZIP_CODE: 'zip_code',
+        COUNTRY: 'country',
+        EXTERNAL_ID: 'external_id',
+    });
 }
+
 module.exports = Constants;
