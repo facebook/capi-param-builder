@@ -15,6 +15,7 @@ require_once __DIR__ . '/DOBUtils.php';
 require_once __DIR__ . '/GenderUtils.php';
 require_once __DIR__ . '/StringUtils.php';
 require_once __DIR__ . '/ZipCodeUtils.php';
+require_once __DIR__ . '/SharedUtils.php';
 
 class PIIUtils
 {
@@ -51,10 +52,29 @@ class PIIUtils
       $normalizedPII = StringUtils::getNormalizedState($piiValue);
     } else if ($dataType === PII_DATA_TYPE::COUNTRY) {
       $normalizedPII = StringUtils::getNormalizedCountry($piiValue);
+    } else if ($dataType === PII_DATA_TYPE::EXTERNAL_ID) {
+      $normalizedPII = StringUtils::getNormalizedExternalID($piiValue);
     } else if ($dataType === PII_DATA_TYPE::ZIP_CODE) {
       $normalizedPII = ZipCodeUtils::getNormalizedZipCode($piiValue);
     }
 
     return $normalizedPII;
+  }
+
+  public static function getNormalizedAndHashedPII($piiValue, $dataType)
+  {
+    if (!isset($piiValue) || !is_string($piiValue) || $piiValue === '') {
+      return null;
+    }
+
+    if (SharedUtils::looksLikeHashed($piiValue)) {
+      return mb_strtolower($piiValue);
+    } else {
+      $normalizedPII = PIIUtils::getNormalizedPII($piiValue, $dataType);
+      if ($normalizedPII === null) {
+        return null;
+      }
+      return hash('sha256', $normalizedPII);
+    }
   }
 }

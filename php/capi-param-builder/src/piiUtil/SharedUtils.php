@@ -19,11 +19,12 @@ class SharedUtils
 
   const STRIP_NON_LATIN_ALPHA_NUMERIC_REGEX = '/[^a-zA-Z0-9]+/u';
 
+  const SHA_256_OR_MD5_REGEX = '/^[A-Fa-f0-9]{64}$|^[A-Fa-f0-9]{32}$/';
+
   public static function looksLikeHashed($input)
   {
     // it could be sha256 or md5
-    return is_string($input) && (preg_match('/^[A-Fa-f0-9]{64}$/', $input) ||
-      preg_match('/^[a-f0-9]{32}$/', $input));
+    return is_string($input) && preg_match(SharedUtils::SHA_256_OR_MD5_REGEX, $input);
   }
 
   /**
