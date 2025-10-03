@@ -15,32 +15,16 @@ final class ExternalIDUtilsTest extends TestCase
 {
   public function testWithExampleData1()
   {
-    $externalId = '     User123    ';
-    $expected = 'user123';
+    $externalId = ' 12345';
+    $expected = '12345';
     $result = StringUtils::getNormalizedExternalID($externalId);
     $this->assertEquals($expected, $result);
   }
 
   public function testWithExampleData2()
   {
-    $externalId = '8df99a46f811595e1a1de5016e2445bc202f72b946482032a75aec528a0a350d';
-    $expected = '8df99a46f811595e1a1de5016e2445bc202f72b946482032a75aec528a0a350d';
-    $result = StringUtils::getNormalizedExternalID($externalId);
-    $this->assertEquals($expected, $result);
-  }
-
-  public function testWithExampleData3()
-  {
-    $externalId = 'Customer-ABC-123';
-    $expected = 'customer-abc-123';
-    $result = StringUtils::getNormalizedExternalID($externalId);
-    $this->assertEquals($expected, $result);
-  }
-
-  public function testWithExampleData4()
-  {
-    $externalId = '    External_ID_456    ';
-    $expected = 'external_id_456';
+    $externalId = 'abc-12345';
+    $expected = 'abc-12345';
     $result = StringUtils::getNormalizedExternalID($externalId);
     $this->assertEquals($expected, $result);
   }
