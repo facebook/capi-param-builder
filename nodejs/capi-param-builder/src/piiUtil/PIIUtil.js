@@ -13,6 +13,7 @@ const { getNormalizedDOB } = require('./dobUtil');
 const { getNormalizedGender } = require('./genderUtil');
 const {
     getNormalizedName,
+    getNormalizedCity
 } = require('./stringUtil');
 
 function getNormalizedPII(piiValue, dataType) {
@@ -39,6 +40,8 @@ function getNormalizedPII(piiValue, dataType) {
         dataType === Constants.PII_DATA_TYPE.LAST_NAME
     ) {
         normalizedPII = getNormalizedName(piiValue);
+    } else if (dataType === Constants.PII_DATA_TYPE.CITY) {
+        normalizedPII = getNormalizedCity(piiValue);
     }
 
     return normalizedPII;
