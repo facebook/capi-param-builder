@@ -17,6 +17,7 @@ class Constants {
     static CLICK_ID_STRING = 'clickid';
     static FBC_NAME_STRING = '_fbc';
     static FBP_NAME_STRING = '_fbp';
+    static FBI_NAME_STRING = '_fbi';
     static DEFAULT_FORMAT = 0x01;
     static APPENDIX_LENGTH_V1 = 2;
     static APPENDIX_LENGTH_V2 = 8;
