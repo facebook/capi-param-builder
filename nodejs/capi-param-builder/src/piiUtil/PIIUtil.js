@@ -12,6 +12,7 @@ const { getNormalizedPhone } = require('./phoneUtil');
 const { getNormalizedDOB } = require('./dobUtil');
 const { getNormalizedGender } = require('./genderUtil');
 const { getNormalizedZipCode } = require('./zipCodeUtil');
+const { sha256_main } = require('./sha256_with_dependencies_new');
 const {
     getNormalizedName,
     getNormalizedCity,
@@ -19,6 +20,22 @@ const {
     getNormalizedCountry,
     getNormalizedExternalID
 } = require('./stringUtil');
+
+const SHA_256_OR_MD5_REGEX = /^[A-Fa-f0-9]{64}$|^[A-Fa-f0-9]{32}$/;
+
+function getNormalizedAndHashedPII(piiValue, dataType) {
+    if (!piiValue || typeof piiValue !== 'string') {
+        return null;
+    }
+
+    if (SHA_256_OR_MD5_REGEX.test(piiValue)) {
+        return piiValue.toLowerCase();
+    } else {
+        let x = sha256_main(getNormalizedPII(piiValue, dataType));
+        console.log(x);
+        return x;
+    }
+}
 
 function getNormalizedPII(piiValue, dataType) {
     if (
@@ -61,4 +78,5 @@ function getNormalizedPII(piiValue, dataType) {
 
 module.exports = {
     getNormalizedPII,
+    getNormalizedAndHashedPII
 };
