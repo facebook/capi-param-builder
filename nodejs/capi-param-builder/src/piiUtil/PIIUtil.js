@@ -15,7 +15,8 @@ const {
     getNormalizedName,
     getNormalizedCity,
     getNormalizedState,
-    getNormalizedCountry
+    getNormalizedCountry,
+    getNormalizedExternalID
 } = require('./stringUtil');
 
 function getNormalizedPII(piiValue, dataType) {
@@ -48,6 +49,8 @@ function getNormalizedPII(piiValue, dataType) {
         normalizedPII = getNormalizedState(piiValue);
     } else if (dataType === Constants.PII_DATA_TYPE.COUNTRY) {
         normalizedPII = getNormalizedCountry(piiValue);
+    } else if (dataType === Constants.PII_DATA_TYPE.EXTERNAL_ID) {
+        normalizedPII = getNormalizedExternalID(piiValue);
     }
 
     return normalizedPII;
