@@ -11,6 +11,7 @@ const { getNormalizedEmail } = require('./emailUtil');
 const { getNormalizedPhone } = require('./phoneUtil');
 const { getNormalizedDOB } = require('./dobUtil');
 const { getNormalizedGender } = require('./genderUtil');
+const { getNormalizedZipCode } = require('./zipCodeUtil');
 const {
     getNormalizedName,
     getNormalizedCity,
@@ -51,6 +52,8 @@ function getNormalizedPII(piiValue, dataType) {
         normalizedPII = getNormalizedCountry(piiValue);
     } else if (dataType === Constants.PII_DATA_TYPE.EXTERNAL_ID) {
         normalizedPII = getNormalizedExternalID(piiValue);
+    } else if (dataType === Constants.PII_DATA_TYPE.ZIP_CODE) {
+        normalizedPII = getNormalizedZipCode(piiValue);
     }
 
     return normalizedPII;
