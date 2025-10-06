@@ -18,7 +18,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "capi_param_builder_ruby"
-  spec.version       = "1.0.0"
+  spec.version       = "1.0.1"
   spec.summary       = "Parameter builder SDK for Conversion API events"
   spec.authors       = ["Facebook"]
   spec.require_paths = ["lib"]
