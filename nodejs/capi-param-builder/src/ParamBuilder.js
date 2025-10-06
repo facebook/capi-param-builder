@@ -246,7 +246,6 @@ class ParamBuilder {
         } catch (error) {
           console.error("Error - resolve etld+1 from paramBuilder." + error);
         }
-        const test = hostname.split(".");
         if (hostname && hostname.split(".").length > 2) {
           return hostname.substring(hostname.indexOf(".") + 1);
         }
