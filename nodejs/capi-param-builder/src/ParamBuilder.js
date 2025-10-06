@@ -319,22 +319,81 @@ class ParamBuilder {
   }
 
   /**
- * Check if a string is a valid IPv4 address
- * @param {string} value - IP address string
- * @returns {boolean} - True if valid IPv4
- */
-  _isIPv4(value) {
-    return net.isIP(value) === 4;
+   * Checks if an IPv4 address is in a private, reserved, or loopback range.
+   * @param {string} ip - The IPv4 address to check.
+   * @returns {boolean} - True if private, reserved, or loopback, otherwise false.
+   */
+  _isPrivateIPv4(ip) {
+    const parts = ip.split('.').map(Number);
+    // Check for invalid IP format
+    if (parts.length !== 4) return false;
+
+    // 10.0.0.0/8
+    if (parts[0] === 10) {
+      return true;
+    }
+    // 172.16.0.0/12
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) {
+      return true;
+    }
+    // 192.168.0.0/16
+    if (parts[0] === 192 && parts[1] === 168) {
+      return true;
+    }
+    // 127.0.0.0/8 (Loopback)
+    if (parts[0] === 127) {
+      return true;
+    }
+    // 169.254.0.0/16 (Link-local)
+    if (parts[0] === 169 && parts[1] === 254) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
-* Check if a string is a valid IPv6 address
-* @param {string} value - IP address string
-* @returns {boolean} - True if valid IPv6
-*/
-  _isIPv6(value) {
-    return net.isIP(value) === 6;
+   * Checks if an IPv6 address is in a private, reserved, or loopback range.
+   * This is a simplified check for common private/special ranges.
+   * For a fully comprehensive check, you would need to implement more complex parsing.
+   * @param {string} ip - The IPv6 address to check.
+   * @returns {boolean} - True if private, reserved, or loopback, otherwise false.
+   */
+  _isPrivateIPv6(ip) {
+    const normalizedIp = ip.toLowerCase();
+
+    // ::1/128 (Loopback)
+    if (normalizedIp === '::1') {
+      return true;
+    }
+    // fe80::/10 (Link-local unicast)
+    if (normalizedIp.startsWith('fe80:')) {
+      return true;
+    }
+    // fc00::/7 (Unique local addresses)
+    if (normalizedIp.startsWith('fc') || normalizedIp.startsWith('fd')) {
+      return true;
+    }
+
+    return false;
   }
+
+  /**
+   * Checks if an IP is a public IP address (neither private nor loopback).
+   * @param {string} ip - The IP address string to check.
+   * @returns {boolean} - True if the IP is a valid public IP, false otherwise.
+   */
+  _isPublicIp(ip) {
+    if (net.isIPv4(ip)) {
+      return !isPrivateIPv4(ip);
+    }
+    if (net.isIPv6(ip)) {
+      return !isPrivateIPv6(ip);
+    }
+    // Not a valid IP, so not public
+    return false;
+  }
+
 }
 
 module.exports = {
