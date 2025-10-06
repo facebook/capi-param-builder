@@ -394,6 +394,18 @@ class ParamBuilder {
     return false;
   }
 
+  _getClientIpFromRequest(xForwardedFor, remoteAddress) {
+    if (xForwardedFor) {
+      // X-Forwarded-For can contain multiple IPs, take the first one
+      const ips = xForwardedFor.split(',');
+      const ip = ips[0].trim();
+      if (this._isPublicIp(ip)) {
+        return ip;
+      }
+    }
+    return remoteAddress || null;
+  }
+
 }
 
 module.exports = {
