@@ -439,6 +439,15 @@ class ParamBuilder {
     return null;
   }
 
+  _getClientIpLanguageTokenFromCookie(cookies) {
+    let clientIpLanguageTokenFromCookie = null;
+    if (cookies[FBI_NAME]) {
+      const cookieValue = cookies[FBI_NAME];
+      clientIpLanguageTokenFromCookie = getLanguageToken(cookieValue);
+    }
+    return clientIpLanguageTokenFromCookie;
+  }
+
 }
 
 module.exports = {
