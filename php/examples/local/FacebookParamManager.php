@@ -69,10 +69,6 @@ final class FacebookParamManager
             }
         }
 
-        $normalized_pii = $this->paramBuilder->getNormalizedPII(
-            '     John_Smith@gmail.com    ',
-            'email'
-        );
         $normalized_and_hashed_pii =
             $this->paramBuilder->getNormalizedAndHashedPII(
                 '     John_Smith@gmail.com    ',
@@ -83,7 +79,6 @@ final class FacebookParamManager
             . 'getFbc: ' . $this->paramBuilder->getFbc() . '<br/>'
             . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>'
             . 'getFbi: ' . $this->paramBuilder->getFbi() . '<br/>'
-            . 'getNormalizedPII: ' . $normalized_pii . '<br/>'
             . 'getNormalizedAndHashedPII: '
             . $normalized_and_hashed_pii . '<br/>';
     }

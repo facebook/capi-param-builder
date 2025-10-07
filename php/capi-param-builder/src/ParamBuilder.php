@@ -279,14 +279,10 @@ final class ParamBuilder
         return $this->fbi;
     }
 
-    public function getNormalizedPII($piiValue, $dataType)
-    {
-        return PIIUtils::getNormalizedPII($piiValue, $dataType);
-    }
-
     public function getNormalizedAndHashedPII($piiValue, $dataType)
     {
-        return PIIUtils::getNormalizedAndHashedPII($piiValue, $dataType);
+        return null;
+        //return PIIUtils::getNormalizedAndHashedPII($piiValue, $dataType);
     }
 
     // TODO: this needs optimizatino, maybe use a DAFSA format,
