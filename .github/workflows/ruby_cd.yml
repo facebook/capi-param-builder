@@ -22,10 +22,22 @@ jobs:
       - name: Gem deploy
         run: |
           mkdir -p ~/.gem
-          touch ~/.gem/credentials
+          echo -e "---\n:rubygems_api_key: $RUBYGEMS_API_KEY\n" > ~/.gem/credentials
           chmod 0600 ~/.gem/credentials
-          printf -- "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}\n" > ~/.gem/credentials
-          gem build *.gemspec
-          gem push *.gem
         env:
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+      - name: debug info
+        run: |
+          if [ ! -f ~/.gem/credentials ]; then
+            echo "Credentials file not found!"
+          exit 1
+          fi
+          if ! grep -q ":rubygems_api_key:" ~/.gem/credentials; then
+            echo "API key not found in credentials file!"
+            exit 1
+          fi
+          echo "Credentials file looks good."
+      - name: Build gem
+        run: gem build *.gemspec
+      - name: Publish gem to RubyGems
+        run: gem push *.gem
