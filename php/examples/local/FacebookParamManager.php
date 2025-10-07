@@ -68,11 +68,26 @@ final class FacebookParamManager
                 // Note: it should never be HttpOnly
             }
         }
+
+        $normalized_pii = $this->paramBuilder->getNormalizedPII(
+            '     John_Smith@gmail.com    ',
+            'email'
+        );
+        $normalized_and_hashed_pii =
+            $this->paramBuilder->getNormalizedAndHashedPII(
+                '     John_Smith@gmail.com    ',
+                'email'
+            );
+
         echo 'ParamBuilder output: <br/>'
             . 'getFbc: ' . $this->paramBuilder->getFbc() . '<br/>'
             . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>'
-            . 'getFbi: ' . $this->paramBuilder->getFbi() . '<br/>';
+            . 'getFbi: ' . $this->paramBuilder->getFbi() . '<br/>'
+            . 'getNormalizedPII: ' . $normalized_pii . '<br/>'
+            . 'getNormalizedAndHashedPII: '
+            . $normalized_and_hashed_pii . '<br/>';
     }
+
 
     public function getParamBuilder()
     {

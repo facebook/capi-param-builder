@@ -11,6 +11,7 @@ namespace FacebookAds;
 require_once 'model/Constants.php';
 require_once 'model/FbcParamConfig.php';
 require_once 'model/CookieSettings.php';
+require_once 'piiUtil/PIIUtils.php';
 
 final class ParamBuilder
 {
@@ -113,13 +114,15 @@ final class ParamBuilder
         $isClickID = $query == FBCLID;
         $separator = $isClickID ? "" : "_";
         // Remove duplication
-        if (!empty($existing_payload)
-            && strpos($existing_payload, $separator.$prefix.$separator)) {
+        if (
+            !empty($existing_payload)
+            && strpos($existing_payload, $separator . $prefix . $separator)
+        ) {
             return $existing_payload;
         }
-        $new_segments = $prefix.$separator.$value;
+        $new_segments = $prefix . $separator . $value;
         return empty($existing_payload) ?
-            $new_segments: $existing_payload.$separator.$new_segments;
+            $new_segments : $existing_payload . $separator . $new_segments;
     }
 
     private function getNewFbcPayloadFromQuery($queries, $referer = null)
@@ -274,6 +277,16 @@ final class ParamBuilder
     public function getFbi()
     {
         return $this->fbi;
+    }
+
+    public function getNormalizedPII($piiValue, $dataType)
+    {
+        return PIIUtils::getNormalizedPII($piiValue, $dataType);
+    }
+
+    public function getNormalizedAndHashedPII($piiValue, $dataType)
+    {
+        return PIIUtils::getNormalizedAndHashedPII($piiValue, $dataType);
     }
 
     // TODO: this needs optimizatino, maybe use a DAFSA format,
