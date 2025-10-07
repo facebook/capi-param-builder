@@ -66,7 +66,9 @@ export declare class ParamBuilder {
     host: string,
     queries: QueryParams | null,
     cookies: Cookies | null,
-    referer?: string | null
+    referer?: string | null,
+    xForwardedFor?: string | null,
+    remoteAddress?: string | null
   ): CookieSettings[];
 
   /**
@@ -87,6 +89,12 @@ export declare class ParamBuilder {
    */
   getFbp(): string | null;
 
+  /**
+   * Get the Client IP Address (client_ip_address) parameter value
+   * @returns The fbi value or null if not available
+   */
+  getFbi(): string | null;
+
   // Internal used privat methods
   private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
   private _getAppendixInfo(is_new: boolean): string;
@@ -103,4 +111,13 @@ export declare class ParamBuilder {
   private _isIPAddress(value: string): boolean;
   private _maybeBracketIPv6(value: string): string;
   private _isIPv6Address(value: string): boolean;
+  private _isPrivateIPv4(value: string): boolean;
+  private _isPrivateIPv6(value: string): boolean;
+  private _isPublicIp(value: string): boolean;
+  private _getClientIpFromRequest(xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
+  private _removeLanguageToken(value):string;
+  private _getClientIpFromCookies(cookies: Cookies | null): string | null;
+  private _getLanguageToken(value: string): string | null;
+  private _getClientIpLanguageTokenFromCookie(cookies: Cookies | null): string | null;
+  private _getClientIp(cookies: Cookies | null, xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
 }
