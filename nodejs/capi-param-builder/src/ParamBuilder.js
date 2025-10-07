@@ -430,7 +430,7 @@ class ParamBuilder {
 
   _getClientIpFromCookie(cookies) {
     let clientIpFromCookie = null;
-    if (cookies[Constants.FBI_NAME_STRING]) {
+    if (cookies && cookies[Constants.FBI_NAME_STRING]) {
       const cookieValue = cookies[Constants.FBI_NAME_STRING];
       clientIpFromCookie = this._removeLanguageToken(cookieValue);
     }
@@ -451,7 +451,7 @@ class ParamBuilder {
 
   _getClientIpLanguageTokenFromCookie(cookies) {
     let clientIpLanguageTokenFromCookie = null;
-    if (cookies[Constants.FBI_NAME_STRING]) {
+    if (cookies && cookies[Constants.FBI_NAME_STRING]) {
       const cookieValue = cookies[Constants.FBI_NAME_STRING];
       clientIpLanguageTokenFromCookie = this._getLanguageToken(cookieValue);
     }
