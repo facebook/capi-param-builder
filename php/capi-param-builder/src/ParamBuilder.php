@@ -244,11 +244,13 @@ final class ParamBuilder
             );
         }
 
+        /*
         $this->fbi = ParamBuilder::getClientIp(
             $cookies,
             $x_forwarded_for,
             $remote_address
         );
+        */
 
         $this->cookies_to_set_array = array_values($this->cookies_to_set);
         return $this->cookies_to_set_array;
