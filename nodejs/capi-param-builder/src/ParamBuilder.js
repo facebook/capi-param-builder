@@ -406,6 +406,18 @@ class ParamBuilder {
     return remoteAddress || null;
   }
 
+  _removeLanguageToken(input) {
+    // Find the position of the last dot
+    const lastDot = input.lastIndexOf('.');
+    if (lastDot !== -1) {
+      const suffix = input.substring(lastDot + 1);
+      if (Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(suffix) || suffix.length === Constants.APPENDIX_LENGTH_V2) {
+        return input.substring(0, lastDot);
+      }
+    }
+    return input;
+  }
+
 }
 
 module.exports = {
