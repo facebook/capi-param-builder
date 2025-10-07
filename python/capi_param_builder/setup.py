@@ -22,7 +22,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="capi_param_builder_python",
-    version="1.0.0",
+    version="1.0.1",
     packages=find_packages(),
     install_requires=[],
     description="Parameter builder SDK for Conversion API events",
