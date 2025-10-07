@@ -20,26 +20,18 @@ jobs:
           distribution: 'temurin'
           java-version: 8
           cache: 'gradle'
-      - name: Import GPG Key
-        run: |
-          mkdir -p ~/.gnupg/
-          printf "${GPG_SIGNING_KEY}" | base64 --decode > ~/.gnupg/private.key
-          md5sum ~/.gnupg/private.key
-          gpg --import --no-tty --batch --yes ~/.gnupg/private.key
-          echo use-agent >> ~/.gnupg/gpg.conf
-          echo pinentry-mode loopback >> ~/.gnupg/gpg.conf
-          echo allow-loopback-pinentry >> ~/.gnupg/gpg-agent.conf
-          echo RELOADAGENT | gpg-connect-agent
-          gpg --list-keys
+      - name: Change gradlew wrapper permissions
+        run: chmod +x ./gradlew
+      - name: Build with Gradle
+        run: ./gradlew build
+      - name: Publish to Maven Central
+        run: ./gradlew publish --no-daemon \
+          -PGPG_SIGNING_KEY="${GPG_SIGNING_KEY}" \
+          -PGPG_SIGNING_PASSWORD="${GPG_SIGNING_PASSWORD}" \
+          -PossrhUsername="${OSSRH_TOKEN_USERNAME}" \
+          -PossrhPassword="${OSSRH_TOKEN_PASSWORD}"
         env:
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-      - name: Publish to Maven Central with Gradle
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-          GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: ./gradlew :capi-param-builder:publishToSonatype closeSonatypeStagingRepository
-      - name: Maven central approval
-        run:
-          echo "Please login to https://central.sonatype.com/ and approve the staging repository"
+          OSSRH_TOKEN_USERNAME: ${{ secrets.OSSRH_TOKEN_USERNAME }}
+          OSSRH_TOKEN_PASSWORD: ${{ secrets.OSSRH_TOKEN_PASSWORD }}
+          GPG_SIGNING_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_SIGNING_PASSWORD: ${{ secrets.GPG_PASSPHRASE }}
