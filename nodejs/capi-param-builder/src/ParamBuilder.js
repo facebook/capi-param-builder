@@ -448,6 +448,35 @@ class ParamBuilder {
     return clientIpLanguageTokenFromCookie;
   }
 
+  _getClientIp(cookies, xForwardedFor, remoteAddress) {
+    let bestClientIp = null;
+
+    const clientIpFromCookie = this._getClientIpFromCookie(cookies);
+    const clientIpLanguageTokenFromCookie = this._getClientIpLanguageTokenFromCookie(cookies);
+    const clientIpFromRequest = this._getClientIpFromRequest(xForwardedFor, remoteAddress);
+
+    const clientIpFromCookieIsIPv6 = net.isIPv6(clientIpFromCookie);
+    const clientIpFromCookieIsIPv4 = net.isIPv4(clientIpFromCookie);
+    const clientIpFromRequestIsIPv6 = net.isIPv6(clientIpFromRequest);
+    const clientIpFromRequestIsIPv4 = net.isIPv4(clientIpFromRequest);
+
+    const clientIpFromCookieIsPublicIp = this._isPublicIp(clientIpFromCookie);
+    const clientIpFromRequestIsPublicIp = this._isPublicIp(clientIpFromRequest);
+
+    // Prioritize: IPv6 over IPv4, public over private, cookie-sourced IPs over request-sourced IPs.
+    if (clientIpFromCookieIsIPv6 && clientIpFromCookieIsPublicIp) {
+      bestClientIp = clientIpFromCookie + '.' + (clientIpLanguageTokenFromCookie || this.appendix_new);
+    } else if (clientIpFromRequestIsIPv6 && clientIpFromRequestIsPublicIp) {
+      bestClientIp = clientIpFromRequest + '.' + this.appendix_normal;
+    } else if (clientIpFromCookieIsIPv4 && clientIpFromCookieIsPublicIp) {
+      bestClientIp = clientIpFromCookie + '.' + (clientIpLanguageTokenFromCookie || this.appendix_new);
+    } else if (clientIpFromRequestIsIPv4 && clientIpFromRequestIsPublicIp) {
+      bestClientIp = clientIpFromRequest + '.' + this.appendix_normal;
+    }
+
+    return bestClientIp;
+  }
+
 }
 
 module.exports = {
