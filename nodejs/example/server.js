@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 const { createServer } = require('node:http');
-const {ParamBuilder} = require('capi-param-builder-nodejs');
+const { ParamBuilder } = require('capi-param-builder-nodejs');
 const url = require('url');
 
 const hostname = 'localhost';//'127.0.0.1';
@@ -40,9 +40,11 @@ const server = createServer((req, res) => {
     req.headers.host, // host
     params, // query params
     requestCookies, // current cookie
-    req.headers.referer // optional, help enhance the accurancy
+    req.headers.referer, // optional, help enhance the accurancy
+    req.headers['x-forwarded-for'] ?? null,
+    //'203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348',
+    req.socket.remoteAddress ?? null
   );
-
   // Save cookies to response
   const responseCookies = [];
   for (const cookie of builder.getCookiesToSet()) {
@@ -54,11 +56,14 @@ const server = createServer((req, res) => {
   // Get fbp
   const fbp = builder.getFbp();
 
+  // Get fbi
+  const fbi = builder.getFbi();
+
   // Bypass fbc and fbp to CAPI event APIs.
 
   // End demo
 
-  res.end("getFbc: " + fbc + "\ngetFbp: " + fbp + "\n");
+  res.end("getFbc: " + fbc + "\n" + "getFbp: " + fbp + "\n" + "getFbi: " + fbi);
 });
 
 function parseCookie(cookieString) {
@@ -68,8 +73,8 @@ function parseCookie(cookieString) {
   const cookies = {};
   const items = cookieString.split('; ');
   for (const item of items) {
-      const [name, value] = item.split('=');
-      cookies[name] = value;
+    const [name, value] = item.split('=');
+    cookies[name] = value;
   }
   return cookies;
 }

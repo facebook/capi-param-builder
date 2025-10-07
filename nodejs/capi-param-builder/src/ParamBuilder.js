@@ -29,6 +29,7 @@ class ParamBuilder {
     // captured values
     this.fbc = null;
     this.fbp = null;
+    this.fbi = null;
 
     // perf optimization - save etld+1
     this.host = null;
@@ -132,7 +133,7 @@ class ParamBuilder {
     return existing_payload !== '' ? `${existing_payload}${separator}${newSegment}` : newSegment;
   }
 
-  processRequest(host, queries, cookies, referer = null) {
+  processRequest(host, queries, cookies, referer = null, xForwardedFor = null, remoteAddress = null) {
     this.cookies_to_set = [];
     this.cookies_to_set_dict = {};
     this.etld_plus_1 = null;
@@ -194,6 +195,12 @@ class ParamBuilder {
           this.etld_plus_1);
       }
     }
+
+    this.fbi = this._getClientIp(
+      cookies, xForwardedFor, remoteAddress
+    );
+
+
     this.cookies_to_set = Object.values(this.cookies_to_set_dict);
     return this.cookies_to_set;
   }
@@ -205,6 +212,9 @@ class ParamBuilder {
   }
   getFbp() {
     return this.fbp;
+  }
+  getFbi() {
+    return this.fbi;
   }
   _getRefererQuery(referer_url) {
     if (!referer_url) {
@@ -385,10 +395,10 @@ class ParamBuilder {
    */
   _isPublicIp(ip) {
     if (net.isIPv4(ip)) {
-      return !isPrivateIPv4(ip);
+      return !this._isPrivateIPv4(ip);
     }
     if (net.isIPv6(ip)) {
-      return !isPrivateIPv6(ip);
+      return !this._isPrivateIPv6(ip);
     }
     // Not a valid IP, so not public
     return false;
@@ -420,8 +430,8 @@ class ParamBuilder {
 
   _getClientIpFromCookie(cookies) {
     let clientIpFromCookie = null;
-    if (cookies[FBI_NAME]) {
-      const cookieValue = cookies[FBI_NAME];
+    if (cookies[Constants.FBI_NAME_STRING]) {
+      const cookieValue = cookies[Constants.FBI_NAME_STRING];
       clientIpFromCookie = this._removeLanguageToken(cookieValue);
     }
     return clientIpFromCookie;
@@ -441,9 +451,9 @@ class ParamBuilder {
 
   _getClientIpLanguageTokenFromCookie(cookies) {
     let clientIpLanguageTokenFromCookie = null;
-    if (cookies[FBI_NAME]) {
-      const cookieValue = cookies[FBI_NAME];
-      clientIpLanguageTokenFromCookie = getLanguageToken(cookieValue);
+    if (cookies[Constants.FBI_NAME_STRING]) {
+      const cookieValue = cookies[Constants.FBI_NAME_STRING];
+      clientIpLanguageTokenFromCookie = this._getLanguageToken(cookieValue);
     }
     return clientIpLanguageTokenFromCookie;
   }
