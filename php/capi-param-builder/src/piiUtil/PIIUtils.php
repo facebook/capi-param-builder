@@ -68,13 +68,13 @@ class PIIUtils
     }
 
     if (SharedUtils::looksLikeHashed($piiValue)) {
-      return mb_strtolower($piiValue);
+      return mb_strtolower($piiValue) . '.' . LANGUAGE_TOKEN;
     } else {
       $normalizedPII = PIIUtils::getNormalizedPII($piiValue, $dataType);
       if ($normalizedPII === null) {
         return null;
       }
-      return hash('sha256', $normalizedPII);
+      return hash('sha256', $normalizedPII) . '.' . LANGUAGE_TOKEN;
     }
   }
 }
