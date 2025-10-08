@@ -99,14 +99,14 @@ class DOBUtils
   // Main function: Normalize DOB
   public static function getNormalizedDOB($dob)
   {
-    //try {
-    if (SharedUtils::looksLikeHashed($dob)) {
-      return $dob;
+    try {
+      if (SharedUtils::looksLikeHashed($dob)) {
+        return $dob;
+      }
+      return DOBUtils::parseDateOfBirth($dob);
+    } catch (\Exception $e) {
+      error_log('Failed to normalize dob: ' . $e->getMessage());
     }
-    return DOBUtils::parseDateOfBirth($dob);
-    //  } catch (\Exception $e) {
-    //   error_log('Failed to normalize dob: ' . $e->getMessage());
-    // }
     return null;
   }
 }
