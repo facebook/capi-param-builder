@@ -213,7 +213,7 @@ class ParamBuilder {
   getFbp() {
     return this.fbp;
   }
-  getFbi() {
+  getClientIpAddress() {
     return this.fbi;
   }
   _getRefererQuery(referer_url) {

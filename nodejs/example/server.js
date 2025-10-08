@@ -57,13 +57,13 @@ const server = createServer((req, res) => {
   const fbp = builder.getFbp();
 
   // Get fbi
-  const fbi = builder.getFbi();
+  const fbi = builder.getClientIpAddress();
 
   // Bypass fbc and fbp to CAPI event APIs.
 
   // End demo
 
-  res.end("getFbc: " + fbc + "\n" + "getFbp: " + fbp + "\n" + "getFbi: " + fbi);
+  res.end("getFbc: " + fbc + "\n" + "getFbp: " + fbp + "\n" + "getClientIpAddress: " + fbi);
 });
 
 function parseCookie(cookieString) {

@@ -91,9 +91,9 @@ export declare class ParamBuilder {
 
   /**
    * Get the Client IP Address (client_ip_address) parameter value
-   * @returns The fbi value or null if not available
+   * @returns The client_ip_address value or null if not available
    */
-  getFbi(): string | null;
+  getClientIpAddress(): string | null;
 
   // Internal used privat methods
   private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
