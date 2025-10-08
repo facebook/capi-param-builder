@@ -219,7 +219,8 @@ class ParamBuilder {
   }
 
   getNormalizedAndHashedPII(piiValue, dataType) {
-    return getNormalizedAndHashedPII(piiValue, dataType);
+    const normalizedAndHashedPII = getNormalizedAndHashedPII(piiValue, dataType);
+    return normalizedAndHashedPII === null ? null : normalizedAndHashedPII + '.' + this.appendix_new;
   }
 
   getNormalizedPII(piiValue, dataType) {
