@@ -25,9 +25,13 @@ class PIIUtils
     // Check for undefined, null, empty, and type
     if (
       !isset($piiValue) || !isset($dataType) ||
-      !is_string($piiValue) || $piiValue === '' ||
-      !in_array($dataType, PII_DATA_TYPE::values(), true)
+      !is_string($piiValue) || $piiValue === ''
     ) {
+      return null;
+    }
+
+    $dataType = StringUtils::getNormalizedExternalID($dataType);
+    if (!in_array($dataType, PII_DATA_TYPE::values(), true)) {
       return null;
     }
 
