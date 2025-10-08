@@ -41,13 +41,17 @@ function getNormalizedPII(piiValue, dataType) {
     if (
         !piiValue ||
         !dataType ||
-        typeof piiValue !== 'string' ||
-        !Object.values(Constants.PII_DATA_TYPE).includes(dataType)
+        typeof piiValue !== 'string' || typeof dataType !== 'string'
     ) {
         return null;
     }
-    let normalizedPII = piiValue;
 
+    dataType = getNormalizedExternalID(dataType);
+    if (!Object.values(Constants.PII_DATA_TYPE).includes(dataType)) {
+        return null;
+    }
+
+    let normalizedPII = piiValue;
     if (dataType === Constants.PII_DATA_TYPE.EMAIL) {
         normalizedPII = getNormalizedEmail(piiValue);
     } else if (dataType === Constants.PII_DATA_TYPE.PHONE) {
