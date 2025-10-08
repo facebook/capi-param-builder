@@ -274,15 +274,16 @@ final class ParamBuilder
         return $this->fbp;
     }
 
-    public function getClientIpAddress()
+    // make public once GTM
+    private function getClientIpAddress()
     {
         return $this->fbi;
     }
 
-    public function getNormalizedAndHashedPII($piiValue, $dataType)
+    // make public once GTM
+    private function getNormalizedAndHashedPII($piiValue, $dataType)
     {
-        return null;
-        //return PIIUtils::getNormalizedAndHashedPII($piiValue, $dataType);
+        return PIIUtils::getNormalizedAndHashedPII($piiValue, $dataType);
     }
 
     // TODO: this needs optimizatino, maybe use a DAFSA format,
