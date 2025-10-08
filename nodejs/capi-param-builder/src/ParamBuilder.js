@@ -10,6 +10,7 @@ const CookieSettings = require('./model/CookieSettings');
 const Constants = require('./model/Constants');
 const net = require('net');
 const { version } = require('../package.json');
+const { getNormalizedAndHashedPII, getNormalizedPII } = require('./piiUtil/PIIUtil');
 
 class ParamBuilder {
   constructor(input_params) {
@@ -216,6 +217,15 @@ class ParamBuilder {
   getClientIpAddress() {
     return this.fbi;
   }
+
+  getNormalizedAndHashedPII(piiValue, dataType) {
+    return getNormalizedAndHashedPII(piiValue, dataType);
+  }
+
+  getNormalizedPII(piiValue, dataType) {
+    return getNormalizedPII(piiValue, dataType);
+  }
+
   _getRefererQuery(referer_url) {
     if (!referer_url) {
       return null;
