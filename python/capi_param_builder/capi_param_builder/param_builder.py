@@ -4,6 +4,8 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import base64
+import os.path
 import random
 import re
 import time
@@ -15,7 +17,7 @@ from .model import CookieSettings, FbcParamConfigs
 from .util import EtldPlusOneResolver
 
 DEFAULT_1PC_AGE: Final[int] = 90 * 24 * 3600  # 90 days
-LANGUAGE_TOKEN: Final[str] = "Ag"
+LANGUAGE_TOKEN: Final[str] = "Ag"  # Python
 SUPPORTED_LANGUAGES_TOKENS: Final[List[str]] = ["AQ", "Ag", "Aw", "BA", "BQ", "Bg"]
 MIN_PAYLOAD_SPLIT_LENGTH: Final[int] = 4
 MAX_PAYLOAD_LENGTH_WITH_LANGUAGE_TOKEN: Final[int] = 5
@@ -24,6 +26,12 @@ IPV6_SEG_REGEX: Final[str] = "^([0-9a-fA-F]{0,4}:)+"
 FBC_COOKIE_NAME: Final[str] = "_fbc"
 FBP_COOKIE_NAME: Final[str] = "_fbp"
 FBCLID_QUERY_PARAMS: Final[str] = "fbclid"
+
+# Appendix constants - matches JavaScript Constants.js
+DEFAULT_FORMAT: Final[int] = 0x01
+LANGUAGE_TOKEN_INDEX: Final[int] = 0x02  # Python language token index
+APPENDIX_LENGTH_V1: Final[int] = 2
+APPENDIX_LENGTH_V2: Final[int] = 8
 
 
 class ParamBuilder:
@@ -47,6 +55,10 @@ class ParamBuilder:
         self.etld_plus_one: Optional[str] = None
         self.domain_list: Optional[List] = None
         self.etld_plus_one_resolver: Optional[EtldPlusOneResolver] = None
+        ## Appendix with version number
+        self.appendix_new: str = self._get_appendix(True)
+        self.appendix_normal: str = self._get_appendix(False)
+
         if isinstance(input, List):
             self.domain_list = []
             for domain in input:
@@ -54,6 +66,59 @@ class ParamBuilder:
                     self.domain_list.append(self._extract_host_from_http_host(domain))
         elif isinstance(input, EtldPlusOneResolver):
             self.etld_plus_one_resolver = input
+
+    def _get_version(self) -> str:
+        """
+        Extract version from setup.py file
+        """
+        try:
+            # Get the directory containing this Python file
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            # Navigate up to find setup.py
+            setup_py_path = os.path.join(current_dir, "..", "..", "setup.py")
+            setup_py_path = os.path.normpath(setup_py_path)
+
+            if os.path.exists(setup_py_path):
+                with open(setup_py_path, "r") as f:
+                    content = f.read()
+                    # Extract version using regex
+                    import re
+
+                    version_match = re.search(
+                        r'version\s*=\s*["\']([^"\']+)["\']', content
+                    )
+                    if version_match:
+                        return version_match.group(1)
+            # Fallback version if not found
+            return "1.0.1"
+        except Exception:
+            # Fallback version on any error
+            return "1.0.1"
+
+    def _get_appendix(self, is_new: bool) -> str:
+        version = self._get_version()
+        version_parts = version.split(".")
+        major = int(version_parts[0])
+        minor = int(version_parts[1])
+        patch = int(version_parts[2])
+
+        is_new_byte = 0x01 if is_new else 0x00
+
+        bytes_array = [
+            DEFAULT_FORMAT,
+            LANGUAGE_TOKEN_INDEX,
+            is_new_byte,
+            major,
+            minor,
+            patch,
+        ]
+
+        # Convert to bytes and then to base64url-safe string
+        byte_data = bytes(bytes_array)
+        base64_encoded = base64.b64encode(byte_data).decode("ascii")
+        # Make it URL-safe by replacing characters
+        base64url_safe = base64_encoded.replace("+", "-").replace("/", "_").rstrip("=")
+        return base64url_safe
 
     def _pre_process_cookies(
         self, cookies: dict[str, str], cookie_name: str
@@ -69,15 +134,18 @@ class ParamBuilder:
         ):
             return None
 
-        if (
-            len(cookie_split) == MAX_PAYLOAD_LENGTH_WITH_LANGUAGE_TOKEN
-            and cookie_split[MAX_PAYLOAD_LENGTH_WITH_LANGUAGE_TOKEN - 1]
-            not in SUPPORTED_LANGUAGES_TOKENS
-        ):
-            return None
+        # Validation for appendix
+        if len(cookie_split) == MAX_PAYLOAD_LENGTH_WITH_LANGUAGE_TOKEN:
+            appendix_value = cookie_split[MAX_PAYLOAD_LENGTH_WITH_LANGUAGE_TOKEN - 1]
+            # Backward compatible with legacy appendix
+            if len(appendix_value) == APPENDIX_LENGTH_V1:
+                if appendix_value not in SUPPORTED_LANGUAGES_TOKENS:
+                    return None
+            elif len(appendix_value) != APPENDIX_LENGTH_V2:
+                return None
 
         if len(cookie_split) == MIN_PAYLOAD_SPLIT_LENGTH:
-            updated_cookie = cookie_value + "." + LANGUAGE_TOKEN
+            updated_cookie = cookie_value + "." + self.appendix_normal
             self.cookies_to_set_dict[cookie_name] = CookieSettings(
                 cookie_name, updated_cookie, self.etld_plus_one, DEFAULT_1PC_AGE
             )
@@ -213,7 +281,7 @@ class ParamBuilder:
             + "."
             + new_fbc_payload
             + "."
-            + LANGUAGE_TOKEN
+            + self.appendix_new
         )
         # TODO: update etld+1 to get proper etld+1.
         udpated_cookie_setting = CookieSettings(
@@ -240,7 +308,7 @@ class ParamBuilder:
             + "."
             + new_fbp_payload
             + "."
-            + LANGUAGE_TOKEN
+            + self.appendix_new
         )
         udpated_cookie_setting = CookieSettings(
             FBP_COOKIE_NAME, new_fbp, self.etld_plus_one, DEFAULT_1PC_AGE
