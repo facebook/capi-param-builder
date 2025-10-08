@@ -103,14 +103,6 @@ export declare class ParamBuilder {
    */
   getNormalizedAndHashedPII(piiValue: string, dataType: string): string | null;
 
-  /**
-   * Normalize PII data without hashing
-   * @param piiValue The PII value to normalize
-   * @param dataType The type of PII data (e.g., 'email', 'phone', 'first_name')
-   * @returns The normalized PII value, or null if invalid
-   */
-  getNormalizedPII(piiValue: string, dataType: string): string | null;
-
   // Internal used privat methods
   private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
   private _getAppendixInfo(is_new: boolean): string;

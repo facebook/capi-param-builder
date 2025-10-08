@@ -56,20 +56,11 @@ const server = createServer((req, res) => {
   // Get fbp
   const fbp = builder.getFbp();
 
-  // Get fbi
-  const fbi = builder.getClientIpAddress();
-
-  // Get getNormalizedPII
-  const normalizedPII = builder.getNormalizedPII('     John_Smith@gmail.com    ', '  eMail ');
-
-  // Get getNormalizedPII
-  const normalizedAndHashedPII = builder.getNormalizedAndHashedPII('     John_Smith@gmail.com    ', 'email');
-
   // Bypass fbc and fbp to CAPI event APIs.
 
   // End demo
 
-  res.end("getFbc: " + fbc + "\n" + "getFbp: " + fbp + "\n" + "getClientIpAddress: " + fbi + "\n" + "getNormalizedPII: " + normalizedPII + "\n" + "getNormalizedAndHashedPII: " + normalizedAndHashedPII);
+  res.end("getFbc: " + fbc + "\n" + "getFbp: " + fbp + "\n");
 });
 
 function parseCookie(cookieString) {

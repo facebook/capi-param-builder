@@ -10,7 +10,7 @@ const CookieSettings = require('./model/CookieSettings');
 const Constants = require('./model/Constants');
 const net = require('net');
 const { version } = require('../package.json');
-const { getNormalizedAndHashedPII, getNormalizedPII } = require('./piiUtil/PIIUtil');
+const { getNormalizedAndHashedPII } = require('./piiUtil/PIIUtil');
 
 class ParamBuilder {
   constructor(input_params) {
@@ -221,10 +221,6 @@ class ParamBuilder {
   getNormalizedAndHashedPII(piiValue, dataType) {
     const normalizedAndHashedPII = getNormalizedAndHashedPII(piiValue, dataType);
     return normalizedAndHashedPII === null ? null : normalizedAndHashedPII + '.' + this.appendix_new;
-  }
-
-  getNormalizedPII(piiValue, dataType) {
-    return getNormalizedPII(piiValue, dataType);
   }
 
   _getRefererQuery(referer_url) {
