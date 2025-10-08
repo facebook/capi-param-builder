@@ -268,14 +268,13 @@ describe('PIIUtil', () => {
                 expect(result).toBe('hashed_phone');
             });
 
-            it('should hash null when normalization returns null', () => {
+            it('should return null when normalization returns null', () => {
                 getNormalizedEmail.mockReturnValue(null);
-                sha256_main.mockReturnValue('hashed_null');
 
                 const result = getNormalizedAndHashedPII('invalid', Constants.PII_DATA_TYPE.EMAIL);
 
-                expect(sha256_main).toHaveBeenCalledWith(null);
-                expect(result).toBe('hashed_null');
+                expect(sha256_main).not.toHaveBeenCalled();
+                expect(result).toBeNull();
             });
         });
 

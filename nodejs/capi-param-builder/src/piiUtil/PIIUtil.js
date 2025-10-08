@@ -31,9 +31,11 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
     if (SHA_256_OR_MD5_REGEX.test(piiValue)) {
         return piiValue.toLowerCase();
     } else {
-        let x = sha256_main(getNormalizedPII(piiValue, dataType));
-        console.log(x);
-        return x;
+        const normalizedPII = getNormalizedPII(piiValue, dataType);
+        if (!normalizedPII) {
+            return null;
+        }
+        return sha256_main(normalizedPII);
     }
 }
 
