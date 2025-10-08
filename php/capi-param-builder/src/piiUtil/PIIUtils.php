@@ -75,7 +75,7 @@ class PIIUtils
       return mb_strtolower($piiValue) . '.' . LANGUAGE_TOKEN;
     } else {
       $normalizedPII = PIIUtils::getNormalizedPII($piiValue, $dataType);
-      if ($normalizedPII === null) {
+      if ($normalizedPII === null || $normalizedPII === '') {
         return null;
       }
       return hash('sha256', $normalizedPII) . '.' . LANGUAGE_TOKEN;
