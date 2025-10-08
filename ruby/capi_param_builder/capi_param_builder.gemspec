@@ -16,9 +16,11 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require_relative 'lib/release_config'
+
 Gem::Specification.new do |spec|
   spec.name          = "capi_param_builder_ruby"
-  spec.version       = "1.0.1"
+  spec.version       = ReleaseConfig::VERSION # import version from config
   spec.summary       = "Parameter builder SDK for Conversion API events"
   spec.authors       = ["Facebook"]
   spec.require_paths = ["lib"]
