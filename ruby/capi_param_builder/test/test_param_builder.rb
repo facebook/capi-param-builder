@@ -10,8 +10,36 @@ require_relative '../lib/capi_param_builder'
 require 'test_etld_plus_one_resolver'
 require_relative '../lib/model/fbc_param_configs'
 
+APPENDIX_IS_NEW = "AQUBAQAB"
+APPENDIX_IS_NORMAL = "AQUAAQAB"
+
+# Save the original value before any tests run
+ORIGINAL_VERSION = ReleaseConfig::VERSION
+# Remove and redefine the constant before all tests
+ReleaseConfig.send(:remove_const, :VERSION)
+ReleaseConfig::VERSION = "1.0.1"
+# Restore the original value after all tests
+Minitest.after_run do
+  ReleaseConfig.send(:remove_const, :VERSION)
+  ReleaseConfig::VERSION = ORIGINAL_VERSION
+end
 
 class TestParamBuilder < Minitest::Test
+    def test_override_different_versions
+        tmp_original_version = ReleaseConfig::VERSION
+        ReleaseConfig.send(:remove_const, :VERSION)
+        ReleaseConfig.const_set(:VERSION, "1.15.24")
+        assert_equal "1.15.24", ReleaseConfig::VERSION
+        builder = ParamBuilder.new()
+        appendix_new = builder.send(:get_appendix, true)
+        assert_equal(appendix_new, "AQUBAQ8Y")
+        appendix_normal = builder.send(:get_appendix, false)
+        assert_equal(appendix_normal, "AQUAAQ8Y")
+    ensure
+        ReleaseConfig.send(:remove_const, :VERSION)
+        ReleaseConfig.const_set(:VERSION, tmp_original_version)
+    end
+
     def test_process_request_with_fbc_fbp_updated
         builder = ParamBuilder.new()
         cookie_to_update = builder.process_request(
@@ -20,16 +48,16 @@ class TestParamBuilder < Minitest::Test
             {"test"=>"value", "_fbc"=>"fb.1.2.test_fbc"},
             "example.com?fbclid=test345")
         assert_equal(2, cookie_to_update.size())
-        assert_contains(".test123", builder.get_fbc())
+        assert_contains(".test123.#{APPENDIX_IS_NEW}", builder.get_fbc())
         assert_contains("fb.0.", builder.get_fbp())
         for cookie in cookie_to_update do
             if cookie.name == '_fbc'
-                assert cookie.value.end_with?(".test123.BQ")
+                assert cookie.value.end_with?(".test123.#{APPENDIX_IS_NEW}")
                 assert_contains('fb.0.', cookie.value)
                 assert_contains("localhost", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
-                assert cookie.value.end_with?(".BQ")
+                assert cookie.value.end_with?(APPENDIX_IS_NEW)
                 assert_equal("localhost", cookie.domain)
             end
         end
@@ -44,18 +72,18 @@ class TestParamBuilder < Minitest::Test
             {},
             "example.com")
         assert_equal(2, cookie_to_update.size())
-        assert builder.get_fbc().end_with?(".test123.BQ")
+        assert builder.get_fbc().end_with?(".test123.#{APPENDIX_IS_NEW}")
         assert_contains("fb.1.", builder.get_fbp())
-        assert builder.get_fbp().end_with?(".BQ")
+        assert builder.get_fbp().end_with?(".#{APPENDIX_IS_NEW}")
         for cookie in cookie_to_update do
             if cookie.name == '_fbc'
-                assert cookie.value.end_with?(".test123.BQ")
+                assert cookie.value.end_with?(".test123.#{APPENDIX_IS_NEW}")
                 assert_contains('fb.1.', cookie.value)
                 assert_equal("example.com", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.1.", cookie.value)
-                assert cookie.value.end_with?(".BQ")
+                assert cookie.value.end_with?(".#{APPENDIX_IS_NEW}")
                 assert_equal("example.com", cookie.domain)
             end
         end
@@ -69,16 +97,15 @@ class TestParamBuilder < Minitest::Test
             {"test"=>"test123", "utm"=>"test", "fbclid"=>"test"},
             {"_fbp"=>"fb.1.123.value", "_fbc"=>"fb.1.2.test_fbc"},
             nil)
-        # add language token
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".test.BQ", cookie.value)
+                assert_contains(".test.#{APPENDIX_IS_NEW}", cookie.value)
                 assert_contains("fb.4.", cookie.value)
                 assert_equal("this.is.a.test.com", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
-                assert_equal("fb.1.123.value.BQ", cookie.value)
+                assert_equal("fb.1.123.value.#{APPENDIX_IS_NORMAL}", cookie.value)
                 assert_equal("this.is.a.test.com", cookie.domain)
             end
         end
@@ -94,11 +121,12 @@ class TestParamBuilder < Minitest::Test
             "https://example.com?fbclid=wer")
         assert_equal(1, cookie_to_update.size())
         for cookie in cookie_to_update do
-            assert_contains(".test.BQ", cookie.value)
+            assert_contains(".test.#{APPENDIX_IS_NEW}", cookie.value)
             assert_contains("fb.4.", cookie.value)
             assert_equal("is.a.test.co.uk", cookie.domain)
         end
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
+        assert_equal("fb.1.123.test.BQ", builder.get_fbp())
     end
 
     def test_process_request_with_with_invali_string_domain_list
@@ -111,7 +139,7 @@ class TestParamBuilder < Minitest::Test
             "https://example.com?fbclid=wer")
         assert_equal(1, cookie_to_update.size())
         for cookie in cookie_to_update do
-            assert_contains(".test.BQ", cookie.value)
+            assert_contains(".test.#{APPENDIX_IS_NEW}", cookie.value)
             assert_contains("fb.4.", cookie.value)
             assert_equal("is.a.test.example.com", cookie.domain)
         end
@@ -128,13 +156,13 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".wer.BQ", cookie.value)
+                assert_contains(".wer.#{APPENDIX_IS_NEW}", cookie.value)
                 assert_contains("fb.4.", cookie.value)
                 assert_equal("is.a.test.co.uk", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.4.", cookie.value)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
                 assert_equal("is.a.test.co.uk", cookie.domain)
             end
         end
@@ -151,13 +179,13 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".wer.BQ", cookie.value)
+                assert_contains(".wer.#{APPENDIX_IS_NEW}", cookie.value)
                 assert_contains("fb.4.", cookie.value)
                 assert_equal("is.a.test.co.uk", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.4.", cookie.value)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
             end
         end
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
@@ -178,13 +206,13 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".test123_test1_test2.BQ", cookie.value)
+                assert_contains(".test123_test1_test2.#{APPENDIX_IS_NEW}", cookie.value)
                 assert_contains("fb.1.", cookie.value)
                 assert_equal("example.com", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.1.", cookie.value)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
             end
         end
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
@@ -204,13 +232,13 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".test1_test2.BQ", cookie.value)
+                assert_contains(".test1_test2.#{APPENDIX_IS_NEW}", cookie.value)
                 assert_contains("fb.1.", cookie.value)
                 assert_equal("example.com", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.1.", cookie.value)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
             end
         end
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
@@ -231,13 +259,16 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".test123_test1_test456.BQ", cookie.value)
+                assert_contains(
+                    ".test123_test1_test456.#{APPENDIX_IS_NEW}",
+                    cookie.value
+                )
                 assert_contains("fb.1.", cookie.value)
                 assert_equal("example.com", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.1.", cookie.value)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
             end
         end
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
@@ -260,13 +291,13 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_contains(".wer_test1_placeholder.BQ", cookie.value)
+                assert_contains(".wer_test1_placeholder.#{APPENDIX_IS_NEW}", cookie.value)
                 assert_contains("fb.1.", cookie.value)
                 assert_equal("example.com", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
                 assert_contains("fb.1.", cookie.value)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
             end
         end
         assert_equal(cookie_to_update, builder.get_cookies_to_set())
@@ -281,11 +312,17 @@ class TestParamBuilder < Minitest::Test
         assert_equal(2, cookie_to_update.size())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_equal("fb.1.2.test_fbc.BQ", cookie.value)
-                assert_equal("example.co.uk", cookie.domain)
+                assert_equal(
+                    "fb.1.2.test_fbc.#{APPENDIX_IS_NORMAL}",
+                    cookie.value
+                )
+                assert_equal(
+                    "example.co.uk",
+                    cookie.domain
+                )
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
-                assert_contains(".BQ", cookie.value)
+                assert_contains(".#{APPENDIX_IS_NEW}", cookie.value)
                 assert_equal("example.co.uk", cookie.domain)
             end
         end
@@ -329,15 +366,15 @@ class TestParamBuilder < Minitest::Test
             {"_fbp"=>"fb.1.123.345", "_fbc"=>"fb.1.2.test_fbc"},
             nil)
         assert_equal(2, cookie_to_update.size())
-        assert_equal("fb.1.2.test_fbc.BQ", builder.get_fbc())
-        assert_equal("fb.1.123.345.BQ", builder.get_fbp())
+        assert_equal("fb.1.2.test_fbc.#{APPENDIX_IS_NORMAL}", builder.get_fbc())
+        assert_equal("fb.1.123.345.#{APPENDIX_IS_NORMAL}", builder.get_fbp())
         for cookie in cookie_to_update do
             if cookie.name == ParamBuilder::FBC_NAME
-                assert_equal("fb.1.2.test_fbc.BQ", cookie.value)
+                assert_equal("fb.1.2.test_fbc.#{APPENDIX_IS_NORMAL}", cookie.value)
                 assert_equal("localhost", cookie.domain)
             else
                 assert_equal(ParamBuilder::FBP_NAME, cookie.name)
-                assert_equal("fb.1.123.345.BQ", cookie.value)
+                assert_equal("fb.1.123.345.#{APPENDIX_IS_NORMAL}", cookie.value)
                 assert_equal("localhost", cookie.domain)
             end
         end

@@ -7,23 +7,32 @@
 require_relative 'model/fbc_param_configs'
 require_relative 'model/cookie_settings'
 require_relative 'model/etld_plus_one_resolver'
+require_relative 'release_config'
 require 'set'
 require 'uri'
 require 'cgi'
+require 'base64'
 
 class ParamBuilder
   FBC_NAME = "_fbc"
   FBP_NAME = "_fbp"
   DEFAULT_1PC_AGE = 90 * 24 * 3600
-  LANGUAGE_TOKEN = "BQ"
+  LANGUAGE_TOKEN = "BQ"  # Original Ruby language token
   SUPPORTED_LANGUAGE_TOKENS = ["AQ", "Ag", "Aw", "BA", "BQ", "Bg"]
   MIN_PAYLOAD_SPLIT_LENGTH = 4
   MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH = 5
   IPV4_REGEX = /\A(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\z/
   IPV6_REGEX = /\A(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\z|\A(?:[0-9a-fA-F]{1,4}:){1,7}:\z|\A(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\z|\A(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}\z|\A(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}\z|\A(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}\z|\A(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}\z|\A[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}\z|\A:(?::[0-9a-fA-F]{1,4}){1,7}\z|\A::\z|\A(?:[0-9a-fA-F]{1,4}:){6}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\z/
+  # Appendix constants
+  DEFAULT_FORMAT = 0x01
+  LANGUAGE_TOKEN_INDEX = 0x05  # Ruby language token index
+  APPENDIX_LENGTH_V1 = 2
+  APPENDIX_LENGTH_V2 = 8
 
   def initialize(input = nil)
     @fbc_params_configs = [FbcParamConfigs.new("fbclid", "", "clickID")]
+    @appendix_new = get_appendix(true)
+    @appendix_normal = get_appendix(false)
 
     if input.nil?
       return
@@ -39,6 +48,34 @@ class ParamBuilder
     end
   end
 
+  private def get_appendix(is_new)
+    version = ReleaseConfig::VERSION
+    version_parts = version.split(".")
+    major = version_parts[0].to_i
+    minor = version_parts[1].to_i
+    patch = version_parts[2].to_i
+
+    is_new_byte = is_new ? 0x01 : 0x00
+
+    # Create byte array
+    bytes_array = [
+      DEFAULT_FORMAT,        # 0x01 = 1
+      LANGUAGE_TOKEN_INDEX,  # 0x05 = 5
+      is_new_byte,          # 0x01 when is_new=true, 0x00 when is_new=false
+      major,                # Major version number
+      minor,                # Minor version number
+      patch                 # Patch version number
+    ]
+
+    # Convert to bytes and then to base64url-safe string
+    byte_data = bytes_array.pack("C*")  # Pack as unsigned chars (bytes)
+    base64_encoded = Base64.encode64(byte_data).strip  # Remove newlines
+    # Make it URL-safe by replacing characters
+    base64url_safe = base64_encoded.tr('+/', '-_').gsub(/=+$/, '')
+    return base64url_safe
+  end
+
+
   private def pre_process_cookies(cookies, cookie_name)
     # Sanity check
     if cookies.nil? || cookies[cookie_name].nil?
@@ -50,13 +87,19 @@ class ParamBuilder
       parts.size > MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH
       return nil
     end
-    if parts.size == MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH && \
-      !SUPPORTED_LANGUAGE_TOKENS.include?(parts[MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH - 1])
-      return nil
+    if parts.size == MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH
+      appendix = parts[MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH - 1]
+      if appendix.size == APPENDIX_LENGTH_V1
+        if !SUPPORTED_LANGUAGE_TOKENS.include?(appendix)
+          return nil
+        end
+      elsif appendix.size != APPENDIX_LENGTH_V2
+        return nil
+      end
     end
     # Append language token if not present
     if parts.size == MIN_PAYLOAD_SPLIT_LENGTH
-      updated_cookie_value = cookie_value + "." + LANGUAGE_TOKEN
+      updated_cookie_value = cookie_value + "." + @appendix_normal
       @cookie_to_set_dict[cookie_name] = CookieSettings.new(
         cookie_name, updated_cookie_value, @etld_plus_one, DEFAULT_1PC_AGE)
       return updated_cookie_value
@@ -252,7 +295,7 @@ class ParamBuilder
       "." +
       new_fbc_payload +
       "." +
-      LANGUAGE_TOKEN
+      @appendix_new
     updated_cookie_setting = CookieSettings.new(
       FBC_NAME, new_fbc, @etld_plus_one, DEFAULT_1PC_AGE)
     return updated_cookie_setting
@@ -271,7 +314,7 @@ class ParamBuilder
       "." +
       new_fbp_payload +
       "." +
-      LANGUAGE_TOKEN
+      @appendix_new
     updated_cookie_setting = CookieSettings.new(
       FBP_NAME, new_fbp, @etld_plus_one, DEFAULT_1PC_AGE)
     return updated_cookie_setting
