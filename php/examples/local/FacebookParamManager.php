@@ -78,7 +78,7 @@ final class FacebookParamManager
         echo 'ParamBuilder output: <br/>'
             . 'getFbc: ' . $this->paramBuilder->getFbc() . '<br/>'
             . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>'
-            . 'getFbi: ' . $this->paramBuilder->getFbi() . '<br/>'
+            . 'getClientIpAddress: ' . $this->paramBuilder->getClientIpAddress() . '<br/>'
             . 'getNormalizedAndHashedPII: '
             . $normalized_and_hashed_pii . '<br/>';
     }

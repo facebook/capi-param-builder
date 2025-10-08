@@ -274,7 +274,7 @@ final class ParamBuilder
         return $this->fbp;
     }
 
-    public function getFbi()
+    public function getClientIpAddress()
     {
         return $this->fbi;
     }

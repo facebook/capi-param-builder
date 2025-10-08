@@ -608,7 +608,7 @@ final class GetClientIpTest extends TestCase
         );
 
         // Verify that FBI was set
-        $fbi = $builder->getFbi();
+        $fbi = $builder->getClientIpAddress();
         $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $fbi);
     }
 
