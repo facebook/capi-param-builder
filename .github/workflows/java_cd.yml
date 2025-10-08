@@ -25,7 +25,8 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
       - name: Publish to Maven Central
-        run: ./gradlew publish --no-daemon \
+        run: |
+          ./gradlew publish --no-daemon \
           -PGPG_SIGNING_KEY="${GPG_SIGNING_KEY}" \
           -PGPG_SIGNING_PASSWORD="${GPG_SIGNING_PASSWORD}" \
           -PossrhUsername="${OSSRH_TOKEN_USERNAME}" \
