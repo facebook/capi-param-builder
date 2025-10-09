@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v1.1.0
+
+### Improve
+- Improve appendix information to include more details about SDK. Details include SDK version number, language token, is_new flag.
+
 ## v1.0.1
 
 ### Improve
