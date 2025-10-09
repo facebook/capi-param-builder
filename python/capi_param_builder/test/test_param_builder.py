@@ -14,6 +14,9 @@ from capi_param_builder.param_builder import ParamBuilder
 
 from .test_etld_plus_one_resolver import TestEtldPlusOneResolver
 
+APPENDIX_IS_NEW = "AQIBAQAB"
+APPENDIX_IS_NORMAL = "AQIAAQAB"
+
 
 class TestParamBuilder(unittest.TestCase):
     def setUp(self) -> None:
@@ -45,8 +48,8 @@ class TestParamBuilder(unittest.TestCase):
         # Test with version 1.0.1
         mock_version.return_value = "1.0.1"
         builder = ParamBuilder()
-        self.assertEqual(builder._get_appendix(False), "AQIAAQAB")
-        self.assertEqual(builder._get_appendix(True), "AQIBAQAB")
+        self.assertEqual(builder._get_appendix(False), APPENDIX_IS_NORMAL)
+        self.assertEqual(builder._get_appendix(True), APPENDIX_IS_NEW)
 
     def test_process_request_empty_constructor(self) -> None:
         builder = ParamBuilder()
@@ -55,7 +58,7 @@ class TestParamBuilder(unittest.TestCase):
         fbp = res.pop()
         self.assertEqual("_fbp", fbp.name)
         self.assertEqual("example.com", fbp.domain)
-        self.assertTrue((fbp.value).endswith(".AQIBAQAB"))
+        self.assertTrue((fbp.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -65,11 +68,11 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue((cookie.value).endswith(".testtest.AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".testtest.{APPENDIX_IS_NEW}"))
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -83,11 +86,11 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue((cookie.value).endswith(".testtest.AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".testtest.{APPENDIX_IS_NEW}"))
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -101,11 +104,13 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertEqual(cookie.value, "fb.1.xxx.abcd.AQIAAQAB")  # normal
+                self.assertEqual(
+                    cookie.value, f"fb.1.xxx.abcd.{APPENDIX_IS_NORMAL}"
+                )  # normal
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))  # new
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))  # new
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -124,12 +129,14 @@ class TestParamBuilder(unittest.TestCase):
         for cookie in res:
             if cookie.name == "_fbc":
                 self.assertTrue(
-                    (cookie.value).endswith(".test123321_test_anotherTest.AQIBAQAB")
+                    (cookie.value).endswith(
+                        f".test123321_test_anotherTest.{APPENDIX_IS_NEW}"
+                    )
                 )
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -150,12 +157,14 @@ class TestParamBuilder(unittest.TestCase):
         for cookie in res:
             if cookie.name == "_fbc":
                 self.assertTrue(
-                    (cookie.value).endswith(".testReferral_test_anotherTest.AQIBAQAB")
+                    (cookie.value).endswith(
+                        f".testReferral_test_anotherTest.{APPENDIX_IS_NEW}"
+                    )
                 )
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -173,11 +182,13 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue((cookie.value).endswith(".test_anotherTest.AQIBAQAB"))
+                self.assertTrue(
+                    (cookie.value).endswith(f".test_anotherTest.{APPENDIX_IS_NEW}")
+                )
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -197,12 +208,14 @@ class TestParamBuilder(unittest.TestCase):
         for cookie in res:
             if cookie.name == "_fbc":
                 self.assertTrue(
-                    (cookie.value).endswith(".testReferral_test_sample.AQIBAQAB")
+                    (cookie.value).endswith(
+                        f".testReferral_test_sample.{APPENDIX_IS_NEW}"
+                    )
                 )
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -214,11 +227,13 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue((cookie.value).endswith(".test123321.AQIBAQAB"))
+                self.assertTrue(
+                    (cookie.value).endswith(f".test123321.{APPENDIX_IS_NEW}")
+                )
                 self.assertEqual("example.com", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -233,7 +248,7 @@ class TestParamBuilder(unittest.TestCase):
         for cookie in res:
             self.assertEqual("_fbp", cookie.name)
             self.assertEqual("example.com", cookie.domain)
-            self.assertTrue((cookie.value).endswith(".AQIBAQAB"))  # new fbp
+            self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))  # new fbp
         self.assertEqual("fb.1.xxx.abcd.Bg", builder.get_fbc())  # no change for fbc
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
@@ -248,10 +263,12 @@ class TestParamBuilder(unittest.TestCase):
             if cookie.name == "_fbc":
                 self.assertTrue("test123321" in cookie.value)
                 self.assertEqual("example.co.uk", cookie.domain)
-                self.assertTrue((cookie.value).endswith(".test123321.AQIBAQAB"))
+                self.assertTrue(
+                    (cookie.value).endswith(f".test123321.{APPENDIX_IS_NEW}")
+                )
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -267,11 +284,11 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue((cookie.value).endswith(".test123.AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".test123.{APPENDIX_IS_NEW}"))
                 self.assertEqual("balabala.test.example.co.uk", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -284,7 +301,7 @@ class TestParamBuilder(unittest.TestCase):
         fbc = res.pop()
         self.assertEqual("_fbc", fbc.name)
         self.assertEqual("[::1]", fbc.domain)
-        self.assertTrue(".test123.AQIBAQAB" in fbc.value)
+        self.assertTrue(f".test123.{APPENDIX_IS_NEW}" in fbc.value)
         self.assertEqual("fb.1.123.fbptest.Ag", builder.get_fbp())
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
@@ -304,7 +321,7 @@ class TestParamBuilder(unittest.TestCase):
         fbc = res.pop()
         self.assertEqual("_fbc", fbc.name)
         self.assertEqual("[2001:db8:4006:812::200e]", fbc.domain)
-        self.assertTrue("test123.AQIBAQAB" in fbc.value)
+        self.assertTrue(f"test123.{APPENDIX_IS_NEW}" in fbc.value)
         self.assertEqual("fb.1.123.test.Bg", builder.get_fbp())
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
@@ -321,11 +338,11 @@ class TestParamBuilder(unittest.TestCase):
 
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue((cookie.value).endswith(".test123.AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".test123.{APPENDIX_IS_NEW}"))
                 self.assertEqual("[192.168.0.1]", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
-                self.assertTrue((cookie.value).endswith(".AQIBAQAB"))
+                self.assertTrue((cookie.value).endswith(f".{APPENDIX_IS_NEW}"))
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
 
@@ -337,7 +354,7 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual(2, len(res))
         for cookie in res:
             if cookie.name == "_fbc":
-                self.assertTrue("test123.AQIBAQAB" in cookie.value)
+                self.assertTrue(f"test123.{APPENDIX_IS_NEW}" in cookie.value)
                 self.assertEqual("localhost", cookie.domain)
             else:
                 self.assertEqual("_fbp", cookie.name)
