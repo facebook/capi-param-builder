@@ -24,15 +24,9 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build with Gradle
         run: ./gradlew build
-      - name: Debug GPG key length
-        run: |
-          echo "Key length: ${#GPG_SIGNING_KEY}"
-          echo "First 20 chars: $(echo "$GPG_SIGNING_KEY" | head -c 20)"
-        env:
-          GPG_SIGNING_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       - name: Publish to Maven Central
         run: |
-          ./gradlew :capi-param-builder:publishToSonatype --no-daemon \
+          ./gradlew :capi-param-builder:publishToSonatype closeSonatypeStagingRepository --no-daemon \
           -PGPG_SIGNING_KEY="${GPG_SIGNING_KEY}" \
           -PGPG_SIGNING_PASSWORD="${GPG_SIGNING_PASSWORD}" \
           -PossrhUsername="${OSSRH_TOKEN_USERNAME}" \
