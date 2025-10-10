@@ -49,30 +49,35 @@ class ParamBuilder
   end
 
   private def get_appendix(is_new)
-    version = ReleaseConfig::VERSION
-    version_parts = version.split(".")
-    major = version_parts[0].to_i
-    minor = version_parts[1].to_i
-    patch = version_parts[2].to_i
+    begin
+      version = ReleaseConfig::VERSION
+      version_parts = version.split(".")
+      major = version_parts[0].to_i
+      minor = version_parts[1].to_i
+      patch = version_parts[2].to_i
 
-    is_new_byte = is_new ? 0x01 : 0x00
+      is_new_byte = is_new ? 0x01 : 0x00
 
-    # Create byte array
-    bytes_array = [
-      DEFAULT_FORMAT,        # 0x01 = 1
-      LANGUAGE_TOKEN_INDEX,  # 0x05 = 5
-      is_new_byte,          # 0x01 when is_new=true, 0x00 when is_new=false
-      major,                # Major version number
-      minor,                # Minor version number
-      patch                 # Patch version number
-    ]
+      # Create byte array
+      bytes_array = [
+        DEFAULT_FORMAT,        # 0x01 = 1
+        LANGUAGE_TOKEN_INDEX,  # 0x05 = 5
+        is_new_byte,          # 0x01 when is_new=true, 0x00 when is_new=false
+        major,                # Major version number
+        minor,                # Minor version number
+        patch                 # Patch version number
+      ]
 
-    # Convert to bytes and then to base64url-safe string
-    byte_data = bytes_array.pack("C*")  # Pack as unsigned chars (bytes)
-    base64_encoded = Base64.encode64(byte_data).strip  # Remove newlines
-    # Make it URL-safe by replacing characters
-    base64url_safe = base64_encoded.tr('+/', '-_').gsub(/=+$/, '')
-    return base64url_safe
+      # Convert to bytes and then to base64url-safe string
+      byte_data = bytes_array.pack("C*")  # Pack as unsigned chars (bytes)
+      base64_encoded = Base64.encode64(byte_data).strip  # Remove newlines
+      # Make it URL-safe by replacing characters
+      base64url_safe = base64_encoded.tr('+/', '-_').gsub(/=+$/, '')
+      return base64url_safe
+    rescue Exception => e
+      puts "Failed to parse version in appendix: #{e}"
+      return LANGUAGE_TOKEN # Fall back to original Ruby language token
+    end
   end
 
 

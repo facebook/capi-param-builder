@@ -40,6 +40,20 @@ class TestParamBuilder < Minitest::Test
         ReleaseConfig.const_set(:VERSION, tmp_original_version)
     end
 
+    def test_override_different_versions_exception
+        tmp_original_version = ReleaseConfig::VERSION
+        ReleaseConfig.send(:remove_const, :VERSION)
+        ReleaseConfig.const_set(:VERSION, nil)
+        builder = ParamBuilder.new()
+        appendix_new = builder.send(:get_appendix, true)
+        assert_equal(appendix_new, "BQ")
+        appendix_normal = builder.send(:get_appendix, false)
+        assert_equal(appendix_normal, "BQ")
+    ensure
+        ReleaseConfig.send(:remove_const, :VERSION)
+        ReleaseConfig.const_set(:VERSION, tmp_original_version)
+    end
+
     def test_process_request_with_fbc_fbp_updated
         builder = ParamBuilder.new()
         cookie_to_update = builder.process_request(
