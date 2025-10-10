@@ -32,7 +32,7 @@ jobs:
           GPG_SIGNING_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       - name: Publish to Maven Central
         run: |
-          ./gradlew :capi_param_builder:publishToSonatype --no-daemon \
+          ./gradlew :capi-param-builder:publishToSonatype --no-daemon \
           -PGPG_SIGNING_KEY="${GPG_SIGNING_KEY}" \
           -PGPG_SIGNING_PASSWORD="${GPG_SIGNING_PASSWORD}" \
           -PossrhUsername="${OSSRH_TOKEN_USERNAME}" \
