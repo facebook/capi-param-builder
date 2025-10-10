@@ -45,6 +45,11 @@ class TestParamBuilder(unittest.TestCase):
         builder = ParamBuilder()
         self.assertEqual(builder._get_appendix(False), "AQIAAQEA")
         self.assertEqual(builder._get_appendix(True), "AQIBAQEA")
+        # Exception when parsing version
+        mock_version.return_value = ""
+        builder = ParamBuilder()
+        self.assertEqual(builder._get_appendix(False), "Ag")
+        self.assertEqual(builder._get_appendix(True), "Ag")
         # Test with version 1.0.1
         mock_version.return_value = "1.0.1"
         builder = ParamBuilder()

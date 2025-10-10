@@ -96,29 +96,36 @@ class ParamBuilder:
             return "1.0.1"
 
     def _get_appendix(self, is_new: bool) -> str:
-        version = self._get_version()
-        version_parts = version.split(".")
-        major = int(version_parts[0])
-        minor = int(version_parts[1])
-        patch = int(version_parts[2])
+        try:
+            version = self._get_version()
+            version_parts = version.split(".")
+            major = int(version_parts[0])
+            minor = int(version_parts[1])
+            patch = int(version_parts[2])
 
-        is_new_byte = 0x01 if is_new else 0x00
+            is_new_byte = 0x01 if is_new else 0x00
 
-        bytes_array = [
-            DEFAULT_FORMAT,
-            LANGUAGE_TOKEN_INDEX,
-            is_new_byte,
-            major,
-            minor,
-            patch,
-        ]
+            bytes_array = [
+                DEFAULT_FORMAT,
+                LANGUAGE_TOKEN_INDEX,
+                is_new_byte,
+                major,
+                minor,
+                patch,
+            ]
 
-        # Convert to bytes and then to base64url-safe string
-        byte_data = bytes(bytes_array)
-        base64_encoded = base64.b64encode(byte_data).decode("ascii")
-        # Make it URL-safe by replacing characters
-        base64url_safe = base64_encoded.replace("+", "-").replace("/", "_").rstrip("=")
-        return base64url_safe
+            # Convert to bytes and then to base64url-safe string
+            byte_data = bytes(bytes_array)
+            base64_encoded = base64.b64encode(byte_data).decode("ascii")
+            # Make it URL-safe by replacing characters
+            base64url_safe = (
+                base64_encoded.replace("+", "-").replace("/", "_").rstrip("=")
+            )
+            return base64url_safe
+        except Exception as e:
+            # Fallback to default appendix
+            print(f"Unable to parse version number, fallback: {e}")
+            return LANGUAGE_TOKEN
 
     def _pre_process_cookies(
         self, cookies: dict[str, str], cookie_name: str
