@@ -10,6 +10,7 @@ package com.facebook.capi.sdk;
 import com.facebook.capi.sdk.model.Constants;
 import com.facebook.capi.sdk.model.CookieSetting;
 import com.facebook.capi.sdk.model.FbcParamConfig;
+import com.facebook.capi.sdk.model.Version;
 import com.facebook.capi.sdk.utils.CookieUtils;
 import com.facebook.capi.sdk.utils.URIUtils;
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class ParamBuilder {
   private String fbc;
   private String fbp;
   URIUtils uriUtils;
-  CookieUtils cookieUtils = new CookieUtils(fbcParamConfigs);
+  CookieUtils cookieUtils = new CookieUtils(fbcParamConfigs, Version.VERSION);
   List<CookieSetting> cookiesToSet;
 
   /**
@@ -61,9 +62,10 @@ public class ParamBuilder {
    * For unit test only
    *
    * @param fbcParamConfigs configs
+   * @param sdkVersion current SDK version
    */
-  protected void setCookieUtils(List<FbcParamConfig> fbcParamConfigs) {
-    this.cookieUtils = new CookieUtils(fbcParamConfigs);
+  protected void setCookieUtils(List<FbcParamConfig> fbcParamConfigs, String sdkVersion) {
+    this.cookieUtils = new CookieUtils(fbcParamConfigs, sdkVersion);
   }
 
   /**

@@ -12,6 +12,7 @@ import com.facebook.capi.sdk.model.CookieSetting;
 import com.facebook.capi.sdk.model.FbcParamConfig;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -22,14 +23,60 @@ public class CookieUtils {
   private List<FbcParamConfig> fbcParamConfigs;
   private String etldPlusOne;
   private int subDomainIndex = 0;
+  // Appendix format constants
+  private static final int DEFAULT_FORMAT = 0x01;
+  private static final int LANGUAGE_TOKEN_INDEX = 0x03; // Java
+  private static final int APPENDIX_LENGTH_V1 = 2;
+  private static final int APPENDIX_LENGTH_V2 = 8;
+
+  private final String APPENDIX_NEW;
+  private final String APPENDIX_NORMAL;
+  private final String VERSION;
 
   /**
    * Default settings for param configs
    *
    * @param fbcParamConfigs default setting configs
+   * @param sdkVersion version of the sdk
    */
-  public CookieUtils(List<FbcParamConfig> fbcParamConfigs) {
+  public CookieUtils(List<FbcParamConfig> fbcParamConfigs, String sdkVersion) {
     this.fbcParamConfigs = fbcParamConfigs;
+    this.VERSION = sdkVersion;
+    this.APPENDIX_NEW = getAppendix(true);
+    this.APPENDIX_NORMAL = getAppendix(false);
+  }
+
+  private String getAppendix(boolean isNew) {
+    try {
+      // Get version and split into major, minor, patch
+      String[] versionParts = this.VERSION.split("\\.");
+      int major = Integer.parseInt(versionParts[0]);
+      int minor = Integer.parseInt(versionParts[1]);
+      int patch = Integer.parseInt(versionParts[2]);
+
+      // Create byte indicating if it's new (0x01) or not (0x00)
+      int isNewByte = isNew ? 0x01 : 0x00;
+
+      // Create byte array: [DEFAULT_FORMAT, LANGUAGE_TOKEN_INDEX, is_new_byte, major, minor, patch]
+      byte[] bytes = {
+        (byte) DEFAULT_FORMAT,
+        (byte) LANGUAGE_TOKEN_INDEX,
+        (byte) isNewByte,
+        (byte) major,
+        (byte) minor,
+        (byte) patch
+      };
+
+      // Convert to base64 and make it URL-safe
+      String base64 = Base64.getEncoder().encodeToString(bytes);
+      String base64urlSafe = base64.replace("+", "-").replace("/", "_").replaceAll("=+$", "");
+
+      return base64urlSafe;
+    } catch (Exception e) {
+      // Fallback to legacy language token if version parsing fails
+      System.err.println("Warning: Failed to generate appendix, using fallback: " + e.getMessage());
+      return Constants.LANGUAGE_TOKEN;
+    }
   }
 
   /**
@@ -84,17 +131,22 @@ public class CookieUtils {
     }
 
     // Invalid language token
-    if (splitLength == Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH
-        && !Arrays.asList(Constants.SUPPORTED_LANGUAGES_TOKEN)
-            .contains(split[Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH - 1])) {
-      return null;
+    if (splitLength == Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH) {
+      String appendixValue = split[Constants.MAX_PAYLOAD_WITH_LANGUAGE_TOKEN_LENGTH - 1];
+      if (appendixValue.length() == APPENDIX_LENGTH_V1) {
+        if (!Arrays.asList(Constants.SUPPORTED_LANGUAGES_TOKEN).contains(appendixValue)) {
+          return null;
+        }
+      } else if (appendixValue.length() != APPENDIX_LENGTH_V2) {
+        return null;
+      }
     }
 
     if (splitLength == Constants.MIN_PAYLOAD_SPLIT_LENGTH) {
       // In Java, trailing delimiters will be ignored.
       // In case we have unexpected trailing extra dot.
       boolean containExtralDot = cookieValue.endsWith(".");
-      String updatedCookie = cookieValue + (containExtralDot ? "" : ".") + Constants.LANGUAGE_TOKEN;
+      String updatedCookie = cookieValue + (containExtralDot ? "" : ".") + this.APPENDIX_NORMAL;
       updatedCookieMap.put(
           cookieName,
           new CookieSetting(
@@ -174,7 +226,7 @@ public class CookieUtils {
               .append(".")
               .append(newFbpPayload)
               .append(".")
-              .append(Constants.LANGUAGE_TOKEN)
+              .append(this.APPENDIX_NEW)
               .toString();
       CookieSetting fbpCookie =
           new CookieSetting(
@@ -229,7 +281,7 @@ public class CookieUtils {
             .append(".")
             .append(newFbcPayload)
             .append(".")
-            .append(Constants.LANGUAGE_TOKEN)
+            .append(this.APPENDIX_NEW)
             .toString();
 
     CookieSetting fbcCookie =

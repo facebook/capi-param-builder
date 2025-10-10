@@ -30,5 +30,5 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // If you want to use the local version of capi-param-builder
     // implementation project(':capi-param-builder')
-    implementation 'com.facebook.capi.sdk:capi-param-builder:1.0.2'
+    implementation 'com.facebook.capi.sdk:capi-param-builder:1.0.3'
 }
