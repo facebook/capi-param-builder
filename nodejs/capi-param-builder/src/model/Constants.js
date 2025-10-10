@@ -7,6 +7,7 @@
  */
 class Constants {
     static DEFAULT_1PC_AGE = 90 * 24 * 3600; // 90 days
+    static LANGUAGE_TOKEN = 'BA'; // NodeJS language token
     static LANGUAGE_TOKEN_INDEX = 0x04; // nodejs
     static SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN = ['AQ', 'Ag', 'Aw', 'BA', 'BQ', 'Bg'];
     static MIN_PAYLOAD_SPLIT_LENGTH = 4;

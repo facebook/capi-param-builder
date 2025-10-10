@@ -8,6 +8,7 @@
 const pb = require('../src/ParamBuilder');
 const ParamBuilder = pb.ParamBuilder;
 const FbcParamConfig = require('../src/model/FbcParamConfig');
+const Constants = require('../src/model/Constants');
 const DummyLocalHostTestResolver = require('./DummyLocalHostTestResolver').DummyLocalHostTestResolver;
 const DUMMY_TIMESTAMP = 1234567890;
 const DUMMY_FBP_PAYLOAD = 2147483647;
@@ -424,5 +425,14 @@ describe('ParamBuilder base unit test', () => {
     expect(updated_cookies.length).toEqual(2);
     expect(builder.getFbc()).toEqual("fb.2." + DUMMY_TIMESTAMP + ".test123_test_balabala." + DUMMY_APPENDIX_NEW);
     expect(builder.getFbp()).toEqual("fb.2."+ DUMMY_TIMESTAMP + "." + DUMMY_FBP_PAYLOAD + "." + DUMMY_APPENDIX_NEW);
+  });
+
+   test('testProcessRequestWithInvalidVersionNumber', () => {
+    const builder = new ParamBuilder();
+    const appendix_new = builder._getAppendixInfo(true); // null version
+    const appendix_normal = builder._getAppendixInfo(false, ""); // empty version
+    // Fallback
+    expect(appendix_new).toEqual(Constants.LANGUAGE_TOKEN);
+    expect(appendix_normal).toEqual(Constants.LANGUAGE_TOKEN);
   });
 });
