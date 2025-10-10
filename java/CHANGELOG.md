@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### v1.0.3
+## v1.1.0
+- Improve existing appendix to include current version number, is_new flag, and langauge token.
+
+## v1.0.3
 - Improve paramConfigs quality by removing leading separator and add duplication check
 
 ## v1.0.2
