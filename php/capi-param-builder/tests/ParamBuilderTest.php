@@ -8,6 +8,7 @@
 
 use PHPUnit\Framework\TestCase;
 use FacebookAds\ParamBuilder;
+use FacebookAds\AppendixProvider;
 use FacebookAds\ETLDPlus1Resolver;
 use FacebookAds\FbcParamConfig;
 use FacebookAds\Constants;
@@ -19,7 +20,6 @@ final class ParamBuilderTest extends TestCase
     // v1.0.1
     private $appendix_is_new = "AQEBAQAB";
     private $appendix_is_normal = "AQEAAQAB";
-
 
     public function testConstructorWithEtldPlusOne()
     {
@@ -73,7 +73,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -107,7 +107,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -141,7 +141,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -172,7 +172,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -206,7 +206,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -239,7 +239,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -272,7 +272,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockSdkVersionForAppendix($builderWithParamConfig);
+        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -294,44 +294,10 @@ final class ParamBuilderTest extends TestCase
         );
     }
 
-    public function testProcessRequestWithMockedSdkVersion()
-    {
-        $builder = new ParamBuilder();
-        // Mock SDK version to 1.15.24
-        $this->mockSdkVersionForAppendix($builder, '1.15.24');
-        $builder->processRequest(
-            'a.b.walmart.com:8080',
-            array(
-                'fbclid' => 'abc'
-            ),
-            [],
-            null
-        );
-
-        // With version 2.5.3, the appendix should be different from default
-        $this->assertIsString($builder->getFbc());
-        $this->assertStringEndsWith('.abc.AQEBAQ8Y', $builder->getFbc());
-        $this->assertIsString($builder->getFbp());
-
-        // Test with different version
-        $builder2 = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder2, 'error');
-
-        $builder2->processRequest(
-            'a.b.walmart.com:8080',
-            array(
-                'fbclid' => 'abc'
-            ),
-            [],
-            null
-        );
-        $this->assertStringEndsWith(".abc.AQ", $builder2->getFbc());
-    }
-
     public function testProcessRequest()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -355,7 +321,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithReferral()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -377,7 +343,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithReferralWithoutQuery()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -395,7 +361,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithRefererAndProtocol()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             [''],
@@ -425,7 +391,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithDomainListAndProtocol()
     {
         $builder = new ParamBuilder(array('https://example.com:8080'));
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'http://a.b.example.com:8080',
             ['fbclid' => 'test123'],
@@ -455,7 +421,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestNoReferralSet()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array('fbclid' => 'test123'),
@@ -472,7 +438,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithUnusedInfo()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array('fbc' => 'test123'),
@@ -491,7 +457,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithInvalidCookies()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -514,7 +480,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithExistingFbc()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(),
@@ -532,7 +498,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithExistingCookie()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -552,7 +518,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithOutdatedCookie()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -572,7 +538,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithInvalidLanguageToken()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(),
@@ -593,7 +559,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithValidCookiesWithoutLanguageToken()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -639,7 +605,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithIP()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             '127.0.0.1:8080',
             array(
@@ -659,7 +625,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithIPv6()
     {
         $builder = new ParamBuilder();
-        $this->mockSdkVersionForAppendix($builder);
+        $this->mockAppendix($builder);
         $builder->processRequest(
             '[::1]:8080',
             array(
@@ -749,30 +715,19 @@ final class ParamBuilderTest extends TestCase
     }
 
     /**
-     * Helper method to mock SDK version by setting static appendix values
+     * Helper method to mock appendix by setting static appendix values
      */
-    private function mockSdkVersionForAppendix($builder, $version = '1.0.1')
+    private function mockAppendix($builder)
     {
         $reflector = new ReflectionClass($builder);
 
-        // Use reflection to call the private getAppendix method directly
-        $getAppendixMethod = $reflector->getMethod('getAppendix');
-        $getAppendixMethod->setAccessible(true);
-
-        // Generate appendix values using the actual ParamBuilder logic
-        $appendix_new = $getAppendixMethod->invoke($builder, true, $version);
-        $appendix_normal = $getAppendixMethod->invoke(
-            $builder,
-            false,
-            $version
-        );
         // Set the appendix values using reflection
         $appendix_new_property = $reflector->getProperty('appendix_new');
         $appendix_new_property->setAccessible(true);
-        $appendix_new_property->setValue($builder, $appendix_new);
+        $appendix_new_property->setValue($builder, $this->appendix_is_new);
 
         $appendix_normal_property = $reflector->getProperty('appendix_normal');
         $appendix_normal_property->setAccessible(true);
-        $appendix_normal_property->setValue($builder, $appendix_normal);
+        $appendix_normal_property->setValue($builder, $this->appendix_is_normal);
     }
 }

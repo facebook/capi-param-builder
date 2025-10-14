@@ -12,7 +12,7 @@ require_once 'model/Constants.php';
 require_once 'model/FbcParamConfig.php';
 require_once 'model/CookieSettings.php';
 require_once 'piiUtil/PIIUtils.php';
-require_once 'util/VersionProvider.php';
+require_once 'util/AppendixProvider.php';
 
 final class ParamBuilder
 {
@@ -21,7 +21,6 @@ final class ParamBuilder
     private $domain_list;
 
     // appendix info
-    private $sdk_version;
     private $appendix_new;
     private $appendix_normal;
 
@@ -45,9 +44,9 @@ final class ParamBuilder
         $this->fbc_param_configs = array(
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING)
         );
-        $sdk_version = VersionProvider::getVersion();
-        $this->appendix_new = $this->getAppendix(true, $sdk_version);
-        $this->appendix_normal = $this->getAppendix(false, $sdk_version);
+
+        $this->appendix_new = AppendixProvider::getAppendix(true);
+        $this->appendix_normal = AppendixProvider::getAppendix(false);
 
         if ($params instanceof ETLDPlus1Resolver) {
             $this->etld_plus1_resolver = $params;
@@ -76,52 +75,6 @@ final class ParamBuilder
         }
 
         return false;
-    }
-
-    private function getAppendix($is_new, $sdk_version) {
-        try {
-            // Invalid version format
-            if (!preg_match('/^\d+(\.\d+){2}$/', $sdk_version)) {
-                return LANGUAGE_TOKEN;
-            }
-
-            $version_parts = explode('.', $sdk_version);
-            $major = intval($version_parts[0]);
-            $minor = intval($version_parts[1]);
-            $patch = intval($version_parts[2]);
-
-            // Create byte indicating if it's new (0x01) or not (0x00)
-            $is_new_byte = $is_new ? 0x01 : 0x00;
-
-            // Create byte array:
-            // [DEFAULT_FORMAT, LANGUAGE_TOKEN_INDEX, is_new_byte, major, minor,
-            // patch]
-            $bytes = pack('C*',
-                DEFAULT_FORMAT,
-                LANGUAGE_TOKEN_INDEX,
-                $is_new_byte,
-                $major,
-                $minor,
-                $patch
-            );
-            // Convert to base64 and make it URL-safe
-            $base64 = base64_encode($bytes);
-            $base64url_safe = str_replace(
-                ['+', '/', '='],
-                ['-', '_', ''],
-                $base64
-            );
-
-            return $base64url_safe;
-        } catch (Exception $e) {
-            // Fallback to legacy language token if version parsing fails
-            ini_set('log_errors', 1);
-            error_log(
-                "Warning: Failed to generate appendix, using fallback: ".
-                $e->getMessage()
-            );
-            return LANGUAGE_TOKEN;
-        }
     }
 
     // pre-process cookie if it exists
