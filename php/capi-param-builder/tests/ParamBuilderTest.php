@@ -16,6 +16,10 @@ require_once 'ETLDPlus1ResolverForUnitTest.php';
 
 final class ParamBuilderTest extends TestCase
 {
+    // v1.0.1
+    private $appendix_is_new = "AQEBAQAB";
+    private $appendix_is_normal = "AQEAAQAB";
+
 
     public function testConstructorWithEtldPlusOne()
     {
@@ -69,6 +73,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -80,11 +85,14 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.abc_test_test123.AQ',
+            '.abc_test_test123.'.$this->appendix_is_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
     }
 
     public function testConstructorWithParamConfigsButNoQueryMatched()
@@ -99,6 +107,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -110,11 +119,14 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.abc.AQ',
+            '.abc.'.$this->appendix_is_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
     }
 
     public function testConstructorWithParamConfigsWithRefererMatched()
@@ -129,6 +141,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -137,11 +150,14 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.abc_test_test123.AQ',
+            '.abc_test_test123.'.$this->appendix_is_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
     }
 
     public function testConstructorWithParamConfigsWithBothQueryAndReferer()
@@ -156,6 +172,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -167,11 +184,14 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.qabc_test_qtest123.AQ',
+            '.qabc_test_qtest123.'.$this->appendix_is_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
     }
 
     public function testConstructorWithParamConfigsWithBothQueryAndRefererMix()
@@ -186,6 +206,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -197,11 +218,14 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.qabc_test_rtest123.AQ',
+            '.qabc_test_rtest123.'.$this->appendix_is_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
     }
 
      public function testConstructorWithParamConfigsWithCustomizedConfigOnly() {
@@ -215,6 +239,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -225,10 +250,15 @@ final class ParamBuilderTest extends TestCase
             "https://walmart.com?invalid=rabc&query=rtest123"
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
-        $this->assertStringEndsWith('.test_test123.AQ',
-            $builderWithParamConfig->getFbc());
+        $this->assertStringEndsWith(
+            '.test_test123.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbc()
+        );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
     }
 
     public function testConstructorWithParamConfigsWithDuplication() {
@@ -242,6 +272,7 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
+        $this->mockSdkVersionForAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -252,15 +283,55 @@ final class ParamBuilderTest extends TestCase
             "https://walmart.com?fbclid=rabc&query=rtest123"
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
-        $this->assertStringEndsWith('.sample456_test_123.AQ',
-            $builderWithParamConfig->getFbc());
+        $this->assertStringEndsWith(
+            '.sample456_test_123.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbc()
+        );
         $this->assertIsString($builderWithParamConfig->getFbp());
-        $this->assertStringEndsWith('.AQ', $builderWithParamConfig->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builderWithParamConfig->getFbp()
+        );
+    }
+
+    public function testProcessRequestWithMockedSdkVersion()
+    {
+        $builder = new ParamBuilder();
+        // Mock SDK version to 1.15.24
+        $this->mockSdkVersionForAppendix($builder, '1.15.24');
+        $builder->processRequest(
+            'a.b.walmart.com:8080',
+            array(
+                'fbclid' => 'abc'
+            ),
+            [],
+            null
+        );
+
+        // With version 2.5.3, the appendix should be different from default
+        $this->assertIsString($builder->getFbc());
+        $this->assertStringEndsWith('.abc.AQEBAQ8Y', $builder->getFbc());
+        $this->assertIsString($builder->getFbp());
+
+        // Test with different version
+        $builder2 = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder2, 'error');
+
+        $builder2->processRequest(
+            'a.b.walmart.com:8080',
+            array(
+                'fbclid' => 'abc'
+            ),
+            [],
+            null
+        );
+        $this->assertStringEndsWith(".abc.AQ", $builder2->getFbc());
     }
 
     public function testProcessRequest()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -270,14 +341,21 @@ final class ParamBuilderTest extends TestCase
             null
         );
         $this->assertIsString($builder->getFbc());
-        $this->assertStringEndsWith('.abc.AQ', $builder->getFbc());
+        $this->assertStringEndsWith(
+            '.abc.'.$this->appendix_is_new,
+            $builder->getFbc()
+        );
         $this->assertIsString($builder->getFbp());
-        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builder->getFbp()
+        );
     }
 
     public function testProcessRequestWithReferral()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -285,14 +363,21 @@ final class ParamBuilderTest extends TestCase
             'walmart.com?fbclid=test123'
         );
         $this->assertIsString($builder->getFbc());
-        $this->assertStringEndsWith('test123.AQ', $builder->getFbc());
+        $this->assertStringEndsWith(
+            'test123.'.$this->appendix_is_new,
+            $builder->getFbc()
+        );
         $this->assertIsString($builder->getFbp());
-        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builder->getFbp()
+        );
     }
 
     public function testProcessRequestWithReferralWithoutQuery()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -301,12 +386,16 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
-        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builder->getFbp()
+        );
     }
 
     public function testProcessRequestWithRefererAndProtocol()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             [''],
@@ -318,11 +407,17 @@ final class ParamBuilderTest extends TestCase
         $this->assertIsString($builder->getFbp());
         foreach ($result as $cookie) {
             if ($cookie->name === '_fbc') {
-                $this->assertStringEndsWith('.test123.AQ', $cookie->value);
+                $this->assertStringEndsWith(
+                    '.test123.'.$this->appendix_is_new,
+                    $cookie->value
+                );
                 $this->assertEquals('b.walmart.com', $cookie->domain);
             } else {
                 $this->assertEquals('_fbp', $cookie->name);
-                $this->assertStringEndsWith('.AQ', $cookie->value);
+                $this->assertStringEndsWith(
+                    '.'.$this->appendix_is_new,
+                    $cookie->value
+                );
             }
         }
     }
@@ -330,6 +425,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithDomainListAndProtocol()
     {
         $builder = new ParamBuilder(array('https://example.com:8080'));
+        $this->mockSdkVersionForAppendix($builder);
         $result = $builder->processRequest(
             'http://a.b.example.com:8080',
             ['fbclid' => 'test123'],
@@ -341,11 +437,17 @@ final class ParamBuilderTest extends TestCase
         $this->assertIsString($builder->getFbp());
         foreach ($result as $cookie) {
             if ($cookie->name === '_fbc') {
-                $this->assertStringEndsWith('.test123.AQ', $cookie->value);
+                $this->assertStringEndsWith(
+                    '.test123.'.$this->appendix_is_new,
+                    $cookie->value
+                );
                 $this->assertEquals('example.com', $cookie->domain);
             } else {
                 $this->assertEquals('_fbp', $cookie->name);
-                $this->assertStringEndsWith('.AQ', $cookie->value);
+                $this->assertStringEndsWith(
+                    '.'.$this->appendix_is_new,
+                    $cookie->value
+                );
             }
         }
     }
@@ -353,19 +455,24 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestNoReferralSet()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array('fbclid' => 'test123'),
             []
         );
         $this->assertIsString($builder->getFbc());
-        $this->assertStringEndsWith('.test123.AQ', $builder->getFbc());
+        $this->assertStringEndsWith(
+            '.test123.'.$this->appendix_is_new,
+            $builder->getFbc()
+        );
         $this->assertIsString($builder->getFbp());
     }
 
     public function testProcessRequestWithUnusedInfo()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array('fbc' => 'test123'),
@@ -375,12 +482,16 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
-        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builder->getFbp()
+        );
     }
 
     public function testProcessRequestWithInvalidCookies()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -394,12 +505,16 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals('_fbp', $result[0]->name);
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
-        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_normal,
+            $builder->getFbp()
+        );
     }
 
     public function testProcessRequestWithExistingFbc()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(),
@@ -408,12 +523,16 @@ final class ParamBuilderTest extends TestCase
             ),
             null
         );
-        $this->assertEquals('fb.1.123.abc.AQ', $builder->getFbc());
+        $this->assertEquals(
+            'fb.1.123.abc.'.$this->appendix_is_normal,
+            $builder->getFbc()
+        );
     }
 
     public function testProcessRequestWithExistingCookie()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -424,12 +543,16 @@ final class ParamBuilderTest extends TestCase
             ),
             null
         );
-        $this->assertEquals('fb.1.123.abc.AQ', $builder->getFbc());
+        $this->assertEquals(
+            'fb.1.123.abc.'.$this->appendix_is_normal,
+            $builder->getFbc()
+        );
     }
 
     public function testProcessRequestWithOutdatedCookie()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -440,12 +563,16 @@ final class ParamBuilderTest extends TestCase
             ),
             null
         );
-        $this->assertStringEndsWith('def.AQ', $builder->getFbc());
+        $this->assertStringEndsWith(
+            'def.'.$this->appendix_is_new,
+            $builder->getFbc()
+        );
     }
 
     public function testProcessRequestWithInvalidLanguageToken()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(),
@@ -457,12 +584,16 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertEquals(null, $builder->getFbc());
         // Since existing fbp is null, we will generate a new one
-        $this->assertStringEndsWith('.AQ', $builder->getFbp());
+        $this->assertStringEndsWith(
+            '.'.$this->appendix_is_new,
+            $builder->getFbp()
+        );
     }
 
     public function testProcessRequestWithValidCookiesWithoutLanguageToken()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -475,10 +606,16 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals(2, count($result));
         foreach ($result as $cookie) {
             if ($cookie->name === '_fbc') {
-                $this->assertEquals('fb.1.123.abc.AQ', $cookie->value);
+                $this->assertEquals(
+                    'fb.1.123.abc.'.$this->appendix_is_normal,
+                    $cookie->value
+                );
             } else {
                 $this->assertEquals('_fbp', $cookie->name);
-                $this->assertStringEndsWith('.AQ', $cookie->value);
+                $this->assertStringEndsWith(
+                    '.'.$this->appendix_is_new,
+                    $cookie->value
+                );
             }
         }
     }
@@ -502,6 +639,7 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithIP()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             '127.0.0.1:8080',
             array(
@@ -511,13 +649,17 @@ final class ParamBuilderTest extends TestCase
             null
         );
         $this->assertIsString($builder->getFbc());
-        $this->assertStringEndsWith('.abc.AQ', $builder->getFbc());
+        $this->assertStringEndsWith(
+            '.abc.'.$this->appendix_is_new,
+            $builder->getFbc()
+        );
         $this->assertIsString($builder->getFbp());
     }
 
     public function testProcessRequestWithIPv6()
     {
         $builder = new ParamBuilder();
+        $this->mockSdkVersionForAppendix($builder);
         $builder->processRequest(
             '[::1]:8080',
             array(
@@ -527,7 +669,10 @@ final class ParamBuilderTest extends TestCase
             null
         );
         $this->assertIsString($builder->getFbc());
-        $this->assertStringEndsWith('.abc.AQ', $builder->getFbc());
+        $this->assertStringEndsWith(
+            '.abc.'.$this->appendix_is_new,
+            $builder->getFbc()
+        );
         $this->assertIsString($builder->getFbp());
     }
 
@@ -601,5 +746,33 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals(2, count($cookies_to_set));
         $cookie = $cookies_to_set[0];
         $this->assertEquals('balabla.123test.com', $cookie->domain);
+    }
+
+    /**
+     * Helper method to mock SDK version by setting static appendix values
+     */
+    private function mockSdkVersionForAppendix($builder, $version = '1.0.1')
+    {
+        $reflector = new ReflectionClass($builder);
+
+        // Use reflection to call the private getAppendix method directly
+        $getAppendixMethod = $reflector->getMethod('getAppendix');
+        $getAppendixMethod->setAccessible(true);
+
+        // Generate appendix values using the actual ParamBuilder logic
+        $appendix_new = $getAppendixMethod->invoke($builder, true, $version);
+        $appendix_normal = $getAppendixMethod->invoke(
+            $builder,
+            false,
+            $version
+        );
+        // Set the appendix values using reflection
+        $appendix_new_property = $reflector->getProperty('appendix_new');
+        $appendix_new_property->setAccessible(true);
+        $appendix_new_property->setValue($builder, $appendix_new);
+
+        $appendix_normal_property = $reflector->getProperty('appendix_normal');
+        $appendix_normal_property->setAccessible(true);
+        $appendix_normal_property->setValue($builder, $appendix_normal);
     }
 }

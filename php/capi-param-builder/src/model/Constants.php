@@ -42,6 +42,10 @@ class PII_DATA_TYPE
 
 define('DEFAULT_1PC_AGE', 90 *  24 * 3600);
 define('LANGUAGE_TOKEN', 'AQ');
+define('DEFAULT_FORMAT', 0x01);
+define('LANGUAGE_TOKEN_INDEX', 0x01); // PHP language token index
+define('APPENDIX_LENGTH_V1', 2);
+define('APPENDIX_LENGTH_V2', 8);
 define('MIN_PAYLOAD_SPLIT_LENGTH', 4);
 define('PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN', 5);
 define('SUPPORTED_LANGUAGES_TOKEN', array('AQ', 'Ag', 'Aw', 'BA', 'BQ', 'Bg'));
