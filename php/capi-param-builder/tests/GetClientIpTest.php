@@ -9,14 +9,24 @@
 use PHPUnit\Framework\TestCase;
 use FacebookAds\ParamBuilder;
 use FacebookAds\Constants;
+use FacebookAds\AppendixProvider;
+
+require_once __DIR__ . '/../src/util/AppendixProvider.php';
 
 final class GetClientIpTest extends TestCase
 {
     private $paramBuilder;
     private $reflection;
+    private $appendix_is_new;
+    private $appendix_is_normal;
 
     protected function setUp(): void
     {
+        // Get the actual appendix values from AppendixProvider
+        $this->appendix_is_new = AppendixProvider::getAppendix(true);
+        $this->appendix_is_normal = AppendixProvider::getAppendix(false);
+
+        // Initialize ParamBuilder and reflection for accessing private methods
         $this->paramBuilder = new ParamBuilder();
         $this->reflection = new ReflectionClass($this->paramBuilder);
     }
@@ -87,7 +97,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_new, $result);
 
         // IPv6 public from request should beat IPv4 public from cookie
         $result = $this->invokePrivateStaticMethod(
@@ -96,7 +106,7 @@ final class GetClientIpTest extends TestCase
             self::IPV6_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // IPv6 public from cookie should beat IPv6 public from request (cookie priority)
         $anotherIPv6Public = '2001:db8::1';
@@ -106,7 +116,7 @@ final class GetClientIpTest extends TestCase
             $anotherIPv6Public,
             null
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_new, $result);
     }
 
     public function testGetClientIpIPv4PublicHandling()
@@ -119,7 +129,7 @@ final class GetClientIpTest extends TestCase
             $anotherIPv4Public,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_new, $result);
 
         // IPv4 public from request when no cookie available
         $result = $this->invokePrivateStaticMethod(
@@ -128,7 +138,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // IPv4 public from remote address when no other sources
         $result = $this->invokePrivateStaticMethod(
@@ -137,7 +147,7 @@ final class GetClientIpTest extends TestCase
             null,
             self::IPV4_PUBLIC
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
     }
 
     public function testGetClientIpPublicOverPrivatePrioritization()
@@ -149,7 +159,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Public IPv4 from request should beat private IPv4 from cookie
         $result = $this->invokePrivateStaticMethod(
@@ -158,7 +168,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Public IPv6 from request should beat private IPv4 from cookie
         $result = $this->invokePrivateStaticMethod(
@@ -167,7 +177,7 @@ final class GetClientIpTest extends TestCase
             self::IPV6_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_normal, $result);
     }
 
     public function testGetClientIpLanguageTokenHandling()
@@ -191,7 +201,7 @@ final class GetClientIpTest extends TestCase
             null,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_new, $result);
 
         // Should use default language token for request-sourced IPs
         $result = $this->invokePrivateStaticMethod(
@@ -200,7 +210,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
     }
 
     public function testGetClientIpFromCookieHelper()
@@ -379,7 +389,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Test with empty cookies array
         $result = $this->invokePrivateStaticMethod(
@@ -388,7 +398,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Test with empty FBI cookie value
         $result = $this->invokePrivateStaticMethod(
@@ -397,7 +407,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Test with whitespace in IP values
         $result = $this->invokePrivateStaticMethod(
@@ -415,7 +425,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
     }
 
     public function testComplexPrioritizationScenarios()
@@ -427,7 +437,7 @@ final class GetClientIpTest extends TestCase
             self::IPV6_PRIVATE,
             null
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_new, $result);
 
         // IPv4 private from cookie vs IPv6 public from request
         $result = $this->invokePrivateStaticMethod(
@@ -436,7 +446,7 @@ final class GetClientIpTest extends TestCase
             self::IPV6_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Mixed valid and invalid IPs
         $result = $this->invokePrivateStaticMethod(
@@ -445,7 +455,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             self::INVALID_IP
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
     }
 
     public function testRealWorldScenarios()
@@ -459,7 +469,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             self::IPV4_PRIVATE
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Load balancer scenario with IPv6
         $result = $this->invokePrivateStaticMethod(
@@ -468,7 +478,7 @@ final class GetClientIpTest extends TestCase
             self::IPV6_PUBLIC,
             self::IPV4_PRIVATE
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // CDN scenario with multiple forwarded IPs
         $result = $this->invokePrivateStaticMethod(
@@ -477,7 +487,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC . ', 203.0.113.1, 198.51.100.1',
             '198.51.100.1'
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Proxy chain scenario
         $result = $this->invokePrivateStaticMethod(
@@ -486,7 +496,7 @@ final class GetClientIpTest extends TestCase
             self::IPV6_PUBLIC,
             self::IPV4_PRIVATE
         );
-        $this->assertEquals(self::IPV6_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_is_normal, $result);
     }
 
     public function testSpecialIPAddresses()
@@ -528,7 +538,7 @@ final class GetClientIpTest extends TestCase
 
         foreach ($publicByPHPFilterIPv4 as $ip) {
             $result = $this->invokePrivateStaticMethod('getClientIp', [], $ip, null);
-            $this->assertEquals($ip . '.' . LANGUAGE_TOKEN, $result, "Expected processed result for IP: $ip");
+            $this->assertEquals($ip . '.' . $this->appendix_is_normal, $result, "Expected processed result for IP: $ip");
         }
 
         // Test some IPv6 addresses that should be considered public
@@ -539,7 +549,7 @@ final class GetClientIpTest extends TestCase
 
         foreach ($publicIPv6Addresses as $ip) {
             $result = $this->invokePrivateStaticMethod('getClientIp', [], $ip, null);
-            $this->assertEquals($ip . '.' . LANGUAGE_TOKEN, $result, "Expected processed result for IPv6: $ip");
+            $this->assertEquals($ip . '.' . $this->appendix_is_normal, $result, "Expected processed result for IPv6: $ip");
         }
 
         // Test IPv6 multicast addresses - PHP's filter_var treats these as public
@@ -552,7 +562,7 @@ final class GetClientIpTest extends TestCase
 
         foreach ($ipv6MulticastAddresses as $ip) {
             $result = $this->invokePrivateStaticMethod('getClientIp', [], $ip, null);
-            $this->assertEquals($ip . '.' . LANGUAGE_TOKEN, $result, "Expected processed result for IPv6 multicast: $ip");
+            $this->assertEquals($ip . '.' . $this->appendix_is_normal, $result, "Expected processed result for IPv6 multicast: $ip");
         }
     }
 
@@ -622,7 +632,7 @@ final class GetClientIpTest extends TestCase
             self::IPV4_PUBLIC,
             null
         );
-        $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $this->appendix_is_normal, $result);
 
         // Test with empty string IP
         $result = $this->invokePrivateStaticMethod(
@@ -657,7 +667,10 @@ final class GetClientIpTest extends TestCase
                 $originalXForwardedFor,
                 $originalRemoteAddress
             );
-            $this->assertEquals(self::IPV4_PUBLIC . '.' . LANGUAGE_TOKEN, $result);
+            $this->assertEquals(
+                self::IPV4_PUBLIC . '.' . $this->appendix_is_new,
+                $result
+            );
         }
 
         // Verify inputs were not modified

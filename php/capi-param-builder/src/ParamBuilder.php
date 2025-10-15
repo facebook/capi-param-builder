@@ -557,13 +557,13 @@ final class ParamBuilder
                 (
                     $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
-                    : LANGUAGE_TOKEN
+                    : AppendixProvider::getAppendix(true)
                 );
         } else if (
             $client_ip_from_request_is_IPv6 &&
             $client_ip_from_request_is_public_ip
         ) {
-            $best_client_ip = $client_ip_from_request . '.' . LANGUAGE_TOKEN;
+            $best_client_ip = $client_ip_from_request . '.' . AppendixProvider::getAppendix(false);
         } else if (
             $client_ip_from_cookie_is_IPv4 &&
             $client_ip_from_cookie_is_public_ip
@@ -572,13 +572,13 @@ final class ParamBuilder
                 (
                     $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
-                    : LANGUAGE_TOKEN
+                    : AppendixProvider::getAppendix(true)
                 );
         } else if (
             $client_ip_from_request_is_IPv4 &&
             $client_ip_from_request_is_public_ip
         ) {
-            $best_client_ip = $client_ip_from_request . '.' . LANGUAGE_TOKEN;
+            $best_client_ip = $client_ip_from_request . '.' . AppendixProvider::getAppendix(false);
         }
 
         return $best_client_ip;
