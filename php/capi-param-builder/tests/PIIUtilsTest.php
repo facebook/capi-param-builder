@@ -9,12 +9,22 @@
 use PHPUnit\Framework\TestCase;
 use FacebookAds\PIIUtils;
 use FacebookAds\PII_DATA_TYPE;
+use FacebookAds\AppendixProvider;
 
 require_once __DIR__ . '/../src/piiUtil/PIIUtils.php';
 
 final class PIIUtilsTest extends TestCase
 {
-  // Tests for getNormalizedPII function
+  private $appendix_is_new;
+  private $appendix_is_normal;
+
+  protected function setUp(): void
+  {
+    // Get the actual appendix values from AppendixProvider
+    $this->appendix_is_new = AppendixProvider::getAppendix(true);
+    $this->appendix_is_normal = AppendixProvider::getAppendix(false);
+  }
+
 
   public function testGetNormalizedPIIWithValidEmail()
   {
@@ -195,7 +205,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidEmail()
   {
     $email = '  Test.User@Example.COM  ';
-    $expectedHash = hash('sha256', 'test.user@example.com') . '.AQ';
+    $expectedHash = hash('sha256', 'test.user@example.com') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($email, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expectedHash, $result);
   }
@@ -203,7 +213,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidPhone()
   {
     $phone = '+1 (555) 123-4567';
-    $expectedHash = hash('sha256', '15551234567') . '.AQ'; // No + prefix in PHP implementation
+    $expectedHash = hash('sha256', '15551234567') . '.' . $this->appendix_is_new; // No + prefix in PHP implementation
     $result = PIIUtils::getNormalizedAndHashedPII($phone, PII_DATA_TYPE::PHONE);
     $this->assertEquals($expectedHash, $result);
   }
@@ -211,43 +221,43 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidFirstName()
   {
     $firstName = '  John Smith  ';
-    $expectedHash = hash('sha256', 'johnsmith') . '.AQ';
+    $expectedHash = hash('sha256', 'johnsmith') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($firstName, PII_DATA_TYPE::FIRST_NAME);
     $this->assertEquals($expectedHash, $result);
   }
 
   public function testGetNormalizedAndHashedPIIWithSha256Hash()
   {
-    // SHA256 hash (64 hex characters) - implementation appends language token
+    // SHA256 hash (64 hex characters) - implementation appends appendix
     $hashedValue = 'A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3';
-    $expected = mb_strtolower($hashedValue) . '.AQ';
+    $expected = mb_strtolower($hashedValue) . '.' . $this->appendix_is_normal;
     $result = PIIUtils::getNormalizedAndHashedPII($hashedValue, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expected, $result);
   }
 
   public function testGetNormalizedAndHashedPIIWithMd5Hash()
   {
-    // MD5 hash (32 hex characters) - implementation appends language token
+    // MD5 hash (32 hex characters) - implementation appends appendix
     $hashedValue = 'D41D8CD98F00B204E9800998ECF8427E';
-    $expected = mb_strtolower($hashedValue) . '.AQ';
+    $expected = mb_strtolower($hashedValue) . '.' . $this->appendix_is_normal;
     $result = PIIUtils::getNormalizedAndHashedPII($hashedValue, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expected, $result);
   }
 
   public function testGetNormalizedAndHashedPIIWithLowercaseSha256Hash()
   {
-    // Already lowercase SHA256 hash - implementation appends language token
+    // Already lowercase SHA256 hash - implementation appends normal appendix
     $hashedValue = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
-    $expected = $hashedValue . '.AQ';
+    $expected = $hashedValue . '.' . $this->appendix_is_normal;
     $result = PIIUtils::getNormalizedAndHashedPII($hashedValue, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expected, $result);
   }
 
   public function testGetNormalizedAndHashedPIIWithMixedCaseSha256Hash()
   {
-    // Mixed case SHA256 hash - implementation appends language token
+    // Mixed case SHA256 hash - implementation appends normal appendix 
     $hashedValue = 'A665a45920422f9D417e4867efdc4FB8a04a1f3fff1fa07E998e86f7f7a27ae3';
-    $expected = mb_strtolower($hashedValue) . '.AQ';
+    $expected = mb_strtolower($hashedValue) . '.' . $this->appendix_is_normal;
     $result = PIIUtils::getNormalizedAndHashedPII($hashedValue, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expected, $result);
   }
@@ -288,7 +298,7 @@ final class PIIUtilsTest extends TestCase
   {
     // Invalid phone gets normalized to digits only, then hashed
     $invalidPhone = 'abc123';
-    $expectedHash = hash('sha256', '123') . '.AQ'; // Only digits remain
+    $expectedHash = hash('sha256', '123') . '.' . $this->appendix_is_new; // Only digits remain
     $result = PIIUtils::getNormalizedAndHashedPII($invalidPhone, PII_DATA_TYPE::PHONE);
     $this->assertEquals($expectedHash, $result);
   }
@@ -304,7 +314,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidDOB()
   {
     $dob = '01/15/1990';
-    $expectedHash = hash('sha256', '19900115') . '.AQ';
+    $expectedHash = hash('sha256', '19900115') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($dob, PII_DATA_TYPE::DATE_OF_BIRTH);
     $this->assertEquals($expectedHash, $result);
   }
@@ -312,7 +322,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidGender()
   {
     $gender = '  Female  ';
-    $expectedHash = hash('sha256', 'f') . '.AQ';
+    $expectedHash = hash('sha256', 'f') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($gender, PII_DATA_TYPE::GENDER);
     $this->assertEquals($expectedHash, $result);
   }
@@ -320,7 +330,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidCity()
   {
     $city = '  San Francisco  ';
-    $expectedHash = hash('sha256', 'sanfrancisco') . '.AQ';
+    $expectedHash = hash('sha256', 'sanfrancisco') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($city, PII_DATA_TYPE::CITY);
     $this->assertEquals($expectedHash, $result);
   }
@@ -328,7 +338,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidState()
   {
     $state = '  New York  ';
-    $expectedHash = hash('sha256', 'ny') . '.AQ';
+    $expectedHash = hash('sha256', 'ny') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($state, PII_DATA_TYPE::STATE);
     $this->assertEquals($expectedHash, $result);
   }
@@ -336,7 +346,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidCountry()
   {
     $country = '  Germany  ';
-    $expectedHash = hash('sha256', 'de') . '.AQ';
+    $expectedHash = hash('sha256', 'de') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($country, PII_DATA_TYPE::COUNTRY);
     $this->assertEquals($expectedHash, $result);
   }
@@ -344,7 +354,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidExternalID()
   {
     $externalId = '  Customer123  ';
-    $expectedHash = hash('sha256', 'customer123') . '.AQ';
+    $expectedHash = hash('sha256', 'customer123') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($externalId, PII_DATA_TYPE::EXTERNAL_ID);
     $this->assertEquals($expectedHash, $result);
   }
@@ -352,7 +362,7 @@ final class PIIUtilsTest extends TestCase
   public function testGetNormalizedAndHashedPIIWithValidZipCode()
   {
     $zipCode = '  90210-1234  ';
-    $expectedHash = hash('sha256', '90210') . '.AQ';
+    $expectedHash = hash('sha256', '90210') . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($zipCode, PII_DATA_TYPE::ZIP_CODE);
     $this->assertEquals($expectedHash, $result);
   }
@@ -361,7 +371,7 @@ final class PIIUtilsTest extends TestCase
   {
     // String that looks like hex but isn't a valid hash length - should be treated as regular input
     $notAHash = 'abcdef123456';
-    $expectedHash = hash('sha256', $notAHash) . '.AQ'; // Should be treated as regular input with language token
+    $expectedHash = hash('sha256', $notAHash) . '.' . $this->appendix_is_new; // Should be treated as regular input with new appendix
     $result = PIIUtils::getNormalizedAndHashedPII($notAHash, PII_DATA_TYPE::EXTERNAL_ID);
     $this->assertEquals($expectedHash, $result);
   }
@@ -370,18 +380,18 @@ final class PIIUtilsTest extends TestCase
   {
     // SHA1 hash (40 hex characters) - not recognized as hash, should be treated as regular input
     $sha1Hash = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
-    $expectedHash = hash('sha256', $sha1Hash) . '.AQ'; // Should be treated as regular input with language token
+    $expectedHash = hash('sha256', $sha1Hash) . '.' . $this->appendix_is_new; // Should be treated as regular input with new appendix
     $result = PIIUtils::getNormalizedAndHashedPII($sha1Hash, PII_DATA_TYPE::EXTERNAL_ID);
     $this->assertEquals($expectedHash, $result);
   }
 
   public function testGetNormalizedAndHashedPIIHashOutputFormat()
   {
-    // Verify that the hash output is always 64 characters + '.AQ' = 67 characters (SHA256 + language token)
+    // Verify that the hash output is always 64 characters + '.$appendix' = 73 characters (SHA256 + language token)
     $input = 'test@example.com';
     $result = PIIUtils::getNormalizedAndHashedPII($input, PII_DATA_TYPE::EMAIL);
-    $this->assertEquals(67, strlen($result));
-    $this->assertRegExp('/^[a-f0-9]{64}\.AQ$/', $result);
+    $this->assertEquals(73, strlen($result));
+    $this->assertRegExp('/^[a-f0-9]{64}\.' . preg_quote($this->appendix_is_new, '/') . '$/', $result);
   }
 
   public function testGetNormalizedAndHashedPIIConsistentHashing()
@@ -408,7 +418,7 @@ final class PIIUtilsTest extends TestCase
     // Test with complex input that requires normalization
     $email = '  Test.User+Tag@EXAMPLE.COM  ';
     $normalizedEmail = 'test.user+tag@example.com';
-    $expectedHash = hash('sha256', $normalizedEmail) . '.AQ';
+    $expectedHash = hash('sha256', $normalizedEmail) . '.' . $this->appendix_is_new;
     $result = PIIUtils::getNormalizedAndHashedPII($email, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expectedHash, $result);
   }

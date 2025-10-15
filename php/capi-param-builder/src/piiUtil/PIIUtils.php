@@ -16,6 +16,7 @@ require_once __DIR__ . '/GenderUtils.php';
 require_once __DIR__ . '/StringUtils.php';
 require_once __DIR__ . '/ZipCodeUtils.php';
 require_once __DIR__ . '/SharedUtils.php';
+require_once __DIR__ . '/../util/AppendixProvider.php';
 
 class PIIUtils
 {
@@ -72,13 +73,15 @@ class PIIUtils
     }
 
     if (SharedUtils::looksLikeHashed($piiValue)) {
-      return mb_strtolower($piiValue) . '.' . LANGUAGE_TOKEN;
+      return mb_strtolower($piiValue) . '.' .
+        AppendixProvider::getAppendix(false);
     } else {
       $normalizedPII = PIIUtils::getNormalizedPII($piiValue, $dataType);
       if ($normalizedPII === null || $normalizedPII === '') {
         return null;
       }
-      return hash('sha256', $normalizedPII) . '.' . LANGUAGE_TOKEN;
+      return hash('sha256', $normalizedPII) . '.' .
+        AppendixProvider::getAppendix(true);
     }
   }
 }
