@@ -17,9 +17,15 @@ require_once 'ETLDPlus1ResolverForUnitTest.php';
 
 final class ParamBuilderTest extends TestCase
 {
-    // v1.0.1
-    private $appendix_is_new = "AQEBAQAB";
-    private $appendix_is_normal = "AQEAAQAB";
+    private $appendix_is_new;
+    private $appendix_is_normal;
+
+    protected function setUp(): void
+    {
+        // Get the actual appendix values from AppendixProvider
+        $this->appendix_is_new = AppendixProvider::getAppendix(true);
+        $this->appendix_is_normal = AppendixProvider::getAppendix(false);
+    }
 
     public function testConstructorWithEtldPlusOne()
     {
@@ -73,7 +79,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -107,7 +112,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -141,7 +145,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -172,7 +175,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -206,7 +208,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -239,7 +240,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -272,7 +272,6 @@ final class ParamBuilderTest extends TestCase
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING),
             new FbcParamConfig("query", 'test', "test_string"),
         ));
-        $this->mockAppendix($builderWithParamConfig);
         $result = $builderWithParamConfig->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -297,7 +296,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequest()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -321,7 +319,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithReferral()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -343,7 +340,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithReferralWithoutQuery()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -361,7 +357,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithRefererAndProtocol()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             [''],
@@ -391,7 +386,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithDomainListAndProtocol()
     {
         $builder = new ParamBuilder(array('https://example.com:8080'));
-        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'http://a.b.example.com:8080',
             ['fbclid' => 'test123'],
@@ -421,7 +415,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestNoReferralSet()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array('fbclid' => 'test123'),
@@ -438,7 +431,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithUnusedInfo()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array('fbc' => 'test123'),
@@ -457,7 +449,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithInvalidCookies()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -480,7 +471,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithExistingFbc()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(),
@@ -498,7 +488,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithExistingCookie()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -518,7 +507,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithOutdatedCookie()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(
@@ -538,7 +526,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithInvalidLanguageToken()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             'a.b.walmart.com:8080',
             array(),
@@ -559,7 +546,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithValidCookiesWithoutLanguageToken()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $result = $builder->processRequest(
             'a.b.walmart.com:8080',
             null,
@@ -605,7 +591,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithIP()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             '127.0.0.1:8080',
             array(
@@ -625,7 +610,6 @@ final class ParamBuilderTest extends TestCase
     public function testProcessRequestWithIPv6()
     {
         $builder = new ParamBuilder();
-        $this->mockAppendix($builder);
         $builder->processRequest(
             '[::1]:8080',
             array(
@@ -712,22 +696,5 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals(2, count($cookies_to_set));
         $cookie = $cookies_to_set[0];
         $this->assertEquals('balabla.123test.com', $cookie->domain);
-    }
-
-    /**
-     * Helper method to mock appendix by setting static appendix values
-     */
-    private function mockAppendix($builder)
-    {
-        $reflector = new ReflectionClass($builder);
-
-        // Set the appendix values using reflection
-        $appendix_new_property = $reflector->getProperty('appendix_new');
-        $appendix_new_property->setAccessible(true);
-        $appendix_new_property->setValue($builder, $this->appendix_is_new);
-
-        $appendix_normal_property = $reflector->getProperty('appendix_normal');
-        $appendix_normal_property->setAccessible(true);
-        $appendix_normal_property->setValue($builder, $this->appendix_is_normal);
     }
 }
