@@ -9,8 +9,8 @@ const FbcParamConfig = require('./model/FbcParamConfig');
 const CookieSettings = require('./model/CookieSettings');
 const Constants = require('./model/Constants');
 const net = require('net');
-const { version } = require('../package.json');
 const { getNormalizedAndHashedPII } = require('./piiUtil/PIIUtil');
+const { getAppendixInfo } = require('./utils/AppendixProvider');
 
 class ParamBuilder {
   constructor(input_params) {
@@ -40,22 +40,8 @@ class ParamBuilder {
     this.cookies_to_set = [];
     this.cookies_to_set_dict = {};
     // language token
-    this.appendix_new = this._getAppendixInfo(true, version);
-    this.appendix_normal = this._getAppendixInfo(false, version);
-  }
-
-  _getAppendixInfo(is_new, sdk_version) {
-    try {
-      const [major, minor, patch] = sdk_version.split('.').map(Number);
-      const is_new_byte = is_new === true ? 0x01 : 0x00;
-      const bytes = [Constants.DEFAULT_FORMAT, Constants.LANGUAGE_TOKEN_INDEX, is_new_byte, major.toString(16), minor.toString(16), patch.toString(16)];
-      const buf = Buffer.from(bytes);
-      const base64urlSafe = buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      return base64urlSafe;
-    } catch (error) {
-      console.error("Exception when parsing appendix version number:" + error);
-      return Constants.LANGUAGE_TOKEN;
-    }
+    this.appendix_new = getAppendixInfo(true);
+    this.appendix_normal = getAppendixInfo(false);
   }
 
   _preprocessCookie(cookies, cookie_name) {
