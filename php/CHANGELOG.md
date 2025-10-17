@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v1.1.0
+- Improve appendix to include current SDK version, is_new flag.
+
 ## v1.0.2
 - ParamsConfig optimization with duplication check and remove unused leading underscore.
 
