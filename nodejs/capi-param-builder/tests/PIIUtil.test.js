@@ -44,6 +44,10 @@ jest.mock('../src/piiUtil/sha256_with_dependencies_new', () => ({
     sha256_main: jest.fn(),
 }));
 
+jest.mock('../src/utils/AppendixProvider', () => ({
+    getAppendixInfo: jest.fn(),
+}));
+
 const { getNormalizedEmail } = require('../src/piiUtil/emailUtil');
 const { getNormalizedPhone } = require('../src/piiUtil/phoneUtil');
 const { getNormalizedDOB } = require('../src/piiUtil/dobUtil');
@@ -57,11 +61,13 @@ const {
 } = require('../src/piiUtil/stringUtil');
 const { getNormalizedZipCode } = require('../src/piiUtil/zipCodeUtil');
 const { sha256_main } = require('../src/piiUtil/sha256_with_dependencies_new');
+const { getAppendixInfo } = require('../src/utils/AppendixProvider');
 
 describe('PIIUtil', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         getNormalizedExternalID.mockImplementation((value) => value);
+        getAppendixInfo.mockReturnValue('AQQAAQEA');
     });
 
     describe('getNormalizedPII', () => {
@@ -193,30 +199,30 @@ describe('PIIUtil', () => {
             it('should return lowercase for uppercase SHA-256', () => {
                 const hash = 'A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3';
                 const result = getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL);
-                expect(result).toBe(hash.toLowerCase());
+                expect(result).toBe(hash.toLowerCase() + '.AQQAAQEA');
                 expect(sha256_main).not.toHaveBeenCalled();
             });
 
             it('should return as-is for lowercase SHA-256', () => {
                 const hash = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
-                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash);
+                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash + '.AQQAAQEA');
             });
 
             it('should handle mixed case SHA-256', () => {
                 const hash = 'A665a45920422F9D417e4867efDC4fb8a04a1f3FFF1fa07E998e86F7f7A27AE3';
-                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash.toLowerCase());
+                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash.toLowerCase() + '.AQQAAQEA');
             });
         });
 
         describe('hash detection - MD5', () => {
             it('should return lowercase for uppercase MD5', () => {
                 const hash = '5D41402ABC4B2A76B9719D911017C592';
-                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash.toLowerCase());
+                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash.toLowerCase() + '.AQQAAQEA');
             });
 
             it('should return as-is for lowercase MD5', () => {
                 const hash = '5d41402abc4b2a76b9719d911017c592';
-                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash);
+                expect(getNormalizedAndHashedPII(hash, Constants.PII_DATA_TYPE.EMAIL)).toBe(hash + '.AQQAAQEA');
             });
         });
 
@@ -226,7 +232,7 @@ describe('PIIUtil', () => {
                 getNormalizedEmail.mockReturnValue('normalized');
                 sha256_main.mockReturnValue('hashed');
 
-                expect(getNormalizedAndHashedPII(notHash, Constants.PII_DATA_TYPE.EMAIL)).toBe('hashed');
+                expect(getNormalizedAndHashedPII(notHash, Constants.PII_DATA_TYPE.EMAIL)).toBe('hashed.AQQAAQEA');
                 expect(sha256_main).toHaveBeenCalled();
             });
 
@@ -235,7 +241,7 @@ describe('PIIUtil', () => {
                 getNormalizedEmail.mockReturnValue('normalized');
                 sha256_main.mockReturnValue('hashed');
 
-                expect(getNormalizedAndHashedPII(notHash, Constants.PII_DATA_TYPE.EMAIL)).toBe('hashed');
+                expect(getNormalizedAndHashedPII(notHash, Constants.PII_DATA_TYPE.EMAIL)).toBe('hashed.AQQAAQEA');
             });
 
             it('should not treat string with invalid hex chars as hash', () => {
@@ -243,7 +249,7 @@ describe('PIIUtil', () => {
                 getNormalizedEmail.mockReturnValue('normalized');
                 sha256_main.mockReturnValue('hashed');
 
-                expect(getNormalizedAndHashedPII(notHash, Constants.PII_DATA_TYPE.EMAIL)).toBe('hashed');
+                expect(getNormalizedAndHashedPII(notHash, Constants.PII_DATA_TYPE.EMAIL)).toBe('hashed.AQQAAQEA');
             });
         });
 
@@ -256,7 +262,7 @@ describe('PIIUtil', () => {
 
                 expect(getNormalizedEmail).toHaveBeenCalledWith('Test@Example.com');
                 expect(sha256_main).toHaveBeenCalledWith('test@example.com');
-                expect(result).toBe('hashed_email');
+                expect(result).toBe('hashed_email.AQQAAQEA');
             });
 
             it('should normalize and hash phone', () => {
@@ -265,7 +271,7 @@ describe('PIIUtil', () => {
 
                 const result = getNormalizedAndHashedPII('1234567890', Constants.PII_DATA_TYPE.PHONE);
 
-                expect(result).toBe('hashed_phone');
+                expect(result).toBe('hashed_phone.AQQAAQEA');
             });
 
             it('should return null when normalization returns null', () => {
@@ -294,11 +300,12 @@ describe('PIIUtil', () => {
 
                 testCases.forEach(({ type, mockFn }) => {
                     jest.clearAllMocks();
+                    getAppendixInfo.mockReturnValue('AQQAAQEA');
                     mockFn.mockReturnValue('normalized');
                     sha256_main.mockReturnValue('hashed');
 
                     const result = getNormalizedAndHashedPII('test', type);
-                    expect(result).toBe('hashed');
+                    expect(result).toBe('hashed.AQQAAQEA');
                 });
             });
         });

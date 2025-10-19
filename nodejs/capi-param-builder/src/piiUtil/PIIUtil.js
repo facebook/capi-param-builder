@@ -20,6 +20,7 @@ const {
     getNormalizedCountry,
     getNormalizedExternalID
 } = require('./stringUtil');
+const { getAppendixInfo } = require('../utils/AppendixProvider');
 
 const SHA_256_OR_MD5_REGEX = /^[A-Fa-f0-9]{64}$|^[A-Fa-f0-9]{32}$/;
 
@@ -29,13 +30,13 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
     }
 
     if (SHA_256_OR_MD5_REGEX.test(piiValue)) {
-        return piiValue.toLowerCase();
+        return piiValue.toLowerCase() + '.' + getAppendixInfo(false);
     } else {
         const normalizedPII = getNormalizedPII(piiValue, dataType);
         if (!normalizedPII) {
             return null;
         }
-        return sha256_main(normalizedPII);
+        return sha256_main(normalizedPII) + '.' + getAppendixInfo(true);
     }
 }
 
