@@ -318,7 +318,7 @@ final class GetClientIpTest extends TestCase
     {
         $langToken = SUPPORTED_LANGUAGES_TOKEN[0];
 
-        // Test getLanguageToken
+        // Test getLanguageToken with V1 format (2-character token)
         $result = $this->invokePrivateStaticMethod(
             'getLanguageToken',
             self::IPV4_PUBLIC . '.' . $langToken
@@ -337,7 +337,7 @@ final class GetClientIpTest extends TestCase
         );
         $this->assertNull($result);
 
-        // Test removeLanguageToken
+        // Test removeLanguageToken with V1 format (2-character token)
         $result = $this->invokePrivateStaticMethod(
             'removeLanguageToken',
             self::IPV4_PUBLIC . '.' . $langToken
@@ -353,6 +353,105 @@ final class GetClientIpTest extends TestCase
         $result = $this->invokePrivateStaticMethod(
             'removeLanguageToken',
             self::IPV4_PUBLIC  // No dot
+        );
+        $this->assertEquals(self::IPV4_PUBLIC, $result);
+    }
+
+    public function testLanguageTokenHelpersV2Format()
+    {
+        // Test getLanguageToken with V2 format (8-character appendix)
+        $v2Appendix = '12345678'; // 8 characters
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV4_PUBLIC . '.' . $v2Appendix
+        );
+        $this->assertEquals($v2Appendix, $result);
+
+        // Test getLanguageToken with V2 format on IPv6
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV6_PUBLIC . '.' . $v2Appendix
+        );
+        $this->assertEquals($v2Appendix, $result);
+
+        // Test removeLanguageToken with V2 format (8-character appendix)
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV4_PUBLIC . '.' . $v2Appendix
+        );
+        $this->assertEquals(self::IPV4_PUBLIC, $result);
+
+        // Test removeLanguageToken with V2 format on IPv6
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV6_PUBLIC . '.' . $v2Appendix
+        );
+        $this->assertEquals(self::IPV6_PUBLIC, $result);
+
+        // Test with 7-character suffix (should NOT be recognized as V2)
+        $sevenChar = '1234567';
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV4_PUBLIC . '.' . $sevenChar
+        );
+        $this->assertNull($result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV4_PUBLIC . '.' . $sevenChar
+        );
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $sevenChar, $result);
+
+        // Test with 9-character suffix (should NOT be recognized as V2)
+        $nineChar = '123456789';
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV4_PUBLIC . '.' . $nineChar
+        );
+        $this->assertNull($result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV4_PUBLIC . '.' . $nineChar
+        );
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $nineChar, $result);
+
+        // Test with mixed alphanumeric V2 appendix
+        $mixedV2 = 'a1b2c3d4'; // 8 characters
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV4_PUBLIC . '.' . $mixedV2
+        );
+        $this->assertEquals($mixedV2, $result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV4_PUBLIC . '.' . $mixedV2
+        );
+        $this->assertEquals(self::IPV4_PUBLIC, $result);
+
+        // Test that actual appendix values are recognized
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV4_PUBLIC . '.' . $this->appendix_is_new
+        );
+        $this->assertEquals($this->appendix_is_new, $result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV4_PUBLIC . '.' . $this->appendix_is_new
+        );
+        $this->assertEquals(self::IPV4_PUBLIC, $result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'getLanguageToken',
+            self::IPV4_PUBLIC . '.' . $this->appendix_is_normal
+        );
+        $this->assertEquals($this->appendix_is_normal, $result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV4_PUBLIC . '.' . $this->appendix_is_normal
         );
         $this->assertEquals(self::IPV4_PUBLIC, $result);
     }

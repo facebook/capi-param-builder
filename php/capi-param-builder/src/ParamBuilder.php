@@ -473,7 +473,10 @@ final class ParamBuilder
         $lastDot = strrpos($input, '.');
         if ($lastDot !== false) {
             $suffix = substr($input, $lastDot + 1);
-            if (in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true)) {
+            if (
+                in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true) ||
+                strlen($suffix) == APPENDIX_LENGTH_V2
+            ) {
                 return substr($input, 0, $lastDot);
             }
         }
@@ -486,7 +489,10 @@ final class ParamBuilder
         $lastDot = strrpos($input, '.');
         if ($lastDot !== false) {
             $suffix = substr($input, $lastDot + 1);
-            if (in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true)) {
+            if (
+                in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true) ||
+                strlen($suffix) == APPENDIX_LENGTH_V2
+            ) {
                 return $suffix;
             }
         }
