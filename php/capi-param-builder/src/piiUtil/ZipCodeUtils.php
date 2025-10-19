@@ -22,7 +22,7 @@ class ZipCodeUtils
       } else {
         $maybeZIP = trim(explode('-', mb_strtolower(strval($zipCode)), 2)[0]);
 
-        if (strlen($maybeZIP) >= 2) {
+        if (mb_strlen($maybeZIP) >= 2) {
           $normalizedZipCode = $maybeZIP;
         }
       }

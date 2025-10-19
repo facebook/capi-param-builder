@@ -73,7 +73,7 @@ class DOBUtils
       array_filter(
         explode(' ', $cleanedInput),
         function ($group) {
-          return strlen($group) > 0;
+          return mb_strlen($group) > 0;
         }
       )
     );
@@ -89,7 +89,7 @@ class DOBUtils
       }
     }
 
-    if (count($digitGroups) === 1 && strlen($digitGroups[0]) === 8) {
+    if (count($digitGroups) === 1 && mb_strlen($digitGroups[0]) === 8) {
       return $digitGroups[0];
     }
 

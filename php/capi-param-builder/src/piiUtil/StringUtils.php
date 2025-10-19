@@ -391,7 +391,7 @@ class StringUtils
   // Helper: Get from map
   private static function getFromMap($input, $mappings)
   {
-    if (strlen($input) === 2) {
+    if (mb_strlen($input) === 2) {
       return $input;
     }
     if (isset($mappings[$input])) {
@@ -414,7 +414,7 @@ class StringUtils
     $inputStr = mb_strtolower(trim($input));
     $inputStr = preg_replace('/[^a-z]/', '', $inputStr);
     $inputStr = StringUtils::getFromMap($inputStr, $mappings);
-    switch (strlen($inputStr)) {
+    switch (mb_strlen($inputStr)) {
       case 0:
         return null;
       case 1:
