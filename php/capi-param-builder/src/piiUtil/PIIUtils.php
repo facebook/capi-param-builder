@@ -72,9 +72,13 @@ class PIIUtils
       return null;
     }
 
-    if (SharedUtils::looksLikeHashed($piiValue)) {
-      return mb_strtolower($piiValue) . '.' .
+    if (SharedUtils::looksLikeHashed(trim($piiValue))) {
+      return mb_strtolower(trim($piiValue)) . '.' .
         AppendixProvider::getAppendix(false);
+    } else if (
+      PIIUtils::isAlreadyNormalizedAndHashedByParamBuilder(trim($piiValue))
+    ) {
+      return trim($piiValue);
     } else {
       $normalizedPII = PIIUtils::getNormalizedPII($piiValue, $dataType);
       if ($normalizedPII === null || $normalizedPII === '') {
@@ -83,5 +87,21 @@ class PIIUtils
       return hash('sha256', $normalizedPII) . '.' .
         AppendixProvider::getAppendix(true);
     }
+  }
+
+  private static function isAlreadyNormalizedAndHashedByParamBuilder($input)
+  {
+    // Find the position of the last dot
+    $lastDot = strrpos($input, '.');
+    if ($lastDot !== false) {
+      $suffix = substr($input, $lastDot + 1);
+      if (
+        in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true) ||
+        mb_strlen($suffix) == APPENDIX_LENGTH_V2
+      ) {
+        return SharedUtils::looksLikeHashed(substr($input, 0, $lastDot));
+      }
+    }
+    return false;
   }
 }
