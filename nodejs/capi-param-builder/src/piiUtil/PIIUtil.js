@@ -29,8 +29,10 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
         return null;
     }
 
-    if (SHA_256_OR_MD5_REGEX.test(piiValue)) {
-        return piiValue.toLowerCase() + '.' + getAppendixInfo(false);
+    if (SHA_256_OR_MD5_REGEX.test(piiValue.trim())) {
+        return piiValue.trim().toLowerCase() + '.' + getAppendixInfo(false);
+    } else if (isAlreadyNormalizedAndHashedByParamBuilder(piiValue.trim())) {
+        return piiValue.trim();
     } else {
         const normalizedPII = getNormalizedPII(piiValue, dataType);
         if (!normalizedPII) {
@@ -38,6 +40,18 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
         }
         return sha256_main(normalizedPII) + '.' + getAppendixInfo(true);
     }
+}
+
+function isAlreadyNormalizedAndHashedByParamBuilder(input) {
+    // Find the position of the last dot
+    const lastDot = input.lastIndexOf('.');
+    if (lastDot !== -1) {
+        const suffix = input.substring(lastDot + 1);
+        if (Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(suffix) || suffix.length === Constants.APPENDIX_LENGTH_V2) {
+            return SHA_256_OR_MD5_REGEX.test(input.substring(0, lastDot));
+        }
+    }
+    return false;
 }
 
 function getNormalizedPII(piiValue, dataType) {
