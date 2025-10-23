@@ -105,7 +105,6 @@ export declare class ParamBuilder {
 
   // Internal used privat methods
   private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
-  private _getAppendixInfo(is_new: boolean): string;
   private _preprocessCookie(cookies: Cookies | null, cookie_name: string): string | null;
   private _isValidSegmentCount(length: number): boolean;
   private _validateAppendix(appendix_value: string): boolean;
@@ -123,8 +122,8 @@ export declare class ParamBuilder {
   private _isPrivateIPv6(value: string): boolean;
   private _isPublicIp(value: string): boolean;
   private _getClientIpFromRequest(xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
-  private _removeLanguageToken(value):string;
-  private _getClientIpFromCookies(cookies: Cookies | null): string | null;
+  private _removeLanguageToken(value: string): string;
+  private _getClientIpFromCookie(cookies: Cookies | null): string | null;
   private _getLanguageToken(value: string): string | null;
   private _getClientIpLanguageTokenFromCookie(cookies: Cookies | null): string | null;
   private _getClientIp(cookies: Cookies | null, xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
