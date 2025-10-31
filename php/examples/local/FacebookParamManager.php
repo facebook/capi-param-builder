@@ -44,8 +44,7 @@ final class FacebookParamManager
             $_GET,
             $_COOKIE,
             $_SERVER['HTTP_REFERER'] ?? null,
-            //$_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
-            '203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348',
+            $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
             $_SERVER['REMOTE_ADDR'] ?? null
         );
         // Optional:
@@ -69,9 +68,20 @@ final class FacebookParamManager
             }
         }
 
+
+        $pii1 = $this->paramBuilder->getNormalizedAndHashedPII('     John_Smith@gmail.com    ', 'email');
+        $pii2 = $this->paramBuilder->getNormalizedAndHashedPII('     +001 (616) 954-78 88    ', 'phone');
+        $pii3 = $this->paramBuilder->getNormalizedAndHashedPII(' 62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f ', 'email');
+        $pii4 = $this->paramBuilder->getNormalizedAndHashedPII('   62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f.AQYBAQAA ', 'email');
+
         echo 'ParamBuilder output: <br/>'
             . 'getFbc: ' . $this->paramBuilder->getFbc() . '<br/>'
-            . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>';
+            . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>'
+            . 'getClientIpAddress: ' . $this->paramBuilder->getClientIpAddress() . '<br/>'
+            . '$pii1: ' . $pii1 . '<br/>'
+            . '$pii2: ' . $pii2 . '<br/>'
+            . '$pii3: ' . $pii3 . '<br/>'
+            . '$pii4: ' . $pii4 . '<br/>';
     }
 
 
