@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Version v1.2.0
+Added support for client IPv6 address retrival and customer information parameters normalization and hashing.
+
 ## Version v1.1.1
 Bug fix for returned object from clientParamBuilder.processAndCollectParams and processAndCollectAllParams. Add underscore to align the naming convention with server side. After the fix, the key should contains underscore as ```_fbc``` and ```_fbp```.
 
