@@ -1,17 +1,17 @@
-# Conversions API parameter builder for Client-side JavaScript
+# Conversions API parameter builder feature for Client-side JavaScript
 
 [![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/client_js/LICENSE)
 
 ## Introduction
 
-Conversions API parameter builder SDK is a lightweight tool for improving
+The Conversions API parameter builder SDK is a lightweight tool for improving
 Conversions API parameter retrieval and quality.
 
 [Client-Side Parameter Builder Onboarding Guide](https://developers.facebook.com/docs/marketing-api/conversions-api/parameter-builder-feature-library/client-side-onboarding).
 
 ## Quick Start
 
-This is the quick start guide to help you integrate parameter builder in Client-side JavaScript.
+This is the quick start guide to help you integrate the parameter builder feature in Client-side JavaScript.
 You can also find a demo in the next section.
 
 Check the latest update from CHANGELOG.
@@ -26,25 +26,21 @@ Manual type the url into http://localhost:3000/?fbclid=test123 or similar, you'l
 
 # Integration
 
-We support 2 client side JS libraries, **clientParamBuilder** and **clientParamsHelper**.
-If you are new, suggest to use clientParamBuilder to start with. Other usage please checkthe onboarding doc for more details.
-clientParamsHelper is an add-on expansion.
-If you need both libraries, you could integrate with clientParamBuilder only by calling clientParamBuilder.processAndCollectAllParams. It contains one API which covers core feature from clientParamsHelper.
+Integration of **clientParamBuilder** as below.
+
+- if you uses **clientParamsHelper** please refer to #Appendix section
 
 ## Add dependency
 
-1. In your webpage, add following sentence to your page for clientParamBuilder:
+1. In your webpage, add the following snippet to your page for clientParamBuilder:
+
+To use clientParamBuilder,please add the following
 
 ```
 <script src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/capiParamBuilder/clientParamBuilder.bundle.js"></script>
 ```
 
-clientParamsHelper
-
-```
-<script
-        src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/clientParamsHelper/clientParamsHelper.bundle.js"></script>
-```
+## How to use API
 
 2. Call the function: clientParamBuilder
 
@@ -52,52 +48,42 @@ clientParamsHelper
 clientParamBuilder.processAndCollectParams(url)
 ```
 
-url is optional. Will start processing the params and save into cookies.
+url is optional. Calling the function triggers processing the params and saving into cookies.
 
 ```
-clientParamBuilder.processAndCollectAllParams(url)
+clientParamBuilder.processAndCollectAllParams(url,getIpFn)
 ```
 
-URL is optional. Will start processing the params and save into cookies. This is a newly added async API. It will cover the similar feature from clientParamsHelper that retrieves backup clickID from in-app-browser if feasible. This is the super set of above processAndCollectParams feature.
+URL is optional. getIpFn is optional, which specifies a user provided function to retrieve client IP addresses. Calling the function triggers processing the params and saving into cookies. processAndCollectAllParams is an updated API version. Besides the added support for retrieving client IP addresses, it includes functionality of previous version of retrieving backup clickID from in-app-browser when feasible.
 
 ```
 clientParamBuilder.getFbc()
 ```
 
-API to get fbc value from cookie. You need to run processAndCollectParams before getFbc.
+API to get fbc value from cookie. You need to run processAndCollectParams before getFbc().
 
 ```
 clientParamBuilder.getFbp()
 ```
 
-API is to get fbc value from cookie. You need run processAndCollectParams before getFbp().
-
-(Optional) clientParamsHelper: add-on expansion. Please check the onboarding guide before using this library. This is a more complex advance library to coordinate.
+API is to get fbp value from cookie. You need to run processAndCollectParams before getFbp().
 
 ```
-collectParams
+clientParamBuilder.getClientIpAddress()
 ```
 
-Only works on fb or ig in-app-browser. Retrieve clickID.
+API is to get fbi(client_ip_address) value from cookie. You need to run processAndCollectAllParams and pass in a valid getIpFn before calling getClientIpAddress() otherwise you will get an empty string.
 
 ```
-decorateUrl
+clientParamBuilder.getNormalizedAndHashedPII(piiValue, dataType)
 ```
 
-Append above retrieved clickID to input url.
+API is to get normalized and hashed (sha256) PII from input piiValue, supported dataType include 'phone', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'city', 'state', 'zip_code', 'country' and 'external_id'.
 
-```
-collectAndSetParams
-```
+# Appendix
 
-Save above retrieved clickID and fbp to cookie.
-
-```
-getFbc, getFbp
-```
-
-Retrieve fbc and fbp from cookie.
+**clientParamsHelper** is under deprecation. If you use it, suggest to move to **clientParamBuilder**. **clientParamBuilder** should cover all API needed. Check the above API for suggestions.
 
 ## License
 
-Conversions API Param Builder for Java is licensed under the LICENSE file in the root directory of this source tree.
+The Conversions API parameter builder feature for JS is licensed under the LICENSE file in the root directory of this source tree.
