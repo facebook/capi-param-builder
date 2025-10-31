@@ -42,7 +42,6 @@ const server = createServer((req, res) => {
     requestCookies, // current cookie
     req.headers.referer, // optional, help enhance the accurancy
     req.headers['x-forwarded-for'] ?? null,
-    //'203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348',
     req.socket.remoteAddress ?? null
   );
   // Save cookies to response
@@ -55,12 +54,25 @@ const server = createServer((req, res) => {
   const fbc = builder.getFbc();
   // Get fbp
   const fbp = builder.getFbp();
+  // Get client IP address
+  const clientIpAddress = builder.getClientIpAddress();
 
-  // Bypass fbc and fbp to CAPI event APIs.
+  const pii1 = builder.getNormalizedAndHashedPII('     John_Smith@gmail.com    ', 'email');
+  const pii2 = builder.getNormalizedAndHashedPII('     +001 (616) 954-78 88    ', 'phone');
+  const pii3 = builder.getNormalizedAndHashedPII(' 62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f ', 'email');
+  const pii4 = builder.getNormalizedAndHashedPII('   62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f.AQYBAQAA ', 'email');
 
-  // End demo
+  // Pass fbc, fbp, clientIpAddress, email and phone number to CAPI event APIs.
 
-  res.end("getFbc: " + fbc + "\n" + "getFbp: " + fbp + "\n");
+  res.end(
+    "getFbc: " + fbc + "\n" +
+    "getFbp: " + fbp + "\n" +
+    "getClientIpAddress: " + clientIpAddress + "\n" +
+    "pii1: " + pii1 + "\n" +
+    "pii2: " + pii2 + "\n" +
+    "pii3: " + pii3 + "\n" +
+    "pii4: " + pii4 + "\n"
+  );
 });
 
 function parseCookie(cookieString) {
