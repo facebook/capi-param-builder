@@ -1,19 +1,19 @@
-# Conversions API parameter builder for NodeJS
+# Conversions API parameter builder feature for NodeJS
 
 [![npm](https://img.shields.io/npm/v/capi-param-builder-nodejs)](https://www.npmjs.com/package/capi-param-builder-nodejs)
 [![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/nodejs/LICENSE)
 
 ## Introduction
 
-Conversions API parameter builder SDK is a lightweight tool for improving
+The Conversions API parameter builder SDK is a lightweight tool for improving
 Conversions API parameter retrieval and quality.
 
 [Server-Side Parameter Builder Onboarding Guide](https://developers.facebook.com/docs/marketing-api/conversions-api/parameter-builder-feature-library/server-side-onboarding)
 
 ## Quick Start
 
-This is a quick start guide for integrating parameter builder with NodeJS. You
-can also find a demo in the next section.
+This is a quick start guide for integrating the parameter builder feature with
+NodeJS. You can also find a demo in the next section.
 
 ### Setup
 
@@ -22,14 +22,14 @@ can also find a demo in the next section.
 2. Update in your package.json with the latest version.
 
 ```
-  "dependencies": {
-      "capi-param-builder-nodejs": {version}
-    }
+ "dependencies": {
+     "capi-param-builder-nodejs": {version}
+   }
 ```
 
-3. Run `npm install` in your application(if you don't have an application, check
-   #demo section for a demo application). You should see the capi-param-builder
-   installed under your nodejs folder.
+3. Run `npm install` in your application. If you don't have an application,
+   check #demo section for a demo application. You should see the
+   capi-param-builder installed under your nodejs folder.
 
 Please check the next section for a local demo.
 
@@ -57,7 +57,7 @@ Following are some further validation:
 
 - The printed getFbc value will change to a string containing the `test`.
 - Verify the browser's cookie section. You should see `_fbc` and `_fbp` exist.
-  And the `_fbc` value contains `test` string.
+  And the `_fbc` value contains the `test` string.
 
   4.2 Then change the URL back to http://localhost:3000 in the same browser.
 
@@ -74,6 +74,7 @@ This section covers how to use the SDK and provide suggestions on the API usage.
 ```
 const {ParamBuilder} = require('capi-param-builder');
 
+
 // [Recommended] Option 1: List of ETLD+1 for your website domains.
 // This helps provide suggestions for your cookie saving domain.
 const builder = new ParamBuilder(["example.com", "localhost"]);
@@ -87,88 +88,125 @@ Optional constructors:
 const etldPlus1Resolver = new DefaultETLDPlus1Resolver();
 const builder = new ParamBuilder(etldPlus1Resolver);
 
+
 // Option 3: Not recommended. Empty input.
 // Not recommended. We will return a best guess on your domain by one level down your input host.
 const builder = new ParamBuilder();
 ```
 
-3. Call `processRequest` to process the fbc, fbp.
+3. Call `processRequest` to process the fbc, fbp and fbi(client_ip_address).
 
 ```
 builder.processRequest(
-    req.headers.host, // host full URL.
-    params, // query params
-    requestCookies, // current cookie
-    req.headers.referer // optional, help enhance the accurancy
-  );
+   req.headers.host, // host full URL.
+   params, // query params
+   requestCookies, // current cookie
+   req.headers.referer // optional, help enhance the accuracy
+   req.headers['x-forwarded-for'] ?? null, // optional, help to select the best client_ip_address
+   req.socket.remoteAddress ?? null // optional, help to select the best client_ip_address
+ );
+
 
 or
 
+
 const cookiesToSet = builder.processRequest(
-    req.headers.host, // host
-    params, // query params
-    requestCookies, // current cookie
-    req.headers.referer // optional, help enhance the accurancy
-  );
+   req.headers.host, // host
+   params, // query params
+   requestCookies, // current cookie
+   req.headers.referer, // optional, help enhance the accuracy
+   req.headers['x-forwarded-for'] ?? null, // optional, help to select the best client_ip_address
+   req.socket.remoteAddress ?? null // optional, help to select the best client_ip_address
+ );
 ```
 
-4.  [Recommended] Save the `cookiesToSet` as first-party cookies. This helps
-    keep consistent fbc and fbp for your event. Based on your webserver
-    framework, the save cookie API may vary. Feel free to choose the best fit
-    for your use case.
+4.  [Recommended] Save the `cookiesToSet` as first-party cookies to keep fbc and
+    fbp consistent across all events. Based on your webserver framework, the
+    save cookie API may vary. Feel free to choose the best fit for your use
+    case.Below is one example excerpted from the demo application.
 
-    Below uses the example from the demo application.
-
-    Recommended: get the list of `cookiesToSet` from API call in step 3.
-
-    ```
-    // Call processRequest in above step 3.
-    // The returned cookiesToSet is the recommended list of cookies to be saved.
-    const cookiesToSet = builder.processRequest(...);
-    for (const cookie of cookiesToSet) {
-     responseCookies.push(cookie.name + '=' + cookie.value + '; Max-Age=' + cookie.maxAge + '; Domain=' + cookie.domain + '; Path=/');
-    }
-    res.setHeader('Set-Cookie', responseCookies);
-    ```
-
-    Optional: call `builder.getCookiesToSet()` to get the list of cookies to be
-    saved.
-
-    ```
-    for (const cookie of builder.getCookiesToSet()) {
-      responseCookies.push(cookie.name + '=' + cookie.value + '; Max-Age=' +
-      cookie.maxAge + '; Domain=' + cookie.domain + '; Path=/');
-    }
-    res.setHeader('Set-Cookie', responseCookies);
-    ```
-
-5.  Get fbc and fbp value
+Recommended: get the list of `cookiesToSet` from API call in step 3.
 
 ```
+// Call processRequest in above step 3.
+// The returned cookiesToSet is the recommended list of cookies to be saved.
+const cookiesToSet = builder.processRequest(...);
+for (const cookie of cookiesToSet) {
+ responseCookies.push(cookie.name + '=' + cookie.value + '; Max-Age=' + cookie.maxAge + '; Domain=' + cookie.domain + '; Path=/');
+}
+res.setHeader('Set-Cookie', responseCookies);
+```
+
+Optional: call `builder.getCookiesToSet()` to get the list of cookies to be
+saved.
+
+```
+for (const cookie of builder.getCookiesToSet()) {
+  responseCookies.push(cookie.name + '=' + cookie.value + '; Max-Age=' +
+  cookie.maxAge + '; Domain=' + cookie.domain + '; Path=/');
+}
+res.setHeader('Set-Cookie', responseCookies);
+```
+
+5.  Get fbc/fbp, client_ip_address, normalized and hashed PII values
+
+```
+
+
 const fbc = builder.getFbc();
 
-```
 
 ```
+
 const fbp = builder.getFbp();
+
 ```
 
-6. Send fbc and fbp back with Conversions API under UserData section:
+
+const client_ip_address = builder.getClientIpAddress();
+
+
+```
+
+const email = builder.getNormalizedAndHashedPII('
+John_Smith@gmail.com','email');
+
+```
+
+
+const phone = builder.getNormalizedAndHashedPII('+1 (616) 954-78 88','phone');
+
+
+```
+
+getNormalizedAndHashedPII(piiValue, dataType)
+
+```
+API is to get normalized and hashed (sha256) PII from input piiValue, supported dataType include 'phone', 'email','first_name', 'last_name', 'date_of_birth', 'gender', 'city', 'state',  'zip_code', 'country' and 'external_id'.
+
+
+```
+
+6. Send fbc, fbp, client_ip_address, email and phone back through Conversions
+   API under UserData section:
 
 ```
 data=[
-  'event_name: '...',
-  'event_tme': <your_time>,
-  'user_data': {
-    'fbc': fbc, // The value provided in step 5
-    'fbp': fbp, // The value provided in step 5
-    ...
-  }
-  ...
+ 'event_name: '...',
+ 'event_time': <your_time>,
+ 'user_data': {
+   'fbc': fbc, // The value provided in step 5
+   'fbp': fbp, // The value provided in step 5
+   'client_ip_address': client_ip_address // The value provided in step 5
+   'em': email // The value provided in step 5
+   'ph': phone // The value provided in step 5
+     ...
+ }
+ ...
 ]
 ```
 
 ## License
 
-Conversions API parameter builder for NodeJS is licensed under the LICENSE file
-in the root directory of this source tree.
+The Conversions API parameter builder feature for NodeJS is licensed under the
+LICENSE file in the root directory of this source tree.
