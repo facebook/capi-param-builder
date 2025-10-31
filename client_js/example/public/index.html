@@ -8,64 +8,64 @@
  -->
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>My JS Library Test</title>
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <title>My JS Library Test</title>
+</head>
 
-  <body>
-    <script src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/capiParamBuilder/clientParamBuilder.bundle.js"></script>
-    <script>
-      console.log(
-        'You need to get user cookie consent first, below processAndCollectParams will set cookies.'
-      );
-      console.log('return all params:processAndCollectParams');
-      console.log(
-        'If you want one API to cover all. Use clientParamBuilder.processAndCollectAllParams(url). The url is optional and the API is an asyc one to store fbc and fbp cookie'
-      );
-      var processAndCollectParams =
-        clientParamBuilder.processAndCollectParams();
-      console.log(processAndCollectParams);
+<body>
+  <script src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/capiParamBuilder/clientParamBuilder.bundle.js"></script>
+  <script>
+    console.log(
+      'You need to get user cookie consent first, below processAndCollectAllParams will set cookies.'
+    );
+    console.log('return all params:processAndCollectAllParams');
+
+    // getIPfn is a function to retrieve the client's IPv6 address, with a fallback to IPv4 if IPv6 is unavailable.
+    // Please note that the implementation here is for demo purpose only, and you should implement your own logic to collect client IPv6 addresses.
+    let getIPfn = async function () {
+      return await (await fetch('https://api64.ipify.org')).text();
+    }
+
+    async function main() {
+      // @params url: [optional] string. The full URL you want to collect clickID from.
+      // @params getIpFn: [optional] function. The function you implemented to collect client IPv6 addresses from. If IPv6 is not available for clients, you should fallback to IPv4.
+      const processAndCollectAllParams =
+        await clientParamBuilder.processAndCollectAllParams(null, getIPfn);
+
+      console.log(processAndCollectAllParams);
+
       console.log('getFbc:' + clientParamBuilder.getFbc());
       console.log('getFbp:' + clientParamBuilder.getFbp());
-      document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('clientParamBuilder-lib').textContent =
-          JSON.stringify(processAndCollectParams);
-      });
-      console.log('--------------Line----------------------');
-    </script>
-    <script src="https://capi-automation.s3.us-east-2.amazonaws.com/public/client_js/clientParamsHelper/clientParamsHelper.bundle.js"></script>
-    <script>
-      console.log('test for clientParamsHelper setup');
-      (async () => {
-        var collectParams = await clientParamsHelper.collectParams();
-        console.log(collectParams);
-        console.log('--------------Line----------------------');
+      console.log('getClientIpAddress:' + clientParamBuilder.getClientIpAddress());
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('     John_Smith@gmail.com    ','email'));
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('     +001 (616) 954-78 88   ','phone'));
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII(' 62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f ','email'));
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('   62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f.AQYBAQAA ','email'));
 
-        document.addEventListener('DOMContentLoaded', function () {
-          document.getElementById('clientParamsHelper-lib').textContent =
-            collectParams ?? 'No content collect.';
-        });
-      })();
-    </script>
-    <h2>Hello world</h2>
+      document.getElementById('clientParamBuilder-lib').textContent =
+          JSON.stringify(processAndCollectAllParams);
+
+  }
+
+  main();
+
+
+  console.log('--------------Line----------------------');
+  </script>
+
+  <h2>Hello world</h2>
+  <p>
+    <b>Please check onboarding guide for the details how to use the
+      Library.
+    </b>
+  </p>
+  <div>
+    <p>Tests example for capiParamsBuilder library:</p>
     <p>
-      <b
-        >Please check onboarding guide for the details how to use these 2
-        libraries.
-      </b>
+      Response from processAndCollectAllParams:
+      <span id="clientParamBuilder-lib"></span>
     </p>
-    <div>
-      <p>1. Tests example for capiParamsBuilder library:</p>
-      <p>
-        Response from processAndCollectParams:
-        <span id="clientParamBuilder-lib"></span>
-      </p>
-    </div>
-
-    <div>
-      <p>2. Tests examples for clientParamsHelper library:</p>
-      <p>test API response: <span id="clientParamsHelper-lib"></span></p>
-    </div>
-  </body>
+  </div>
+</body>
 </html>
