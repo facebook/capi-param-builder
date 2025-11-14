@@ -18,11 +18,21 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+# Import version from release_config
+import sys
+from pathlib import Path
+
 from setuptools import find_packages, setup
+
+# Add the package directory to path to import release_config
+package_dir = Path(__file__).parent / "capi_param_builder"
+sys.path.insert(0, str(package_dir))
+
+from release_config import VERSION
 
 setup(
     name="capi_param_builder_python",
-    version="1.1.0",
+    version=VERSION,
     packages=find_packages(),
     install_requires=[],
     description="Parameter builder SDK for Conversion API events",

@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import base64
-import os.path
 import random
 import re
 import time
@@ -69,31 +68,15 @@ class ParamBuilder:
 
     def _get_version(self) -> str:
         """
-        Extract version from setup.py file
+        Extract version from release_config module
         """
         try:
-            # Get the directory containing this Python file
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            # Navigate up to find setup.py
-            setup_py_path = os.path.join(current_dir, "..", "..", "setup.py")
-            setup_py_path = os.path.normpath(setup_py_path)
+            from .release_config import VERSION
 
-            if os.path.exists(setup_py_path):
-                with open(setup_py_path, "r") as f:
-                    content = f.read()
-                    # Extract version using regex
-                    import re
-
-                    version_match = re.search(
-                        r'version\s*=\s*["\']([^"\']+)["\']', content
-                    )
-                    if version_match:
-                        return version_match.group(1)
-            # Fallback version if not found
-            return "1.0.1"
+            return VERSION
         except Exception:
             # Fallback version on any error
-            return "1.0.1"
+            return "1.0.0"
 
     def _get_appendix(self, is_new: bool) -> str:
         try:
