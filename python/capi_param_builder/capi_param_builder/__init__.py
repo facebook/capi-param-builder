@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 from .param_builder import ParamBuilder
-
 from .util import EtldPlusOneResolver
 
 __all__ = ["ParamBuilder", "EtldPlusOneResolver"]

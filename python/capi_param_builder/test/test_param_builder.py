@@ -9,7 +9,6 @@ from typing import List
 from unittest.mock import patch
 
 from capi_param_builder.model import FbcParamConfigs
-
 from capi_param_builder.param_builder import ParamBuilder
 
 from .test_etld_plus_one_resolver import TestEtldPlusOneResolver

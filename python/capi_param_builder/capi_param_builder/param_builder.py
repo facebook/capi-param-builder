@@ -12,7 +12,6 @@ from typing import Final, List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
 from .model import CookieSettings, FbcParamConfigs
-
 from .util import EtldPlusOneResolver
 
 DEFAULT_1PC_AGE: Final[int] = 90 * 24 * 3600  # 90 days
