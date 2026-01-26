@@ -14,17 +14,27 @@ use FacebookAds\FbcParamConfig;
 use FacebookAds\Constants;
 
 require_once 'ETLDPlus1ResolverForUnitTest.php';
+require_once __DIR__ . '/../src/util/AppendixProvider.php';
+require_once __DIR__ . '/../src/model/Constants.php';
 
 final class ParamBuilderTest extends TestCase
 {
-    private $appendix_is_new;
-    private $appendix_is_normal;
+    private $appendix_general_new;
+    private $appendix_net_new;
+    private $appendix_modified_new;
+    private $appendix_no_change;
 
     protected function setUp(): void
     {
         // Get the actual appendix values from AppendixProvider
-        $this->appendix_is_new = AppendixProvider::getAppendix(true);
-        $this->appendix_is_normal = AppendixProvider::getAppendix(false);
+        $this->appendix_general_new =
+            AppendixProvider::getAppendix(APPENDIX_GENERAL_NEW);
+        $this->appendix_net_new =
+            AppendixProvider::getAppendix(APPENDIX_NET_NEW);
+        $this->appendix_modified_new =
+            AppendixProvider::getAppendix(APPENDIX_MODIFIED_NEW);
+        $this->appendix_no_change =
+            AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
     }
 
     public function testConstructorWithEtldPlusOne()
@@ -90,12 +100,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.abc_test_test123.'.$this->appendix_is_new,
+            '.abc_test_test123.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -123,12 +133,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.abc.'.$this->appendix_is_new,
+            '.abc.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -153,12 +163,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.abc_test_test123.'.$this->appendix_is_new,
+            '.abc_test_test123.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -186,12 +196,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.qabc_test_qtest123.'.$this->appendix_is_new,
+            '.qabc_test_qtest123.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -219,12 +229,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.qabc_test_rtest123.'.$this->appendix_is_new,
+            '.qabc_test_rtest123.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -251,12 +261,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.test_test123.'.$this->appendix_is_new,
+            '.test_test123.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -283,12 +293,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builderWithParamConfig->getFbc());
         $this->assertStringEndsWith(
-            '.sample456_test_123.'.$this->appendix_is_new,
+            '.sample456_test_123.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbc()
         );
         $this->assertIsString($builderWithParamConfig->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builderWithParamConfig->getFbp()
         );
     }
@@ -306,12 +316,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builder->getFbc());
         $this->assertStringEndsWith(
-            '.abc.'.$this->appendix_is_new,
+            '.abc.'.$this->appendix_net_new,
             $builder->getFbc()
         );
         $this->assertIsString($builder->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builder->getFbp()
         );
     }
@@ -327,12 +337,12 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builder->getFbc());
         $this->assertStringEndsWith(
-            'test123.'.$this->appendix_is_new,
+            'test123.'.$this->appendix_net_new,
             $builder->getFbc()
         );
         $this->assertIsString($builder->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builder->getFbp()
         );
     }
@@ -349,7 +359,7 @@ final class ParamBuilderTest extends TestCase
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builder->getFbp()
         );
     }
@@ -369,14 +379,14 @@ final class ParamBuilderTest extends TestCase
         foreach ($result as $cookie) {
             if ($cookie->name === '_fbc') {
                 $this->assertStringEndsWith(
-                    '.test123.'.$this->appendix_is_new,
+                    '.test123.'.$this->appendix_net_new,
                     $cookie->value
                 );
                 $this->assertEquals('b.walmart.com', $cookie->domain);
             } else {
                 $this->assertEquals('_fbp', $cookie->name);
                 $this->assertStringEndsWith(
-                    '.'.$this->appendix_is_new,
+                    '.'.$this->appendix_net_new,
                     $cookie->value
                 );
             }
@@ -398,14 +408,14 @@ final class ParamBuilderTest extends TestCase
         foreach ($result as $cookie) {
             if ($cookie->name === '_fbc') {
                 $this->assertStringEndsWith(
-                    '.test123.'.$this->appendix_is_new,
+                    '.test123.'.$this->appendix_net_new,
                     $cookie->value
                 );
                 $this->assertEquals('example.com', $cookie->domain);
             } else {
                 $this->assertEquals('_fbp', $cookie->name);
                 $this->assertStringEndsWith(
-                    '.'.$this->appendix_is_new,
+                    '.'.$this->appendix_net_new,
                     $cookie->value
                 );
             }
@@ -422,7 +432,7 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builder->getFbc());
         $this->assertStringEndsWith(
-            '.test123.'.$this->appendix_is_new,
+            '.test123.'.$this->appendix_net_new,
             $builder->getFbc()
         );
         $this->assertIsString($builder->getFbp());
@@ -441,7 +451,7 @@ final class ParamBuilderTest extends TestCase
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builder->getFbp()
         );
     }
@@ -463,7 +473,7 @@ final class ParamBuilderTest extends TestCase
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_normal,
+            '.'.$this->appendix_no_change,
             $builder->getFbp()
         );
     }
@@ -480,7 +490,7 @@ final class ParamBuilderTest extends TestCase
             null
         );
         $this->assertEquals(
-            'fb.1.123.abc.'.$this->appendix_is_normal,
+            'fb.1.123.abc.'.$this->appendix_no_change,
             $builder->getFbc()
         );
     }
@@ -499,7 +509,7 @@ final class ParamBuilderTest extends TestCase
             null
         );
         $this->assertEquals(
-            'fb.1.123.abc.'.$this->appendix_is_normal,
+            'fb.1.123.abc.'.$this->appendix_no_change,
             $builder->getFbc()
         );
     }
@@ -518,7 +528,7 @@ final class ParamBuilderTest extends TestCase
             null
         );
         $this->assertStringEndsWith(
-            'def.'.$this->appendix_is_new,
+            'def.'.$this->appendix_modified_new,
             $builder->getFbc()
         );
     }
@@ -538,7 +548,7 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals(null, $builder->getFbc());
         // Since existing fbp is null, we will generate a new one
         $this->assertStringEndsWith(
-            '.'.$this->appendix_is_new,
+            '.'.$this->appendix_net_new,
             $builder->getFbp()
         );
     }
@@ -559,13 +569,13 @@ final class ParamBuilderTest extends TestCase
         foreach ($result as $cookie) {
             if ($cookie->name === '_fbc') {
                 $this->assertEquals(
-                    'fb.1.123.abc.'.$this->appendix_is_normal,
+                    'fb.1.123.abc.'.$this->appendix_no_change,
                     $cookie->value
                 );
             } else {
                 $this->assertEquals('_fbp', $cookie->name);
                 $this->assertStringEndsWith(
-                    '.'.$this->appendix_is_new,
+                    '.'.$this->appendix_net_new,
                     $cookie->value
                 );
             }
@@ -601,7 +611,7 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builder->getFbc());
         $this->assertStringEndsWith(
-            '.abc.'.$this->appendix_is_new,
+            '.abc.'.$this->appendix_net_new,
             $builder->getFbc()
         );
         $this->assertIsString($builder->getFbp());
@@ -620,7 +630,7 @@ final class ParamBuilderTest extends TestCase
         );
         $this->assertIsString($builder->getFbc());
         $this->assertStringEndsWith(
-            '.abc.'.$this->appendix_is_new,
+            '.abc.'.$this->appendix_net_new,
             $builder->getFbc()
         );
         $this->assertIsString($builder->getFbp());

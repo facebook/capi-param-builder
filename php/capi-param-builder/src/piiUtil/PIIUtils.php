@@ -74,7 +74,7 @@ class PIIUtils
 
     if (SharedUtils::looksLikeHashed(trim($piiValue))) {
       return mb_strtolower(trim($piiValue)) . '.' .
-        AppendixProvider::getAppendix(false);
+        AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
     } else if (
       PIIUtils::isAlreadyNormalizedAndHashedByParamBuilder(trim($piiValue))
     ) {
@@ -85,7 +85,7 @@ class PIIUtils
         return null;
       }
       return hash('sha256', $normalizedPII) . '.' .
-        AppendixProvider::getAppendix(true);
+        AppendixProvider::getAppendix(APPENDIX_NET_NEW);
     }
   }
 

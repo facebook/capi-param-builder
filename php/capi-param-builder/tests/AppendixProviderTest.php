@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use FacebookAds\AppendixProvider;
 
 require_once __DIR__ . '/../src/util/AppendixProvider.php';
+require_once __DIR__ . '/../src/model/Constants.php';
 
 final class AppendixProviderTest extends TestCase
 {
@@ -61,22 +62,71 @@ final class AppendixProviderTest extends TestCase
     public function testGetAppendixWithValidAppendix()
     {
         $this->mockSdkVersion('1.0.1');
-        $this->assertEquals(AppendixProvider::getAppendix(true), "AQEBAQAB");
-        $this->assertEquals(AppendixProvider::getAppendix(false), "AQEAAQAB");
+        $this->assertEquals(
+            "AQEBAQAB",
+            AppendixProvider::getAppendix(APPENDIX_GENERAL_NEW)
+        );
+        $this->assertEquals(
+            "AQECAQAB",
+            AppendixProvider::getAppendix(APPENDIX_NET_NEW)
+        );
+        $this->assertEquals(
+            "AQEDAQAB",
+            AppendixProvider::getAppendix(APPENDIX_MODIFIED_NEW)
+        );
+        $this->assertEquals(
+            "AQEAAQAB",
+            AppendixProvider::getAppendix(APPENDIX_NO_CHANGE)
+        );
+        // Invalid appendix type
+        $this->assertEquals(
+            "AQEAAQAB",
+            AppendixProvider::getAppendix(0x99)
+        );
 
         $this->mockSdkVersion('1.15.24');
-        $this->assertEquals(AppendixProvider::getAppendix(true), "AQEBAQ8Y");
-        $this->assertEquals(AppendixProvider::getAppendix(false), "AQEAAQ8Y");
+        $this->assertEquals(
+            "AQEBAQ8Y",
+            AppendixProvider::getAppendix(APPENDIX_GENERAL_NEW)
+        );
+        $this->assertEquals(
+            "AQECAQ8Y",
+            AppendixProvider::getAppendix(APPENDIX_NET_NEW)
+        );
+        $this->assertEquals(
+            "AQEDAQ8Y",
+            AppendixProvider::getAppendix(APPENDIX_MODIFIED_NEW)
+        );
+        $this->assertEquals(
+            "AQEAAQ8Y",
+            AppendixProvider::getAppendix(APPENDIX_NO_CHANGE)
+        );
+        $this->assertEquals(
+            "AQEAAQ8Y",
+            AppendixProvider::getAppendix(0x99)
+        );
     }
 
     public function testGetAppendixWithInValidAppendix()
     {
         $this->mockSdkVersion('test123');
-        $this->assertEquals(AppendixProvider::getAppendix(true), "AQ");
-        $this->assertEquals(AppendixProvider::getAppendix(false), "AQ");
+        $this->assertEquals(
+            "AQ",
+            AppendixProvider::getAppendix(APPENDIX_GENERAL_NEW)
+        );
+        $this->assertEquals(
+            "AQ",
+            AppendixProvider::getAppendix(APPENDIX_NO_CHANGE)
+        );
 
         $this->mockSdkVersion('!@#.%%.^%');
-        $this->assertEquals(AppendixProvider::getAppendix(true), "AQ");
-        $this->assertEquals(AppendixProvider::getAppendix(false), "AQ");
+        $this->assertEquals(
+            "AQ",
+            AppendixProvider::getAppendix(APPENDIX_GENERAL_NEW)
+        );
+        $this->assertEquals(
+            "AQ",
+            AppendixProvider::getAppendix(APPENDIX_NO_CHANGE)
+        );
     }
 }

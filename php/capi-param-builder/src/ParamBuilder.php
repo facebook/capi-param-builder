@@ -21,8 +21,10 @@ final class ParamBuilder
     private $domain_list;
 
     // appendix info
-    private $appendix_new;
-    private $appendix_normal;
+    private $appendix_net_new;
+    private $appendix_modified_new;
+    private $appendix_general_new;
+    private $appendix_no_change;
 
     // captured values
     private $fbc = null;
@@ -45,8 +47,14 @@ final class ParamBuilder
             new FbcParamConfig(FBCLID, '', CLICK_ID_STRING)
         );
 
-        $this->appendix_new = AppendixProvider::getAppendix(true);
-        $this->appendix_normal = AppendixProvider::getAppendix(false);
+        $this->appendix_general_new =
+            AppendixProvider::getAppendix(APPENDIX_GENERAL_NEW);
+        $this->appendix_net_new =
+            AppendixProvider::getAppendix(APPENDIX_NET_NEW);
+        $this->appendix_modified_new =
+            AppendixProvider::getAppendix(APPENDIX_MODIFIED_NEW);
+        $this->appendix_no_change =
+            AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
 
         if ($params instanceof ETLDPlus1Resolver) {
             $this->etld_plus1_resolver = $params;
@@ -101,7 +109,7 @@ final class ParamBuilder
             $contains_extra_dot = empty($slices[MIN_PAYLOAD_SPLIT_LENGTH - 1]);
             $updated_cookie = $cookie_value
                 . ($contains_extra_dot ? '' : '.')
-                . $this->appendix_normal;
+                . $this->appendix_no_change;
         }
 
         // Cookie exist, contains language token. Validate it
@@ -239,11 +247,14 @@ final class ParamBuilder
         if (ParamBuilder::shouldUpdateFbc($new_fbc_payload)) {
             $this->computeETLDPlus1ForHost($host);
             $drop_ts = round(microtime(true) * 1000);
+            $is_net_new = empty($this->fbc);
             $this->fbc = FB_PREFIX .
                 '.' . $this->sub_domain_index .
                 '.' . $drop_ts .
                 '.' . $new_fbc_payload .
-                '.' . $this->appendix_new;
+                '.' . ($is_net_new
+                    ? $this->appendix_net_new
+                    : $this->appendix_modified_new);
             $this->cookies_to_set[FBC_NAME] = new CookieSettings(
                 FBC_NAME,
                 $this->fbc,
@@ -261,7 +272,7 @@ final class ParamBuilder
                 '.' . $this->sub_domain_index .
                 '.' . $drop_ts .
                 '.' . $new_fbp_payload .
-                '.' . $this->appendix_new;
+                '.' . $this->appendix_net_new;
             $this->cookies_to_set[FBP_NAME] = new CookieSettings(
                 FBP_NAME,
                 $this->fbp,
@@ -549,6 +560,10 @@ final class ParamBuilder
             $client_ip_from_request
         );
 
+        $client_ip_appendix = $client_ip_from_request_is_public_ip
+            ? AppendixProvider::getAppendix(APPENDIX_MODIFIED_NEW)
+            : AppendixProvider::getAppendix(APPENDIX_NET_NEW);
+
         // Prioritize: IPv6 over IPv4, public over private,
         // and cookie-sourced IPs over request-sourced IPs.
         if (
@@ -559,13 +574,14 @@ final class ParamBuilder
                 (
                     $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
-                    : AppendixProvider::getAppendix(true)
+                    : $client_ip_appendix
                 );
         } else if (
             $client_ip_from_request_is_IPv6 &&
             $client_ip_from_request_is_public_ip
         ) {
-            $best_client_ip = $client_ip_from_request . '.' . AppendixProvider::getAppendix(false);
+            $best_client_ip = $client_ip_from_request . '.' .
+                AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
         } else if (
             $client_ip_from_cookie_is_IPv4 &&
             $client_ip_from_cookie_is_public_ip
@@ -574,13 +590,14 @@ final class ParamBuilder
                 (
                     $client_ip_language_token_from_cookie
                     ? $client_ip_language_token_from_cookie
-                    : AppendixProvider::getAppendix(true)
+                    : $client_ip_appendix
                 );
         } else if (
             $client_ip_from_request_is_IPv4 &&
             $client_ip_from_request_is_public_ip
         ) {
-            $best_client_ip = $client_ip_from_request . '.' . AppendixProvider::getAppendix(false);
+            $best_client_ip = $client_ip_from_request . '.' .
+                AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
         }
 
         return $best_client_ip;

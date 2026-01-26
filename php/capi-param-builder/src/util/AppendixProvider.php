@@ -11,7 +11,7 @@ require_once __DIR__ . '/VersionProvider.php';
 require_once __DIR__ . '/../model/Constants.php';
 
 class AppendixProvider {
-    public static function getAppendix($is_new) {
+    public static function getAppendix($appendix_type) {
         try {
             $sdk_version = VersionProvider::getVersion();
 
@@ -26,7 +26,10 @@ class AppendixProvider {
             $patch = intval($version_parts[2]);
 
             // Create byte indicating if it's new (0x01) or not (0x00)
-            $is_new_byte = $is_new ? 0x01 : 0x00;
+            $is_new_byte = in_array(
+                $appendix_type,
+                [APPENDIX_NET_NEW, APPENDIX_GENERAL_NEW, APPENDIX_MODIFIED_NEW]
+            ) ? $appendix_type : 0x00;
 
             // Create byte array:
             // [DEFAULT_FORMAT, LANGUAGE_TOKEN_INDEX, is_new_byte, major, minor,

@@ -55,3 +55,7 @@ define('FBI_NAME', '_fbi');
 define('FBCLID', 'fbclid');
 define('CLICK_ID_STRING', 'click_id');
 define('FB_PREFIX', 'fb');
+define('APPENDIX_GENERAL_NEW', 0x01);
+define('APPENDIX_NET_NEW', 0x02);
+define('APPENDIX_MODIFIED_NEW', 0x03);
+define('APPENDIX_NO_CHANGE', 0x00);
