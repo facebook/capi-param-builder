@@ -116,8 +116,8 @@ final class GetClientIpTest extends TestCase
         $this->assertEquals(self::IPV6_PUBLIC . '.' . $this->appendix_no_change, $result);
 
         // IPv6 public from cookie should beat IPv6 public from request (cookie priority)
-        // Since request has a public IP, use APPENDIX_MODIFIED_NEW
-        $anotherIPv6Public = '2001:db8::1';
+        // Cloudflare DNS as public IP, use APPENDIX_MODIFIED_NEW
+        $anotherIPv6Public = '2606:4700:4700::1111';
         $result = $this->invokePrivateStaticMethod(
             'getClientIp',
             [FBI_NAME => self::IPV6_PUBLIC],
