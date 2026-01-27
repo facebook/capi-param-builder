@@ -1,0 +1,90 @@
+<!-- public/index.html -->
+<!--
+* Copyright (c) Meta Platforms, Inc. and affiliates.
+* All rights reserved.
+*
+* This source code is licensed under the license found in the
+* LICENSE file in the root directory of this source tree.
+ -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My JS Library Test</title>
+</head>
+
+<body>
+  <script src="/dev/clientParamBuilder.bundle.js"></script>
+  <script>
+    console.log(
+      'You need to get user cookie consent first, below processAndCollectAllParams will set cookies.'
+    );
+    console.log('return all params:processAndCollectAllParams');
+
+    // getIPfn is a function to retrieve the client's IPv6 address, with a fallback to IPv4 if IPv6 is unavailable.
+    // Please note that the implementation here is for demo purpose only, and you should implement your own logic to collect client IPv6 addresses.
+    let getIPfn = async function () {
+      return await (await fetch('https://api64.ipify.org')).text();
+    }
+
+    async function main() {
+      // @params url: [optional] string. The full URL you want to collect clickID from.
+      // @params getIpFn: [optional] function. The function you implemented to collect client IPv6 addresses from. If IPv6 is not available for clients, you should fallback to IPv4.
+      const processAndCollectAllParams =
+        await clientParamBuilder.processAndCollectAllParams(null, getIPfn);
+
+      console.log(processAndCollectAllParams);
+
+      console.log('getFbc:' + clientParamBuilder.getFbc());
+      console.log('getFbp:' + clientParamBuilder.getFbp());
+      console.log('getClientIpAddress:' + clientParamBuilder.getClientIpAddress());
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('     John_Smith@gmail.com    ','email'));
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('     +001 (616) 954-78 88   ','phone'));
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII(' 62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f ','email'));
+      console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('   62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f.AQYBAQAA ','email'));
+
+      document.getElementById('clientParamBuilder-lib').textContent = JSON.stringify(processAndCollectAllParams);
+
+      const appendix = [];
+      [...atob(clientParamBuilder.getFbc().split('.')[4])].map(c => appendix.push(c.charCodeAt(0)));
+      const version = `${appendix[3]}.${appendix[4]}.${appendix[5]}`;
+      document.getElementById('decoded-appendix').textContent = appendix;
+      document.getElementById('decoded-version').textContent = version;
+
+      // TODO: Quick check we can decode the version like so ^ and then check
+      // embed in the build the known list of server side supported versions.
+      // Not as good as a full e2e test but lets do that too in Sandcastle
+  }
+
+  main();
+
+
+  console.log('--------------Line----------------------');
+  </script>
+
+  <h2>Hello world</h2>
+  <p>
+    <b>Please check onboarding guide for the details how to use the
+      Library.
+    </b>
+  </p>
+  <div>
+    <p>Tests example for capiParamsBuilder library:</p>
+    <p>
+      Response from processAndCollectAllParams:
+      <span id="clientParamBuilder-lib"></span>
+    </p>
+  </div>
+  <!-- TODO(bhavansh): Import PixelJS and wire this up!-->
+  <button type="button">Send Pixel event!</button>
+  <table border="1">
+    <thead>
+      <tr><th>Key</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Appendix</td><td id="decoded-appendix"></td></tr>
+      <tr><td>Version</td><td id="decoded-version"></td></tr>
+    </tbody>
+  </table>
+</body>
+</html>
