@@ -5,7 +5,7 @@ plugins {
 group = 'com.facebook.capi.sdk'
 
 nexusPublishing{
-    repositoryDescription = 'capi-param-builder:1.1.0' // Known issue:https://github.com/gradle-nexus/publish-plugin/issues/310
+    repositoryDescription = 'capi-param-builder:1.1.1' // Known issue:https://github.com/gradle-nexus/publish-plugin/issues/310
     repositories {
         sonatype {
             nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))

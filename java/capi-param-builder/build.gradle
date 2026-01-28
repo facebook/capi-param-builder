@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.facebook.capi.sdk'
-version = '1.1.0' // Please keep the version same as ../build.gradle
+version = '1.1.1' // Please keep the version same as ../build.gradle
 
 repositories {
     mavenCentral()
