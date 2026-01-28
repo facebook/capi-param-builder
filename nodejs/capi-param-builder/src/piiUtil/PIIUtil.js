@@ -30,7 +30,7 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
     }
 
     if (SHA_256_OR_MD5_REGEX.test(piiValue.trim())) {
-        return piiValue.trim().toLowerCase() + '.' + getAppendixInfo(false);
+        return piiValue.trim().toLowerCase() + '.' + getAppendixInfo(Constants.APPENDIX_NO_CHANGE);
     } else if (isAlreadyNormalizedAndHashedByParamBuilder(piiValue.trim())) {
         return piiValue.trim();
     } else {
@@ -38,7 +38,7 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
         if (!normalizedPII) {
             return null;
         }
-        return sha256_main(normalizedPII) + '.' + getAppendixInfo(true);
+        return sha256_main(normalizedPII) + '.' + getAppendixInfo(Constants.APPENDIX_NET_NEW);
     }
 }
 

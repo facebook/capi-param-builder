@@ -6,6 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 const { getAppendixInfo } = require('../src/utils/AppendixProvider');
+const {
+  APPENDIX_GENERAL_NEW,
+  APPENDIX_NET_NEW,
+  APPENDIX_MODIFIED_NEW,
+  APPENDIX_NO_CHANGE,
+} = require('../src/model/Constants');
 
 jest.mock('../package.json', () => ({version: '1.0.1'}));
 
@@ -21,61 +27,65 @@ describe('AppendixProvider - getAppendixInfo', () => {
   });
 
   test('test cases on valid input', () => {
-    expect(getAppendixInfo(true)).toBe('AQQBAQAB'); // 1.0.1
-    expect(getAppendixInfo(false)).toBe('AQQAAQAB'); // 1.0.1
+    expect(getAppendixInfo(APPENDIX_GENERAL_NEW)).toBe('AQQBAQAB');
+    expect(getAppendixInfo(APPENDIX_NET_NEW)).toBe('AQQCAQAB');
+    expect(getAppendixInfo(APPENDIX_MODIFIED_NEW)).toBe('AQQDAQAB');
+    expect(getAppendixInfo(APPENDIX_NO_CHANGE)).toBe('AQQAAQAB');
+    // Invalid appendix type
+    expect(getAppendixInfo(0x99)).toBe('AQQAAQAB');
   });
 
   test('test cases on invalid input', () => {
-    const resultFalse = getAppendixInfo(false);
-    expect(getAppendixInfo(1)).toBe(resultFalse);
-    expect(getAppendixInfo('true')).toBe(resultFalse);
-    expect(getAppendixInfo({})).toBe(resultFalse);
-    expect(getAppendixInfo([])).toBe(resultFalse);
-    expect(getAppendixInfo(0)).toBe(resultFalse);
-    expect(getAppendixInfo('')).toBe(resultFalse);
-    expect(getAppendixInfo(null)).toBe(resultFalse);
-    expect(getAppendixInfo(undefined)).toBe(resultFalse);
+    const resultNoChange = getAppendixInfo(APPENDIX_NO_CHANGE);
+    expect(getAppendixInfo('true')).toBe(resultNoChange);
+    expect(getAppendixInfo({})).toBe(resultNoChange);
+    expect(getAppendixInfo([])).toBe(resultNoChange);
+    expect(getAppendixInfo('')).toBe(resultNoChange);
+    expect(getAppendixInfo(null)).toBe(resultNoChange);
+    expect(getAppendixInfo(undefined)).toBe(resultNoChange);
   });
 
   test('should handle version 1.15.24', () => {
     jest.doMock('../package.json', () => ({version: '1.15.24'}));
     const { getAppendixInfo } = require('../src/utils/AppendixProvider');
-    expect(getAppendixInfo(true)).toBe('AQQBAQ8Y');
-    expect(getAppendixInfo(false)).toBe('AQQAAQ8Y');
+    expect(getAppendixInfo(APPENDIX_GENERAL_NEW)).toBe('AQQBAQ8Y');
+    expect(getAppendixInfo(APPENDIX_NET_NEW)).toBe('AQQCAQ8Y');
+    expect(getAppendixInfo(APPENDIX_MODIFIED_NEW)).toBe('AQQDAQ8Y');
+    expect(getAppendixInfo(APPENDIX_NO_CHANGE)).toBe('AQQAAQ8Y');
   });
 
   test('should return LANGUAGE_TOKEN when version is invalid format', () => {
     mockPackageVersion('invalid-version');
     const { getAppendixInfo } = require('../src/utils/AppendixProvider');
-    const result = getAppendixInfo(true);
+    const result = getAppendixInfo(APPENDIX_GENERAL_NEW);
     expect(result).toBe('BA');
   });
 
   test('should return LANGUAGE_TOKEN when version is missing', () => {
     mockPackageVersion({});
     const { getAppendixInfo } = require('../src/utils/AppendixProvider');
-    const result = getAppendixInfo(true);
+    const result = getAppendixInfo(APPENDIX_GENERAL_NEW);
     expect(result).toBe('BA');
   });
 
   test('should return LANGUAGE_TOKEN when version has only 2 parts', () => {
     mockPackageVersion('1.0');
     const { getAppendixInfo } = require('../src/utils/AppendixProvider');
-    const result = getAppendixInfo(true);
+    const result = getAppendixInfo(APPENDIX_GENERAL_NEW);
     expect(result).toBe('BA');
   });
 
   test('should return LANGUAGE_TOKEN when version has too many parts', () => {
     mockPackageVersion('1.0.0.1');
     const { getAppendixInfo } = require('../src/utils/AppendixProvider');
-    const result = getAppendixInfo(true);
+    const result = getAppendixInfo(APPENDIX_GENERAL_NEW);
     expect(result).toBe('BA');
   });
 
   test('should return LANGUAGE_TOKEN when version contains non-numeric values', () => {
     mockPackageVersion('a.b.c');
     const { getAppendixInfo } = require('../src/utils/AppendixProvider');
-    const result = getAppendixInfo(true);
+    const result = getAppendixInfo(APPENDIX_GENERAL_NEW);
     expect(result).toBe('BA');
   });
 

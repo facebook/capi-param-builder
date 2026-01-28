@@ -7,9 +7,17 @@
  */
 
 const { version } = require('../../package.json');
-const { LANGUAGE_TOKEN , LANGUAGE_TOKEN_INDEX , DEFAULT_FORMAT } = require('../model/Constants');
+const {
+  LANGUAGE_TOKEN,
+  LANGUAGE_TOKEN_INDEX,
+  DEFAULT_FORMAT,
+  APPENDIX_NET_NEW,
+  APPENDIX_GENERAL_NEW,
+  APPENDIX_MODIFIED_NEW,
+  APPENDIX_NO_CHANGE,
+} = require('../model/Constants');
 
-function getAppendixInfo(is_new) {
+function getAppendixInfo(appendix_type) {
     try {
       // Validate version format: must be exactly 3 numeric parts separated by dots
       if (!/^\d+(\.\d+){2}$/.test(version)) {
@@ -23,7 +31,15 @@ function getAppendixInfo(is_new) {
         return LANGUAGE_TOKEN;
       }
 
-      const is_new_byte = is_new === true ? 0x01 : 0x00;
+      // Create byte indicating appendix type
+      const validTypes = [
+        APPENDIX_NET_NEW,
+        APPENDIX_GENERAL_NEW,
+        APPENDIX_MODIFIED_NEW
+      ];
+      const is_new_byte = validTypes.includes(appendix_type)
+        ? appendix_type
+        : APPENDIX_NO_CHANGE;
       const bytes = [DEFAULT_FORMAT, LANGUAGE_TOKEN_INDEX, is_new_byte, major, minor, patch];
       const buf = Buffer.from(bytes);
       const base64urlSafe = buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

@@ -22,6 +22,10 @@ class Constants {
     static DEFAULT_FORMAT = 0x01;
     static APPENDIX_LENGTH_V1 = 2;
     static APPENDIX_LENGTH_V2 = 8;
+    static APPENDIX_GENERAL_NEW = 0x01;
+    static APPENDIX_NET_NEW = 0x02;
+    static APPENDIX_MODIFIED_NEW = 0x03;
+    static APPENDIX_NO_CHANGE = 0x00;
 
     static PII_DATA_TYPE = Object.freeze({
         PHONE: 'phone',

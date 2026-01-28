@@ -39,9 +39,10 @@ class ParamBuilder {
     // output cookies, an array of CookieSettings
     this.cookies_to_set = [];
     this.cookies_to_set_dict = {};
-    // language token
-    this.appendix_new = getAppendixInfo(true);
-    this.appendix_normal = getAppendixInfo(false);
+    // appendix info
+    this.appendix_net_new = getAppendixInfo(Constants.APPENDIX_NET_NEW);
+    this.appendix_modified_new = getAppendixInfo(Constants.APPENDIX_MODIFIED_NEW);
+    this.appendix_no_change = getAppendixInfo(Constants.APPENDIX_NO_CHANGE);
   }
 
   _preprocessCookie(cookies, cookie_name) {
@@ -96,7 +97,7 @@ class ParamBuilder {
   }
 
   _updateCookieWithLanguageToken(cookie_value, cookie_name) {
-    const updated_cookie_value = `${cookie_value}.${this.appendix_normal}`;
+    const updated_cookie_value = `${cookie_value}.${this.appendix_no_change}`;
 
     this.cookies_to_set_dict[cookie_name] = new CookieSettings(
       cookie_name,
@@ -153,7 +154,7 @@ class ParamBuilder {
     if (!this.fbp) {
       const new_fbp_payload = Math.floor(Math.random() * 2147483647);
       const drop_ts = Date.now();
-      this.fbp = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbp_payload}.${this.appendix_new}`;
+      this.fbp = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbp_payload}.${this.appendix_net_new}`;
       this.cookies_to_set_dict[Constants.FBP_NAME_STRING] = new CookieSettings(
         Constants.FBP_NAME_STRING,
         this.fbp,
@@ -167,7 +168,7 @@ class ParamBuilder {
     // check if we should overwrite the fbc
     if (!this.fbc) {
       const drop_ts = Date.now();
-      this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_new}`;
+      this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_net_new}`;
       this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
         Constants.FBC_NAME_STRING,
         this.fbc,
@@ -179,7 +180,7 @@ class ParamBuilder {
       const old_fbc_payload = split[3];
       if (new_fbc_payload !== old_fbc_payload) {
         const drop_ts = Date.now();
-        this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_new}`;
+        this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_modified_new}`;
         this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
           Constants.FBC_NAME_STRING,
           this.fbc,
@@ -470,15 +471,19 @@ class ParamBuilder {
     const clientIpFromCookieIsPublicIp = this._isPublicIp(clientIpFromCookie);
     const clientIpFromRequestIsPublicIp = this._isPublicIp(clientIpFromRequest);
 
+    const clientIpAppendix = clientIpFromRequestIsPublicIp
+      ? this.appendix_modified_new
+      : this.appendix_net_new;
+
     // Prioritize: IPv6 over IPv4, public over private, cookie-sourced IPs over request-sourced IPs.
     if (clientIpFromCookieIsIPv6 && clientIpFromCookieIsPublicIp) {
-      bestClientIp = clientIpFromCookie + '.' + (clientIpLanguageTokenFromCookie || this.appendix_new);
+      bestClientIp = clientIpFromCookie + '.' + (clientIpLanguageTokenFromCookie || clientIpAppendix);
     } else if (clientIpFromRequestIsIPv6 && clientIpFromRequestIsPublicIp) {
-      bestClientIp = clientIpFromRequest + '.' + this.appendix_normal;
+      bestClientIp = clientIpFromRequest + '.' + this.appendix_no_change;
     } else if (clientIpFromCookieIsIPv4 && clientIpFromCookieIsPublicIp) {
-      bestClientIp = clientIpFromCookie + '.' + (clientIpLanguageTokenFromCookie || this.appendix_new);
+      bestClientIp = clientIpFromCookie + '.' + (clientIpLanguageTokenFromCookie || clientIpAppendix);
     } else if (clientIpFromRequestIsIPv4 && clientIpFromRequestIsPublicIp) {
-      bestClientIp = clientIpFromRequest + '.' + this.appendix_normal;
+      bestClientIp = clientIpFromRequest + '.' + this.appendix_no_change;
     }
 
     return bestClientIp;
