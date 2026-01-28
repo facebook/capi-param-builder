@@ -44,4 +44,10 @@ public class Constants {
 
   /** ClickID string */
   public static final String CLICK_ID_STRING = "clickID";
+
+  // Appendix type constants
+  public static final int APPENDIX_NO_CHANGE = 0x00;
+  public static final int APPENDIX_GENERAL_NEW = 0x01;
+  public static final int APPENDIX_NET_NEW = 0x02;
+  public static final int APPENDIX_MODIFIED_NEW = 0x03;
 }

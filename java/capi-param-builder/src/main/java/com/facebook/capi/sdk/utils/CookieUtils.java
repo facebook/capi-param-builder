@@ -29,8 +29,9 @@ public class CookieUtils {
   private static final int APPENDIX_LENGTH_V1 = 2;
   private static final int APPENDIX_LENGTH_V2 = 8;
 
-  private final String APPENDIX_NEW;
-  private final String APPENDIX_NORMAL;
+  private final String APPENDIX_NET_NEW;
+  private final String APPENDIX_MODIFIED_NEW;
+  private final String APPENDIX_NO_CHANGE;
   private final String VERSION;
 
   /**
@@ -42,11 +43,12 @@ public class CookieUtils {
   public CookieUtils(List<FbcParamConfig> fbcParamConfigs, String sdkVersion) {
     this.fbcParamConfigs = fbcParamConfigs;
     this.VERSION = sdkVersion;
-    this.APPENDIX_NEW = getAppendix(true);
-    this.APPENDIX_NORMAL = getAppendix(false);
+    this.APPENDIX_NET_NEW = getAppendix(Constants.APPENDIX_NET_NEW);
+    this.APPENDIX_MODIFIED_NEW = getAppendix(Constants.APPENDIX_MODIFIED_NEW);
+    this.APPENDIX_NO_CHANGE = getAppendix(Constants.APPENDIX_NO_CHANGE);
   }
 
-  private String getAppendix(boolean isNew) {
+  private String getAppendix(int appendixType) {
     try {
       // Get version and split into major, minor, patch
       String[] versionParts = this.VERSION.split("\\.");
@@ -54,14 +56,21 @@ public class CookieUtils {
       int minor = Integer.parseInt(versionParts[1]);
       int patch = Integer.parseInt(versionParts[2]);
 
-      // Create byte indicating if it's new (0x01) or not (0x00)
-      int isNewByte = isNew ? 0x01 : 0x00;
+      // Validate appendix type
+      int newByteType;
+      if (appendixType == Constants.APPENDIX_NET_NEW
+          || appendixType == Constants.APPENDIX_GENERAL_NEW
+          || appendixType == Constants.APPENDIX_MODIFIED_NEW) {
+        newByteType = appendixType;
+      } else {
+        newByteType = Constants.APPENDIX_NO_CHANGE;
+      }
 
       // Create byte array: [DEFAULT_FORMAT, LANGUAGE_TOKEN_INDEX, is_new_byte, major, minor, patch]
       byte[] bytes = {
         (byte) DEFAULT_FORMAT,
         (byte) LANGUAGE_TOKEN_INDEX,
-        (byte) isNewByte,
+        (byte) newByteType,
         (byte) major,
         (byte) minor,
         (byte) patch
@@ -146,7 +155,7 @@ public class CookieUtils {
       // In Java, trailing delimiters will be ignored.
       // In case we have unexpected trailing extra dot.
       boolean containExtralDot = cookieValue.endsWith(".");
-      String updatedCookie = cookieValue + (containExtralDot ? "" : ".") + this.APPENDIX_NORMAL;
+      String updatedCookie = cookieValue + (containExtralDot ? "" : ".") + this.APPENDIX_NO_CHANGE;
       updatedCookieMap.put(
           cookieName,
           new CookieSetting(
@@ -226,7 +235,7 @@ public class CookieUtils {
               .append(".")
               .append(newFbpPayload)
               .append(".")
-              .append(this.APPENDIX_NEW)
+              .append(this.APPENDIX_NET_NEW)
               .toString();
       CookieSetting fbpCookie =
           new CookieSetting(
@@ -254,14 +263,17 @@ public class CookieUtils {
       return null;
     }
     boolean updateCookie = false;
+    boolean isNetNew = false;
     // Check new cookie update
     if (existingFbc == null || existingFbc.isEmpty()) {
       updateCookie = true;
+      isNetNew = true;
     } else {
       // extract payload
       String[] split = existingFbc.split("\\.");
       if (split.length < Constants.MIN_PAYLOAD_SPLIT_LENGTH) {
         updateCookie = true; // corrupt fbc, overwrite
+        isNetNew = true;
       } else {
         updateCookie = !newFbcPayload.equals(split[3]);
       }
@@ -272,6 +284,7 @@ public class CookieUtils {
     }
 
     long dropTs = new Date().getTime();
+    String appendix = isNetNew ? this.APPENDIX_NET_NEW : this.APPENDIX_MODIFIED_NEW;
     String fbc =
         new StringBuilder()
             .append("fb.")
@@ -281,7 +294,7 @@ public class CookieUtils {
             .append(".")
             .append(newFbcPayload)
             .append(".")
-            .append(this.APPENDIX_NEW)
+            .append(appendix)
             .toString();
 
     CookieSetting fbcCookie =

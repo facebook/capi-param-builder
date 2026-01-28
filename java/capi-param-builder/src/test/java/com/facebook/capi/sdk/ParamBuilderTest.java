@@ -27,8 +27,9 @@ public class ParamBuilderTest {
 
   Map<String, String> requestCookieMap = new HashMap<String, String>();
   String SDK_VERSION = "1.0.1";
-  String APPENDIX_IS_NEW = "AQMBAQAB";
-  String APPENDIX_IS_NORMAL = "AQMAAQAB";
+  String APPENDIX_NET_NEW = "AQMCAQAB";
+  String APPENDIX_MODIFIED_NEW = "AQMDAQAB";
+  String APPENDIX_NO_CHANGE = "AQMAAQAB";
 
   @BeforeEach
   void setup() {
@@ -77,8 +78,8 @@ public class ParamBuilderTest {
     List<CookieSetting> result = builder.processRequest("localhost", queries, requestCookieMap);
     assertThat(result).isNotNull();
     assertThat(result.size()).isEqualTo(2);
-    assertThat(builder.getFbc()).isEqualTo("fb.1.1234.fbcTest." + APPENDIX_IS_NORMAL);
-    assertThat(builder.getFbp()).isEqualTo("fb.2.3456.fbpTest." + APPENDIX_IS_NORMAL);
+    assertThat(builder.getFbc()).isEqualTo("fb.1.1234.fbcTest." + APPENDIX_NO_CHANGE);
+    assertThat(builder.getFbp()).isEqualTo("fb.2.3456.fbpTest." + APPENDIX_NO_CHANGE);
     ParamBuilderTest.assertCookieSettingList(result, builder.getCookiesToSet());
   }
 
@@ -104,7 +105,7 @@ public class ParamBuilderTest {
   @DisplayName("Testing ParamBuilder.processRequest when config fbcParamConfigs changes")
   void testProcessRequestFbcParamConfigChanges() {
     String version_1_15_24 = "1.15.24";
-    String V1_15_24_NEW = "AQMBAQ8Y";
+    String V1_15_24_NET_NEW = "AQMCAQ8Y";
     List<FbcParamConfig> fbcParamConfigs =
         new ArrayList<FbcParamConfig>(
             Arrays.asList(
@@ -118,11 +119,11 @@ public class ParamBuilderTest {
     assertThat(result.size()).isEqualTo(2);
     for (CookieSetting cookie : result) {
       if (cookie.getName().equals(Constants.FBC_COOKIE_NAME)) {
-        assertThat(cookie.getValue()).contains(".test456_test_test123." + V1_15_24_NEW);
+        assertThat(cookie.getValue()).contains(".test456_test_test123." + V1_15_24_NET_NEW);
         assertThat(cookie.getDomain()).isEqualTo("localhost");
       } else if (cookie.getName().equals(Constants.FBP_COOKIE_NAME)) {
         assertThat(cookie.getValue()).contains("fb.");
-        assertThat(cookie.getValue()).contains("." + V1_15_24_NEW);
+        assertThat(cookie.getValue()).contains("." + V1_15_24_NET_NEW);
       }
     }
     ParamBuilderTest.assertCookieSettingList(result, builder.getCookiesToSet());
@@ -132,8 +133,8 @@ public class ParamBuilderTest {
   @DisplayName("Testing ParamBuilder.processRequest when version number changes")
   void testProcessRequestVersionChanges() {
     String version_1_15_24 = "1.15.24";
-    String V1_15_24_NEW = "AQMBAQ8Y";
-    String V1_15_24_NORMAL = "AQMAAQ8Y";
+    String V1_15_24_MODIFIED_NEW = "AQMDAQ8Y";
+    String V1_15_24_NO_CHANGE = "AQMAAQ8Y";
     List<FbcParamConfig> fbcParamConfigs =
         new ArrayList<FbcParamConfig>(
             Arrays.asList(new FbcParamConfig("query", "test", "whatevertest")));
@@ -144,11 +145,11 @@ public class ParamBuilderTest {
     assertThat(result.size()).isEqualTo(2);
     for (CookieSetting cookie : result) {
       if (cookie.getName().equals(Constants.FBC_COOKIE_NAME)) {
-        assertThat(cookie.getValue()).contains(".test_test123." + V1_15_24_NEW);
+        assertThat(cookie.getValue()).contains(".test_test123." + V1_15_24_MODIFIED_NEW);
         assertThat(cookie.getDomain()).isEqualTo("localhost");
       } else if (cookie.getName().equals(Constants.FBP_COOKIE_NAME)) {
         assertThat(cookie.getValue()).contains("fb.");
-        assertThat(cookie.getValue()).contains("." + V1_15_24_NORMAL);
+        assertThat(cookie.getValue()).contains("." + V1_15_24_NO_CHANGE);
       }
     }
     ParamBuilderTest.assertCookieSettingList(result, builder.getCookiesToSet());
@@ -161,12 +162,11 @@ public class ParamBuilderTest {
     builder.processRequest("localhost", queries, this.requestCookieMap);
     String fbc = builder.getFbc();
     String fbp = builder.getFbp();
-    System.out.println(fbc);
     // With language token
     assertThat(fbc)
-        .isEqualTo(requestCookieMap.get(Constants.FBC_COOKIE_NAME) + "." + APPENDIX_IS_NORMAL);
+        .isEqualTo(requestCookieMap.get(Constants.FBC_COOKIE_NAME) + "." + APPENDIX_NO_CHANGE);
     assertThat(fbp)
-        .isEqualTo(requestCookieMap.get(Constants.FBP_COOKIE_NAME) + "." + APPENDIX_IS_NORMAL);
+        .isEqualTo(requestCookieMap.get(Constants.FBP_COOKIE_NAME) + "." + APPENDIX_NO_CHANGE);
   }
 
   @Test
@@ -179,8 +179,8 @@ public class ParamBuilderTest {
     builder.processRequest("localhost", queries, requestCookieMapDemo);
     String fbc = builder.getFbc();
     String fbp = builder.getFbp();
-    assertThat(fbc).contains(".test456." + APPENDIX_IS_NEW);
-    assertThat(fbp).contains("." + APPENDIX_IS_NEW);
+    assertThat(fbc).contains(".test456." + APPENDIX_NET_NEW);
+    assertThat(fbp).contains("." + APPENDIX_NET_NEW);
   }
 
   @Test
@@ -203,9 +203,9 @@ public class ParamBuilderTest {
     builder.processRequest("localhost", queries, this.requestCookieMap);
     String fbc = builder.getFbc();
     String fbp = builder.getFbp();
-    assertThat(fbc).contains(".test456." + APPENDIX_IS_NEW);
+    assertThat(fbc).contains(".test456." + APPENDIX_MODIFIED_NEW);
     assertThat(fbp)
-        .isEqualTo(requestCookieMap.get(Constants.FBP_COOKIE_NAME) + "." + APPENDIX_IS_NORMAL);
+        .isEqualTo(requestCookieMap.get(Constants.FBP_COOKIE_NAME) + "." + APPENDIX_NO_CHANGE);
   }
 
   @Test
@@ -217,8 +217,8 @@ public class ParamBuilderTest {
     builder.processRequest("localhost", null, this.requestCookieMap);
     String fbc = builder.getFbc();
     String fbp = builder.getFbp();
-    assertThat(fbc).isEqualTo("fb.1.1234.fbcTest." + APPENDIX_IS_NORMAL);
-    assertTrue(fbp.matches(String.format("^fb\\.0\\.[0-9]+\\.[0-9]+\\.%s$", APPENDIX_IS_NEW)));
+    assertThat(fbc).isEqualTo("fb.1.1234.fbcTest." + APPENDIX_NO_CHANGE);
+    assertTrue(fbp.matches(String.format("^fb\\.0\\.[0-9]+\\.[0-9]+\\.%s$", APPENDIX_NET_NEW)));
   }
 
   @Test

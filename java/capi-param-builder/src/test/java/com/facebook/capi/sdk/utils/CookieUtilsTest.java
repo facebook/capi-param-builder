@@ -36,8 +36,9 @@ public class CookieUtilsTest {
   Map<String, String> cookies = new HashMap<>();
   Map<String, String[]> queryMap = new HashMap<>();
 
-  String APPENDIX_IS_NEW = "AQMBAQAB";
-  String APPENDIX_IS_NORMAL = "AQMAAQAB";
+  String APPENDIX_NET_NEW = "AQMCAQAB";
+  String APPENDIX_MODIFIED_NEW = "AQMDAQAB";
+  String APPENDIX_NO_CHANGE = "AQMAAQAB";
 
   @BeforeEach
   void setup() {
@@ -76,9 +77,9 @@ public class CookieUtilsTest {
     assertThat(updatedCookiesMap.size()).isEqualTo(0);
     // Valid existing cookie w/o language token, add language token and update the cookie
     assertThat(cookieUtils.preprocessCookies(cookies, Constants.FBC_COOKIE_NAME, updatedCookiesMap))
-        .isEqualTo("fb.1.1234.fbcTest." + APPENDIX_IS_NORMAL);
+        .isEqualTo("fb.1.1234.fbcTest." + APPENDIX_NO_CHANGE);
     assertThat(updatedCookiesMap.get(Constants.FBC_COOKIE_NAME).getValue())
-        .isEqualTo("fb.1.1234.fbcTest." + APPENDIX_IS_NORMAL);
+        .isEqualTo("fb.1.1234.fbcTest." + APPENDIX_NO_CHANGE);
     assertThat(updatedCookiesMap.size()).isEqualTo(1);
   }
 
@@ -117,7 +118,8 @@ public class CookieUtilsTest {
         cookieUtils.getUpdatedFbcCookie("fb.1.123456.test123", "test456", updatedCookiesMap);
     assertThat(result).isNotNull();
     String cookieValue = result.getValue();
-    assertTrue(cookieValue.matches(String.format("^fb.1.[0-9]+.test456.%s$", APPENDIX_IS_NEW)));
+    assertTrue(
+        cookieValue.matches(String.format("^fb.1.[0-9]+.test456.%s$", APPENDIX_MODIFIED_NEW)));
     assertThat(result.getDomain()).isEqualTo("test.com");
   }
 
@@ -138,7 +140,7 @@ public class CookieUtilsTest {
     assertThat(result).isNotNull();
     assertThat(result.getDomain()).isEqualTo("test.bar.com");
     String cookieValue = result.getValue();
-    assertTrue(cookieValue.matches(String.format("^fb.2.[0-9]+.test456.%s$", APPENDIX_IS_NEW)));
+    assertTrue(cookieValue.matches(String.format("^fb.2.[0-9]+.test456.%s$", APPENDIX_NET_NEW)));
   }
 
   @Test
@@ -152,7 +154,7 @@ public class CookieUtilsTest {
     assertThat(result.getDomain()).isEqualTo("bar.com");
     String cookieValue = result.getValue();
     assertTrue(
-        cookieValue.matches(String.format("^fb\\.1\\.[0-9]+\\.[0-9]+\\.%s$", APPENDIX_IS_NEW)));
+        cookieValue.matches(String.format("^fb\\.1\\.[0-9]+\\.[0-9]+\\.%s$", APPENDIX_NET_NEW)));
   }
 
   @Test
@@ -198,13 +200,13 @@ public class CookieUtilsTest {
   @Test
   @DisplayName("Testing different version number with different appendix")
   void testAppendixVersionNumber() {
-    String V1_15_24_NEW = "AQMBAQ8Y";
+    String V1_15_24_NET_NEW = "AQMCAQ8Y";
     CookieUtils cookieUtilsWithParamsConfig =
         new CookieUtils(
             new ArrayList<FbcParamConfig>(
                 Arrays.asList(
                     new FbcParamConfig(Constants.FBCLID_STRING, "", Constants.CLICK_ID_STRING))),
-            "1.15.24"); // Test version number
+            "1.15.24");
     // Same fbc value, no update
     CookieSetting fbcResult =
         cookieUtilsWithParamsConfig.getUpdatedFbcCookie(
@@ -213,9 +215,8 @@ public class CookieUtilsTest {
 
     CookieSetting fbpResult =
         cookieUtilsWithParamsConfig.getUpdatedFbpCookie(null, updatedCookiesMap);
-    System.out.println(fbpResult.getValue());
     assertThat(fbpResult).isNotNull();
     String fbpValue = fbpResult.getValue();
-    assertTrue(fbpValue.matches(String.format("^fb.0.[0-9]+.[0-9]+.%s$", V1_15_24_NEW)));
+    assertTrue(fbpValue.matches(String.format("^fb.0.[0-9]+.[0-9]+.%s$", V1_15_24_NET_NEW)));
   }
 }
