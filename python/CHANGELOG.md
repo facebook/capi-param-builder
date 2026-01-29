@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v1.1.2
+Improve the is_new flag with more breakdown on net new and modified new option.
+
 ## v1.1.1
 
 Bug fix for the version number in appendix. After upload to pypi, the setup
