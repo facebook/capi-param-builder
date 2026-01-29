@@ -31,6 +31,12 @@ LANGUAGE_TOKEN_INDEX: Final[int] = 0x02  # Python language token index
 APPENDIX_LENGTH_V1: Final[int] = 2
 APPENDIX_LENGTH_V2: Final[int] = 8
 
+# Appendix type constants
+APPENDIX_NO_CHANGE: Final[int] = 0x00
+APPENDIX_GENERAL_NEW: Final[int] = 0x01
+APPENDIX_NET_NEW: Final[int] = 0x02
+APPENDIX_MODIFIED_NEW: Final[int] = 0x03
+
 
 class ParamBuilder:
     """
@@ -54,8 +60,9 @@ class ParamBuilder:
         self.domain_list: Optional[List] = None
         self.etld_plus_one_resolver: Optional[EtldPlusOneResolver] = None
         ## Appendix with version number
-        self.appendix_new: str = self._get_appendix(True)
-        self.appendix_normal: str = self._get_appendix(False)
+        self.appendix_net_new: str = self._get_appendix(APPENDIX_NET_NEW)
+        self.appendix_modified_new: str = self._get_appendix(APPENDIX_MODIFIED_NEW)
+        self.appendix_no_change: str = self._get_appendix(APPENDIX_NO_CHANGE)
 
         if isinstance(input, List):
             self.domain_list = []
@@ -77,7 +84,7 @@ class ParamBuilder:
             # Fallback version on any error
             return "1.0.0"
 
-    def _get_appendix(self, is_new: bool) -> str:
+    def _get_appendix(self, appendix_type: int) -> str:
         try:
             version = self._get_version()
             version_parts = version.split(".")
@@ -85,12 +92,21 @@ class ParamBuilder:
             minor = int(version_parts[1])
             patch = int(version_parts[2])
 
-            is_new_byte = 0x01 if is_new else 0x00
+            # Validate appendix type
+            valid_types = [
+                APPENDIX_NET_NEW,
+                APPENDIX_GENERAL_NEW,
+                APPENDIX_MODIFIED_NEW,
+            ]
+            if appendix_type in valid_types:
+                type_byte = appendix_type
+            else:
+                type_byte = APPENDIX_NO_CHANGE
 
             bytes_array = [
                 DEFAULT_FORMAT,
                 LANGUAGE_TOKEN_INDEX,
-                is_new_byte,
+                type_byte,
                 major,
                 minor,
                 patch,
@@ -134,7 +150,7 @@ class ParamBuilder:
                 return None
 
         if len(cookie_split) == MIN_PAYLOAD_SPLIT_LENGTH:
-            updated_cookie = cookie_value + "." + self.appendix_normal
+            updated_cookie = cookie_value + "." + self.appendix_no_change
             self.cookies_to_set_dict[cookie_name] = CookieSettings(
                 cookie_name, updated_cookie, self.etld_plus_one, DEFAULT_1PC_AGE
             )
@@ -251,17 +267,24 @@ class ParamBuilder:
 
         # cookie update
         cookie_update = False
+        is_net_new = False
         if existing_fbc is None:
             cookie_update = True
+            is_net_new = True
         else:
             parts = existing_fbc.split(".")
-            cookie_update = new_fbc_payload != parts[3]
+            if len(parts) < MIN_PAYLOAD_SPLIT_LENGTH:
+                cookie_update = True  # corrupt fbc, overwrite
+                is_net_new = True
+            else:
+                cookie_update = new_fbc_payload != parts[3]
 
         if cookie_update is False:
             return None
 
         # Get ms
         now_ts = int(time.time() * 1000)
+        appendix = self.appendix_net_new if is_net_new else self.appendix_modified_new
         new_fbc = (
             "fb."
             + str(self.sub_domain_index)
@@ -270,7 +293,7 @@ class ParamBuilder:
             + "."
             + new_fbc_payload
             + "."
-            + self.appendix_new
+            + appendix
         )
         # TODO: update etld+1 to get proper etld+1.
         udpated_cookie_setting = CookieSettings(
@@ -297,7 +320,7 @@ class ParamBuilder:
             + "."
             + new_fbp_payload
             + "."
-            + self.appendix_new
+            + self.appendix_net_new
         )
         udpated_cookie_setting = CookieSettings(
             FBP_COOKIE_NAME, new_fbp, self.etld_plus_one, DEFAULT_1PC_AGE
