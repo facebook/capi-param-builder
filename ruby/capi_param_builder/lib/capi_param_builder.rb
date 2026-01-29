@@ -29,10 +29,17 @@ class ParamBuilder
   APPENDIX_LENGTH_V1 = 2
   APPENDIX_LENGTH_V2 = 8
 
+  # Appendix type constants
+  APPENDIX_NO_CHANGE = 0x00
+  APPENDIX_GENERAL_NEW = 0x01
+  APPENDIX_NET_NEW = 0x02
+  APPENDIX_MODIFIED_NEW = 0x03
+
   def initialize(input = nil)
     @fbc_params_configs = [FbcParamConfigs.new("fbclid", "", "clickID")]
-    @appendix_new = get_appendix(true)
-    @appendix_normal = get_appendix(false)
+    @appendix_net_new = get_appendix(APPENDIX_NET_NEW)
+    @appendix_modified_new = get_appendix(APPENDIX_MODIFIED_NEW)
+    @appendix_no_change = get_appendix(APPENDIX_NO_CHANGE)
 
     if input.nil?
       return
@@ -48,7 +55,7 @@ class ParamBuilder
     end
   end
 
-  private def get_appendix(is_new)
+  private def get_appendix(appendix_type)
     begin
       version = ReleaseConfig::VERSION
       version_parts = version.split(".")
@@ -56,13 +63,19 @@ class ParamBuilder
       minor = version_parts[1].to_i
       patch = version_parts[2].to_i
 
-      is_new_byte = is_new ? 0x01 : 0x00
+      # Validate appendix type
+      valid_types = [APPENDIX_NET_NEW, APPENDIX_GENERAL_NEW, APPENDIX_MODIFIED_NEW]
+      if valid_types.include?(appendix_type)
+        type_byte = appendix_type
+      else
+        type_byte = APPENDIX_NO_CHANGE
+      end
 
       # Create byte array
       bytes_array = [
         DEFAULT_FORMAT,        # 0x01 = 1
         LANGUAGE_TOKEN_INDEX,  # 0x05 = 5
-        is_new_byte,          # 0x01 when is_new=true, 0x00 when is_new=false
+        type_byte,            # appendix type
         major,                # Major version number
         minor,                # Minor version number
         patch                 # Patch version number
@@ -104,7 +117,7 @@ class ParamBuilder
     end
     # Append language token if not present
     if parts.size == MIN_PAYLOAD_SPLIT_LENGTH
-      updated_cookie_value = cookie_value + "." + @appendix_normal
+      updated_cookie_value = cookie_value + "." + @appendix_no_change
       @cookie_to_set_dict[cookie_name] = CookieSettings.new(
         cookie_name, updated_cookie_value, @etld_plus_one, DEFAULT_1PC_AGE)
       return updated_cookie_value
@@ -282,17 +295,26 @@ class ParamBuilder
       return nil
     end
 
+    cookie_update = false
+    is_net_new = false
     if existing_fbc.nil?
       cookie_update = true
+      is_net_new = true
     else
       parts = existing_fbc.split(/\./)
-      cookie_update = new_fbc_payload != parts[3]
+      if parts.size < MIN_PAYLOAD_SPLIT_LENGTH
+        cookie_update = true
+        is_net_new = true
+      else
+        cookie_update = new_fbc_payload != parts[3]
+      end
     end
     if cookie_update == false
       return nil
     end
 
     current_ms = (Time.now.to_f * 1000).to_i.to_s
+    appendix = is_net_new ? @appendix_net_new : @appendix_modified_new
     new_fbc = "fb." +
       @sub_domain_index.to_s +
       "." +
@@ -300,7 +322,7 @@ class ParamBuilder
       "." +
       new_fbc_payload +
       "." +
-      @appendix_new
+      appendix
     updated_cookie_setting = CookieSettings.new(
       FBC_NAME, new_fbc, @etld_plus_one, DEFAULT_1PC_AGE)
     return updated_cookie_setting
@@ -319,7 +341,7 @@ class ParamBuilder
       "." +
       new_fbp_payload +
       "." +
-      @appendix_new
+      @appendix_net_new
     updated_cookie_setting = CookieSettings.new(
       FBP_NAME, new_fbp, @etld_plus_one, DEFAULT_1PC_AGE)
     return updated_cookie_setting
