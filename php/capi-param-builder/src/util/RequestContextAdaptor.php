@@ -7,19 +7,22 @@
  */
 
 namespace FacebookAds;
+
 require_once __DIR__ . '/../model/PlainDataObject.php';
 
 use Throwable;
 use FacebookAds\PlainDataObject;
 
-class RequestContextAdaptor {
+class RequestContextAdaptor
+{
 
     /**
      * Extracts request data from global server variables or overrides.
      * * @param array|null $server_overrides
      * @return PlainDataObject
      */
-    public static function extract($server_overrides = null): PlainDataObject {
+    public static function extract($server_overrides = null): PlainDataObject
+    {
         // 1. Initialize Defaults (matching PlainDataObject types)
         $host = "";
         $query_params = [];
@@ -29,8 +32,9 @@ class RequestContextAdaptor {
         $remote_address = null;    // Defaults to null for ?string
 
         try {
-            // Use global server or override
-            $server = $server_overrides ?? $_SERVER;
+            // Use overrides if they are a valid array; otherwise fall back
+            // to global $_SERVER
+            $server = is_array($server_overrides) ? $server_overrides : $_SERVER;
 
             if ($server) {
                 // Extract Headers
