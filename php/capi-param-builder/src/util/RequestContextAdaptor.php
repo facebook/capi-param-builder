@@ -12,7 +12,7 @@ require_once __DIR__ . '/../model/PlainDataObject.php';
 use Throwable;
 use FacebookAds\PlainDataObject;
 
-class RequestAdaptor {
+class RequestContextAdaptor {
 
     /**
      * Extracts request data from global server variables or overrides.

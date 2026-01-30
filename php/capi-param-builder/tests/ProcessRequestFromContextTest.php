@@ -14,7 +14,7 @@ use FacebookAds\AppendixProvider;
 require_once 'ETLDPlus1ResolverForUnitTest.php';
 require_once __DIR__ . '/../src/ParamBuilder.php';
 require_once __DIR__ . '/../src/util/AppendixProvider.php';
-require_once __DIR__ . '/../src/util/RequestAdaptor.php';
+require_once __DIR__ . '/../src/util/RequestContextAdaptor.php';
 require_once __DIR__ . '/../src/model/PlainDataObject.php';
 require_once __DIR__ . '/../src/model/Constants.php';
 

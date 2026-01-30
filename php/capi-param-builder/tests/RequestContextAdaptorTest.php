@@ -7,14 +7,14 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use FacebookAds\RequestAdaptor;
+use FacebookAds\RequestContextAdaptor;
 use FacebookAds\PlainDataObject;
 
-require_once __DIR__ . '/../src/util/RequestAdaptor.php';
+require_once __DIR__ . '/../src/util/RequestContextAdaptor.php';
 require_once __DIR__ . '/../src/model/PlainDataObject.php';
 
 /**
- * Unit tests for RequestAdaptor
+ * Unit tests for RequestContextAdaptor
  *
  * Tests cover:
  * - Basic extraction functionality
@@ -22,7 +22,7 @@ require_once __DIR__ . '/../src/model/PlainDataObject.php';
  * - Edge cases and error handling
  * - Global variable scenarios
  */
-final class RequestAdaptorTest extends TestCase
+final class RequestContextAdaptorTest extends TestCase
 {
     private $original_server;
     private $original_get;
@@ -60,7 +60,7 @@ final class RequestAdaptorTest extends TestCase
 
     public function testExtractReturnsPlainDataObject(): void
     {
-        $result = RequestAdaptor::extract([]);
+        $result = RequestContextAdaptor::extract([]);
         $this->assertInstanceOf(PlainDataObject::class, $result);
     }
 
@@ -71,7 +71,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '192.168.1.1',
         ];
 
-        $result = RequestAdaptor::extract(null);
+        $result = RequestContextAdaptor::extract(null);
 
         $this->assertEquals('example.com', $result->host);
         $this->assertEquals('192.168.1.1', $result->remote_address);
@@ -79,7 +79,7 @@ final class RequestAdaptorTest extends TestCase
 
     public function testExtractWithEmptyServerOverrides(): void
     {
-        $result = RequestAdaptor::extract([]);
+        $result = RequestContextAdaptor::extract([]);
 
         $this->assertEquals('', $result->host);
         $this->assertEquals([], $result->query_params);
@@ -96,35 +96,35 @@ final class RequestAdaptorTest extends TestCase
     public function testExtractHost(): void
     {
         $server = ['HTTP_HOST' => 'www.example.com'];
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
         $this->assertEquals('www.example.com', $result->host);
     }
 
     public function testExtractHostWithPort(): void
     {
         $server = ['HTTP_HOST' => 'localhost:8080'];
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
         $this->assertEquals('localhost:8080', $result->host);
     }
 
     public function testExtractReferer(): void
     {
         $server = ['HTTP_REFERER' => 'https://google.com/search?q=test'];
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
         $this->assertEquals('https://google.com/search?q=test', $result->referer);
     }
 
     public function testExtractXForwardedFor(): void
     {
         $server = ['HTTP_X_FORWARDED_FOR' => '203.0.113.195, 70.41.3.18, 150.172.238.178'];
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
         $this->assertEquals('203.0.113.195, 70.41.3.18, 150.172.238.178', $result->x_forwarded_for);
     }
 
     public function testExtractRemoteAddress(): void
     {
         $server = ['REMOTE_ADDR' => '192.168.1.100'];
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
         $this->assertEquals('192.168.1.100', $result->remote_address);
     }
 
@@ -137,7 +137,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '10.0.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('api.example.com', $result->host);
         $this->assertEquals('https://referrer.com', $result->referer);
@@ -154,7 +154,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_GET = ['foo' => 'bar', 'baz' => 'qux'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals(['foo' => 'bar', 'baz' => 'qux'], $result->query_params);
     }
@@ -169,7 +169,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => 'param1=value1&param2=value2',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result->query_params);
     }
@@ -184,7 +184,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => 'from_query_string=true',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         // $_GET should take precedence over QUERY_STRING
         $this->assertEquals(['from_get' => 'true'], $result->query_params);
@@ -199,7 +199,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => 'name=John%20Doe&email=test%40example.com&tags[]=a&tags[]=b',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('John Doe', $result->query_params['name']);
         $this->assertEquals('test@example.com', $result->query_params['email']);
@@ -214,7 +214,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => '',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals([], $result->query_params);
     }
@@ -228,7 +228,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_COOKIE = ['session_id' => 'abc123', 'user_pref' => 'dark_mode'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals(['session_id' => 'abc123', 'user_pref' => 'dark_mode'], $result->cookies);
     }
@@ -243,7 +243,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'cookie1=value1; cookie2=value2',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals(['cookie1' => 'value1', 'cookie2' => 'value2'], $result->cookies);
     }
@@ -258,7 +258,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'from_header=true',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         // $_COOKIE should take precedence over HTTP_COOKIE
         $this->assertEquals(['from_global' => 'true'], $result->cookies);
@@ -273,7 +273,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'encoded=hello%20world; special=a%3Db%26c%3Dd',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('hello world', $result->cookies['encoded']);
         $this->assertEquals('a=b&c=d', $result->cookies['special']);
@@ -288,7 +288,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => '  cookie1=value1  ;   cookie2=value2  ; cookie3=value3',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertArrayHasKey('cookie1', $result->cookies);
         $this->assertArrayHasKey('cookie2', $result->cookies);
@@ -304,7 +304,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'valid=value; invalid_no_equals; another=test',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('value', $result->cookies['valid']);
         $this->assertEquals('test', $result->cookies['another']);
@@ -321,7 +321,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'empty=; normal=value',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('', $result->cookies['empty']);
         $this->assertEquals('value', $result->cookies['normal']);
@@ -348,7 +348,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => 'page=1&sort=name',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('myapp.test', $result->host);
         $this->assertEquals(['page' => '1', 'sort' => 'name'], $result->query_params);
@@ -375,7 +375,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '192.168.1.50',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('wordpress.local', $result->host);
         $this->assertEquals(['p' => '123', 'preview' => 'true'], $result->query_params);
@@ -398,7 +398,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => 'q=node/123',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('drupal.example.com', $result->host);
         $this->assertEquals(['q' => 'node/123'], $result->query_params);
@@ -418,7 +418,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '172.16.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('ci.local', $result->host);
         $this->assertEquals(['c' => 'home', 'm' => 'index'], $result->query_params);
@@ -443,7 +443,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '10.0.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('shop.example.com', $result->host);
         $this->assertEquals('8.8.8.8, 10.0.0.1', $result->x_forwarded_for);
@@ -464,7 +464,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '127.0.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('yii.local:8000', $result->host);
         $this->assertEquals(['r' => 'site/index'], $result->query_params);
@@ -483,7 +483,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '10.0.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('api.production.com', $result->host);
         $this->assertEquals('203.0.113.195, 70.41.3.18', $result->x_forwarded_for);
@@ -500,7 +500,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '172.31.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('54.239.28.85', $result->x_forwarded_for);
         $this->assertEquals('172.31.0.1', $result->remote_address);
@@ -515,7 +515,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '172.64.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('203.0.113.50, 172.64.0.1', $result->x_forwarded_for);
     }
@@ -531,7 +531,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $result->remote_address);
     }
@@ -544,7 +544,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '::1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('2001:db8::1, 2001:db8::2', $result->x_forwarded_for);
         $this->assertEquals('::1', $result->remote_address);
@@ -563,7 +563,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => null,
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         // null ?? '' returns '', null ?? null returns null
         $this->assertEquals('', $result->host);
@@ -581,7 +581,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('', $result->host);
         $this->assertEquals('', $result->referer);
@@ -594,7 +594,7 @@ final class RequestAdaptorTest extends TestCase
         $longHost = str_repeat('a', 255) . '.example.com';
         $server = ['HTTP_HOST' => $longHost];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals($longHost, $result->host);
     }
@@ -607,7 +607,7 @@ final class RequestAdaptorTest extends TestCase
         $longValue = str_repeat('x', 10000);
         $server = ['QUERY_STRING' => 'long_param=' . $longValue];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals($longValue, $result->query_params['long_param']);
     }
@@ -623,7 +623,7 @@ final class RequestAdaptorTest extends TestCase
         }
         $server = ['HTTP_COOKIE' => implode('; ', $cookieParts)];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertCount(50, $result->cookies);
         $this->assertEquals('value0', $result->cookies['cookie0']);
@@ -636,7 +636,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_REFERER' => 'https://example.com/path?query=hello%20world&special=<script>',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals(
             'https://example.com/path?query=hello%20world&special=<script>',
@@ -649,7 +649,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_GET = ['name' => '日本語', 'emoji' => '🚀'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals('日本語', $result->query_params['name']);
         $this->assertEquals('🚀', $result->query_params['emoji']);
@@ -660,7 +660,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_COOKIE = ['lang' => 'العربية'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals('العربية', $result->cookies['lang']);
     }
@@ -677,8 +677,8 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '8.8.8.8',
         ];
 
-        $result1 = RequestAdaptor::extract($server);
-        $result2 = RequestAdaptor::extract($server);
+        $result1 = RequestContextAdaptor::extract($server);
+        $result2 = RequestContextAdaptor::extract($server);
 
         $this->assertEquals($result1->host, $result2->host);
         $this->assertEquals($result1->referer, $result2->referer);
@@ -693,7 +693,7 @@ final class RequestAdaptorTest extends TestCase
         ];
         $originalServer = $server;
 
-        RequestAdaptor::extract($server);
+        RequestContextAdaptor::extract($server);
 
         $this->assertEquals($originalServer, $server);
     }
@@ -707,7 +707,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_COOKIE = ['_fbi' => '8.8.8.8.en'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals('8.8.8.8.en', $result->cookies['_fbi']);
     }
@@ -717,7 +717,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_COOKIE = ['_fbp' => 'fb.1.1234567890123.1234567890'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals('fb.1.1234567890123.1234567890', $result->cookies['_fbp']);
     }
@@ -727,7 +727,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_COOKIE = ['_fbc' => 'fb.1.1234567890123.AbCdEfGhIjKlMnOpQrStUvWxYz'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals('fb.1.1234567890123.AbCdEfGhIjKlMnOpQrStUvWxYz', $result->cookies['_fbc']);
     }
@@ -737,7 +737,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_GET = ['fbclid' => 'IwAR3xYz_test_fbclid_value'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         $this->assertEquals('IwAR3xYz_test_fbclid_value', $result->query_params['fbclid']);
     }
@@ -752,7 +752,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_HOST' => 'evil.com\r\nX-Injected: header',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         // The class should extract as-is without modification
         // Security validation should be done by the consumer
@@ -764,7 +764,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_GET = ['xss' => '<script>alert("xss")</script>'];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         // Raw extraction - no sanitization
         $this->assertEquals('<script>alert("xss")</script>', $result->query_params['xss']);
@@ -775,7 +775,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
         $_GET = ['id' => "1'; DROP TABLE users; --"];
 
-        $result = RequestAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
 
         // Raw extraction - no sanitization
         $this->assertEquals("1'; DROP TABLE users; --", $result->query_params['id']);
@@ -797,7 +797,7 @@ final class RequestAdaptorTest extends TestCase
             'QUERY_STRING' => 'api_key=abc123&format=json',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('api.example.com', $result->host);
         $this->assertEquals('203.0.113.50', $result->x_forwarded_for);
@@ -809,7 +809,7 @@ final class RequestAdaptorTest extends TestCase
         $this->resetGlobals();
 
         // CLI context typically has minimal server data
-        $result = RequestAdaptor::extract([]);
+        $result = RequestContextAdaptor::extract([]);
 
         $this->assertEquals('', $result->host);
         $this->assertEquals([], $result->query_params);
@@ -832,7 +832,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '192.168.1.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('secure.example.com', $result->host);
     }
@@ -850,7 +850,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'base64=dGVzdD1pbj1kYXRh',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         // Should handle equals signs in cookie values correctly
         $this->assertEquals('dGVzdD1pbj1kYXRh', $result->cookies['base64']);
@@ -865,7 +865,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => 'complex=a=b=c=d',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         // explode with limit 2 should preserve all equals after the first
         $this->assertEquals('a=b=c=d', $result->cookies['complex']);
@@ -880,7 +880,7 @@ final class RequestAdaptorTest extends TestCase
             'HTTP_COOKIE' => '',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals([], $result->cookies);
     }
@@ -910,7 +910,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '10.0.0.1',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('shop.example.com', $result->host);
         $this->assertEquals('payment', $result->query_params['step']);
@@ -936,7 +936,7 @@ final class RequestAdaptorTest extends TestCase
             'REMOTE_ADDR' => '8.8.8.8',
         ];
 
-        $result = RequestAdaptor::extract($server);
+        $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('facebook', $result->query_params['utm_source']);
         $this->assertEquals('IwAR3abc123', $result->query_params['fbclid']);

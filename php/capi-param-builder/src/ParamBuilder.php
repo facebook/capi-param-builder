@@ -14,7 +14,7 @@ require_once 'model/CookieSettings.php';
 require_once 'model/PlainDataObject.php';
 require_once 'piiUtil/PIIUtils.php';
 require_once 'util/AppendixProvider.php';
-require_once 'util/RequestAdaptor.php';
+require_once 'util/RequestContextAdaptor.php';
 
 final class ParamBuilder
 {
@@ -299,7 +299,7 @@ final class ParamBuilder
         // 1. Normalize input into PlainDataObject
         $data = ($context instanceof PlainDataObject)
             ? $context
-            : RequestAdaptor::extract($context);
+            : RequestContextAdaptor::extract($context);
 
         // 2. Delegate to the existing API
         // This prevents code duplication by reusing existing logic.
