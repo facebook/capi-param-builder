@@ -32,9 +32,17 @@ class RequestContextAdaptor
         $remote_address = null;    // Defaults to null for ?string
 
         try {
-            // Use overrides if they are a valid array; otherwise fall back
-            // to global $_SERVER
-            $server = is_array($server_overrides) ? $server_overrides : $_SERVER;
+            // MERGE LOGIC:
+            // 1. Start with the global $_SERVER data (fallback).
+            // 2. Overwrite with provided overrides (priority).
+            // array_merge ensures that keys in the second array overwrite the first,
+            // but keys missing from the second are kept from the first.
+            $global_server = $_SERVER ?? [];
+            $overrides = (is_array($server_overrides) && !empty($server_overrides))
+                ? $server_overrides
+                : [];
+
+            $server = array_merge($global_server, $overrides);
 
             if ($server) {
                 // Extract Headers

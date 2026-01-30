@@ -942,4 +942,368 @@ final class RequestContextAdaptorTest extends TestCase
         $this->assertEquals('IwAR3abc123', $result->query_params['fbclid']);
         $this->assertEquals('https://www.facebook.com/', $result->referer);
     }
+
+    // =========================================================================
+    // Merge Logic Tests - Overrides take priority over global $_SERVER
+    // =========================================================================
+
+    /**
+     * Test that overrides take priority over global $_SERVER values
+     */
+    public function testMergeLogicOverridesTakePriority(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'REMOTE_ADDR' => '10.0.0.1',
+            'HTTP_REFERER' => 'https://global-referer.com',
+        ];
+
+        $overrides = [
+            'HTTP_HOST' => 'override.example.com',
+            'REMOTE_ADDR' => '192.168.1.1',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Overrides should win
+        $this->assertEquals('override.example.com', $result->host);
+        $this->assertEquals('192.168.1.1', $result->remote_address);
+        // Global value should be used when not overridden
+        $this->assertEquals('https://global-referer.com', $result->referer);
+    }
+
+    /**
+     * Test that global $_SERVER values are used as fallback when not overridden
+     */
+    public function testMergeLogicGlobalFallback(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'REMOTE_ADDR' => '10.0.0.1',
+            'HTTP_REFERER' => 'https://global-referer.com',
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.50',
+        ];
+
+        // Only override host
+        $overrides = [
+            'HTTP_HOST' => 'override.example.com',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Override wins for host
+        $this->assertEquals('override.example.com', $result->host);
+        // Global values used for everything else
+        $this->assertEquals('10.0.0.1', $result->remote_address);
+        $this->assertEquals('https://global-referer.com', $result->referer);
+        $this->assertEquals('203.0.113.50', $result->x_forwarded_for);
+    }
+
+    /**
+     * Test merge with empty overrides uses all global values
+     */
+    public function testMergeLogicEmptyOverridesUsesGlobals(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'REMOTE_ADDR' => '10.0.0.1',
+            'HTTP_REFERER' => 'https://global-referer.com',
+        ];
+
+        $result = RequestContextAdaptor::extract([]);
+
+        // All global values should be used
+        $this->assertEquals('global.example.com', $result->host);
+        $this->assertEquals('10.0.0.1', $result->remote_address);
+        $this->assertEquals('https://global-referer.com', $result->referer);
+    }
+
+    /**
+     * Test merge with null overrides uses all global values
+     */
+    public function testMergeLogicNullOverridesUsesGlobals(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'REMOTE_ADDR' => '10.0.0.1',
+        ];
+
+        $result = RequestContextAdaptor::extract(null);
+
+        $this->assertEquals('global.example.com', $result->host);
+        $this->assertEquals('10.0.0.1', $result->remote_address);
+    }
+
+    /**
+     * Test that overrides can add new keys not present in global $_SERVER
+     */
+    public function testMergeLogicOverridesAddNewKeys(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+        ];
+
+        $overrides = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_REFERER' => 'https://override-referer.com',
+            'HTTP_X_FORWARDED_FOR' => '8.8.8.8',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Global host is used
+        $this->assertEquals('global.example.com', $result->host);
+        // New keys from overrides are added
+        $this->assertEquals('192.168.1.1', $result->remote_address);
+        $this->assertEquals('https://override-referer.com', $result->referer);
+        $this->assertEquals('8.8.8.8', $result->x_forwarded_for);
+    }
+
+    /**
+     * Test that overrides can set values to null to effectively override global values
+     */
+    public function testMergeLogicOverridesCanSetNull(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'HTTP_REFERER' => 'https://global-referer.com',
+        ];
+
+        $overrides = [
+            'HTTP_REFERER' => null,
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Host from global
+        $this->assertEquals('global.example.com', $result->host);
+        // Referer is null because override set it to null
+        $this->assertNull($result->referer);
+    }
+
+    /**
+     * Test that overrides can set values to empty string
+     */
+    public function testMergeLogicOverridesCanSetEmptyString(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'HTTP_REFERER' => 'https://global-referer.com',
+        ];
+
+        $overrides = [
+            'HTTP_HOST' => '',
+            'HTTP_REFERER' => '',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Override empty string should win
+        $this->assertEquals('', $result->host);
+        $this->assertEquals('', $result->referer);
+    }
+
+    /**
+     * Test merge behavior in typical web server context
+     * Global $_SERVER has connection info, overrides have custom headers
+     */
+    public function testMergeLogicTypicalWebServerContext(): void
+    {
+        // Simulate typical $_SERVER from web server
+        $_SERVER = [
+            'HTTP_HOST' => 'www.example.com',
+            'REMOTE_ADDR' => '172.31.0.1', // Load balancer internal IP
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+            'REQUEST_METHOD' => 'GET',
+        ];
+
+        // Override with actual client info from proxy headers
+        $overrides = [
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.50, 172.31.0.1',
+            'HTTP_REFERER' => 'https://facebook.com/ad',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Global values preserved
+        $this->assertEquals('www.example.com', $result->host);
+        $this->assertEquals('172.31.0.1', $result->remote_address);
+        // Override values added
+        $this->assertEquals('203.0.113.50, 172.31.0.1', $result->x_forwarded_for);
+        $this->assertEquals('https://facebook.com/ad', $result->referer);
+    }
+
+    /**
+     * Test merge with QUERY_STRING from both sources
+     */
+    public function testMergeLogicQueryStringFromOverride(): void
+    {
+        $this->resetGlobals();
+        $_GET = []; // Empty $_GET so QUERY_STRING is used
+
+        $_SERVER = [
+            'HTTP_HOST' => 'example.com',
+            'QUERY_STRING' => 'global_param=global_value',
+        ];
+
+        $overrides = [
+            'QUERY_STRING' => 'override_param=override_value',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Override QUERY_STRING should win
+        $this->assertEquals(['override_param' => 'override_value'], $result->query_params);
+    }
+
+    /**
+     * Test merge with HTTP_COOKIE from both sources
+     */
+    public function testMergeLogicHttpCookieFromOverride(): void
+    {
+        $this->resetGlobals();
+        $_COOKIE = []; // Empty $_COOKIE so HTTP_COOKIE is used
+
+        $_SERVER = [
+            'HTTP_HOST' => 'example.com',
+            'HTTP_COOKIE' => 'global_cookie=global_value',
+        ];
+
+        $overrides = [
+            'HTTP_COOKIE' => 'override_cookie=override_value',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Override HTTP_COOKIE should win
+        $this->assertEquals(['override_cookie' => 'override_value'], $result->cookies);
+    }
+
+    /**
+     * Test that all header extraction works with merged server array
+     */
+    public function testMergeLogicAllHeadersFromMixedSources(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'REMOTE_ADDR' => '10.0.0.1',
+        ];
+
+        $overrides = [
+            'HTTP_HOST' => 'override.example.com',
+            'HTTP_REFERER' => 'https://override-referer.com',
+            'HTTP_X_FORWARDED_FOR' => '8.8.8.8',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Verify all headers are correctly extracted from merged array
+        $this->assertEquals('override.example.com', $result->host);
+        $this->assertEquals('https://override-referer.com', $result->referer);
+        $this->assertEquals('8.8.8.8', $result->x_forwarded_for);
+        $this->assertEquals('10.0.0.1', $result->remote_address);
+    }
+
+    /**
+     * Test merge with complex real-world scenario
+     */
+    public function testMergeLogicComplexRealWorldScenario(): void
+    {
+        // Simulate production web server with load balancer
+        $_SERVER = [
+            'HTTP_HOST' => 'api.example.com',
+            'REMOTE_ADDR' => '10.0.0.1', // Internal LB IP
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+            'REQUEST_URI' => '/api/v1/users',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+        ];
+        $_GET = ['page' => '1', 'limit' => '10'];
+        $_COOKIE = ['session' => 'abc123'];
+
+        // Overrides from application layer (e.g., testing or custom handling)
+        $overrides = [
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.50, 10.0.0.1',
+            'HTTP_REFERER' => 'https://app.example.com/dashboard',
+            'HTTP_X_REQUEST_ID' => 'req-12345',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Global values preserved
+        $this->assertEquals('api.example.com', $result->host);
+        $this->assertEquals('10.0.0.1', $result->remote_address);
+        // Override values
+        $this->assertEquals('203.0.113.50, 10.0.0.1', $result->x_forwarded_for);
+        $this->assertEquals('https://app.example.com/dashboard', $result->referer);
+        // Global $_GET and $_COOKIE still work
+        $this->assertEquals(['page' => '1', 'limit' => '10'], $result->query_params);
+        $this->assertEquals(['session' => 'abc123'], $result->cookies);
+    }
+
+    /**
+     * Test merge handles globals with many keys efficiently
+     */
+    public function testMergeLogicWithManyGlobalKeys(): void
+    {
+        // Simulate real $_SERVER with many keys
+        $_SERVER = [
+            'HTTP_HOST' => 'example.com',
+            'REMOTE_ADDR' => '127.0.0.1',
+            'SERVER_NAME' => 'example.com',
+            'SERVER_PORT' => '80',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/',
+            'SCRIPT_NAME' => '/index.php',
+            'PHP_SELF' => '/index.php',
+            'DOCUMENT_ROOT' => '/var/www/html',
+            'HTTP_ACCEPT' => 'text/html',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+            'HTTP_ACCEPT_ENCODING' => 'gzip, deflate',
+            'HTTP_CONNECTION' => 'keep-alive',
+        ];
+
+        // Simple override
+        $overrides = [
+            'HTTP_HOST' => 'override.example.com',
+            'HTTP_X_FORWARDED_FOR' => '8.8.8.8',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // Override wins
+        $this->assertEquals('override.example.com', $result->host);
+        $this->assertEquals('8.8.8.8', $result->x_forwarded_for);
+        // Global fallback
+        $this->assertEquals('127.0.0.1', $result->remote_address);
+    }
+
+    /**
+     * Test that partial overrides work correctly
+     * Only override specific headers, keep rest from global
+     */
+    public function testMergeLogicPartialOverride(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'global.example.com',
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_REFERER' => 'https://global-referer.com',
+            'HTTP_X_FORWARDED_FOR' => '10.0.0.1',
+        ];
+
+        // Only override X-Forwarded-For (common pattern for proxies)
+        $overrides = [
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.50, 10.0.0.1',
+        ];
+
+        $result = RequestContextAdaptor::extract($overrides);
+
+        // All global values except the overridden one
+        $this->assertEquals('global.example.com', $result->host);
+        $this->assertEquals('192.168.1.1', $result->remote_address);
+        $this->assertEquals('https://global-referer.com', $result->referer);
+        // Override wins for X-Forwarded-For
+        $this->assertEquals('203.0.113.50, 10.0.0.1', $result->x_forwarded_for);
+    }
 }
