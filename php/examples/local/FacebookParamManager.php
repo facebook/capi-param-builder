@@ -82,6 +82,17 @@ final class FacebookParamManager
             . '$pii2: ' . $pii2 . '<br/>'
             . '$pii3: ' . $pii3 . '<br/>'
             . '$pii4: ' . $pii4 . '<br/>';
+
+        $this->paramBuilder->processRequestFromContext();
+
+        echo 'ParamBuilder output for processRequestFromContext call: <br/>'
+            . 'getFbc: ' . $this->paramBuilder->getFbc() . '<br/>'
+            . 'getFbp: ' . $this->paramBuilder->getFbp() . '<br/>'
+            . 'getClientIpAddress: ' . $this->paramBuilder->getClientIpAddress() . '<br/>'
+            . '$pii1: ' . $pii1 . '<br/>'
+            . '$pii2: ' . $pii2 . '<br/>'
+            . '$pii3: ' . $pii3 . '<br/>'
+            . '$pii4: ' . $pii4 . '<br/>';
     }
 
 

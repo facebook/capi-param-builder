@@ -11,8 +11,10 @@ namespace FacebookAds;
 require_once 'model/Constants.php';
 require_once 'model/FbcParamConfig.php';
 require_once 'model/CookieSettings.php';
+require_once 'model/PlainDataObject.php';
 require_once 'piiUtil/PIIUtils.php';
 require_once 'util/AppendixProvider.php';
+require_once 'util/RequestAdaptor.php';
 
 final class ParamBuilder
 {
@@ -69,7 +71,8 @@ final class ParamBuilder
         }
     }
 
-    private function validateAppendix($appendix_value) {
+    private function validateAppendix($appendix_value)
+    {
         $appendix_length = strlen($appendix_value);
 
         // Backward compatible V1 format: 2-character language token
@@ -289,6 +292,25 @@ final class ParamBuilder
 
         $this->cookies_to_set_array = array_values($this->cookies_to_set);
         return $this->cookies_to_set_array;
+    }
+
+    public function processRequestFromContext($context = null)
+    {
+        // 1. Normalize input into PlainDataObject
+        $data = ($context instanceof PlainDataObject)
+            ? $context
+            : RequestAdaptor::extract($context);
+
+        // 2. Delegate to the existing API
+        // This prevents code duplication by reusing existing logic.
+        return $this->processRequest(
+            $data->host,
+            $data->query_params,
+            $data->cookies,
+            $data->referer,
+            $data->x_forwarded_for,
+            $data->remote_address
+        );
     }
 
     public function getCookiesToSet()
