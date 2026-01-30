@@ -6,12 +6,13 @@ on:
       - v*-nodejs
   workflow_dispatch:
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     defaults:
       run:
         working-directory: nodejs/capi-param-builder
@@ -25,14 +26,12 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Install dependencies
         run: npm ci
-      - name: Verify npm authentication
-        run: npm whoami
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Run and build
+        run: npm run build --if-present
+      - name: Unit test
+        run: npm test
       - name: Publish to npm
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Show npm debug log if publish failed
         if: failure()
         run: cat /home/runner/.npm/_logs/*.log || echo "No npm log found"
