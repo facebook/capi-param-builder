@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- Adding support for taking request context as input to the SDK.
 
 ## v1.2.1
 - Improve the is_new flag with more breakdown on net new and modified new option.
