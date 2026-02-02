@@ -19,6 +19,27 @@ export declare class CookieSettings {
 }
 
 /**
+ * A plain data object representing specific HTTP request details.
+ */
+export declare class PlainDataObject {
+  public host: string;
+  public query_params: QueryParams;
+  public cookies: Cookies;
+  public referer: string | null;
+  public x_forwarded_for: string | null;
+  public remote_address: string | null;
+
+  constructor(
+    host: string,
+    query_params: QueryParams,
+    cookies: Cookies,
+    referer: string | null,
+    x_forwarded_for: string | null,
+    remote_address: string | null
+  );
+}
+
+/**
  * Interface for ETLD+1 resolver object
  */
 export interface ETLD1Resolver {
