@@ -30,6 +30,17 @@ describe('RequestContextAdaptor', () => {
             expect(result).toBeInstanceOf(PlainDataObject);
         });
 
+        test('extract with no arguments returns default values', () => {
+            const result = RequestContextAdaptor.extract();
+
+            expect(result.host).toBe('');
+            expect(result.query_params).toEqual({});
+            expect(result.cookies).toEqual({});
+            expect(result.referer).toBeNull();
+            expect(result.x_forwarded_for).toBeNull();
+            expect(result.remote_address).toBeNull();
+        });
+
         test('extract with null request returns default values', () => {
             const result = RequestContextAdaptor.extract(null);
 

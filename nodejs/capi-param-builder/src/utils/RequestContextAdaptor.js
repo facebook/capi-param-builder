@@ -59,7 +59,7 @@ class RequestContextAdaptor {
    * @param {Object|null} req - The HTTP request object
    * @returns {PlainDataObject} - The extracted request data
    */
-  static extract(req) {
+  static extract(req = null) {
     // 1. Initialize Defaults (matching PlainDataObject types)
     let host = '';
     let query_params = {};
