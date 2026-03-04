@@ -4,7 +4,7 @@
   "description": "client side param builder demo",
   "main": "index.js",
   "scripts": {},
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "express": "^4.19.2"
   }

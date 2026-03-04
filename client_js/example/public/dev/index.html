@@ -50,10 +50,6 @@
       const version = `${appendix[3]}.${appendix[4]}.${appendix[5]}`;
       document.getElementById('decoded-appendix').textContent = appendix;
       document.getElementById('decoded-version').textContent = version;
-
-      // TODO: Quick check we can decode the version like so ^ and then check
-      // embed in the build the known list of server side supported versions.
-      // Not as good as a full e2e test but lets do that too in Sandcastle
   }
 
   main();
@@ -75,7 +71,6 @@
       <span id="clientParamBuilder-lib"></span>
     </p>
   </div>
-  <!-- TODO(bhavansh): Import PixelJS and wire this up!-->
   <button type="button">Send Pixel event!</button>
   <table border="1">
     <thead>
