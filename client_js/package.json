@@ -3,6 +3,9 @@
   "version": "1.2.1",
   "description": "Conversions API parameter builder for Client-side JavaScript",
   "license": "SEE LICENSE IN LICENSE",
+  "resolutions": {
+    "serialize-javascript": "^6.0.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.26.8",
     "@babel/preset-env": "^7.26.8",
