@@ -3,7 +3,13 @@
   "version": "1.2.1",
   "description": "Conversions API parameter builder for Client-side JavaScript",
   "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "node": ">=18"
+  },
   "resolutions": {
+    "serialize-javascript": "^6.0.2"
+  },
+  "overrides": {
     "serialize-javascript": "^6.0.2"
   },
   "devDependencies": {

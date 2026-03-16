@@ -1,24 +1,24 @@
-name: Param builder NodeJS CI
+name: Param builder Client JS CI
 
 on:
   push:
     paths:
-      - 'nodejs/**'
+      - 'client_js/**'
     tags-ignore:
-      - 'v*'          # Ignores version tag pushes
+      - 'v*'
     branches:
       - '**'
   pull_request:
     paths:
-      - 'nodejs/**'
-  workflow_dispatch:  # Enables manual trigger
+      - 'client_js/**'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: nodejs/capi-param-builder
+        working-directory: client_js
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
@@ -31,6 +31,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Install dependencies
-      run: npm install
+      run: npm ci
     - name: Run tests
       run: npm test
+    - name: Build
+      run: npm run build
