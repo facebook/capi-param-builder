@@ -5,7 +5,7 @@
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { getFbc, getFbp } from '../utils/commonUtil.js';
+import { getFbc, getFbp, getClientIpAddress } from '../utils/commonUtil.js';
 
 describe('commonUtil test', () => {
   let originalCookie;
@@ -64,5 +64,24 @@ describe('commonUtil test', () => {
     });
     const fbc = getFbp();
     expect(fbc).toEqual('');
+  });
+
+  test('getClientIpAddress from cookie, fbi exist', () => {
+    const fbi_string = '192.168.1.1.AQYCAQAA';
+    Object.defineProperty(document, 'cookie', {
+      value: '_fbi=' + fbi_string,
+      writable: true,
+    });
+    const fbi = getClientIpAddress();
+    expect(fbi).toEqual(fbi_string);
+  });
+
+  test('getClientIpAddress from cookie, fbi not exist', () => {
+    Object.defineProperty(document, 'cookie', {
+      value: '',
+      writable: true,
+    });
+    const fbi = getClientIpAddress();
+    expect(fbi).toEqual('');
   });
 });
