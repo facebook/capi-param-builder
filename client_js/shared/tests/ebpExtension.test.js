@@ -43,8 +43,11 @@ describe('ebpExtension test', () => {
       writable: true,
       configurable: true,
     });
-    delete window.location;
-    window.location = { href: 'http://test.com/', hostname: 'test.com' };
+    Object.defineProperty(window, 'location', {
+      value: { href: 'http://test.com/', hostname: 'test.com' },
+      writable: true,
+      configurable: true,
+    });
   });
   afterEach(() => {
     jest.resetModules();
