@@ -1,8 +1,25 @@
 {
-  "name": "client-js-param-builder",
-  "version": "1.2.1",
+  "name": "capi-param-builder-clientjs",
+  "version": "1.2.2",
   "description": "Conversions API parameter builder for Client-side JavaScript",
+  "author": "Facebook",
   "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/capi-param-builder.git",
+    "directory": "client_js"
+  },
+  "homepage": "https://github.com/facebook/capi-param-builder#readme",
+  "main": "dist/clientParamBuilder.bundle.js",
+  "files": [
+    "dist/",
+    "capiParamBuilder/",
+    "shared/",
+    "webpack.config.js",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -37,7 +54,8 @@
     "lint": "eslint --fix .",
     "format": "prettier --write .",
     "test": "jest",
-    "clear_jest": "jest --clearCache"
+    "clear_jest": "jest --clearCache",
+    "prepublishOnly": "yarn test && yarn build"
   },
   "jest": {
     "transform": {
