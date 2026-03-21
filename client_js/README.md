@@ -1,6 +1,6 @@
 # Conversions API parameter builder feature for Client-side JavaScript
 
-[![npm](https://img.shields.io/npm/v/capi-param-builder-clientjs)](https://www.npmjs.com/package/capi-param-builder-clientjs)
+[![npm](https://img.shields.io/npm/v/meta-capi-param-builder-clientjs)](https://www.npmjs.com/package/meta-capi-param-builder-clientjs)
 [![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/client_js/LICENSE)
 
 ## Introduction
@@ -16,19 +16,19 @@ The Conversions API parameter builder SDK is a lightweight client-side JavaScrip
 Install the package via npm or yarn:
 
 ```bash
-npm install capi-param-builder-clientjs
+npm install meta-capi-param-builder-clientjs
 ```
 
 or
 
 ```bash
-yarn add capi-param-builder-clientjs
+yarn add meta-capi-param-builder-clientjs
 ```
 
 Alternatively, include the bundle directly via a script tag:
 
 ```html
-<script src="https://unpkg.com/capi-param-builder-clientjs/dist/clientParamBuilder.bundle.js"></script>
+<script src="https://unpkg.com/meta-capi-param-builder-clientjs/dist/clientParamBuilder.bundle.js"></script>
 ```
 
 Check the latest update from [CHANGELOG](./CHANGELOG.md).

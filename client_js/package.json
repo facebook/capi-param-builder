@@ -1,5 +1,5 @@
 {
-  "name": "capi-param-builder-clientjs",
+  "name": "meta-capi-param-builder-clientjs",
   "version": "1.2.2",
   "description": "Conversions API parameter builder for Client-side JavaScript",
   "author": "Facebook",
