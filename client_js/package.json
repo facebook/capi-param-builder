@@ -24,10 +24,12 @@
     "node": ">=18"
   },
   "resolutions": {
-    "serialize-javascript": "^6.0.2"
+    "serialize-javascript": "^7.0.3",
+    "@tootallnate/once": "^3.0.1"
   },
   "overrides": {
-    "serialize-javascript": "^6.0.2"
+    "serialize-javascript": "^7.0.3",
+    "@tootallnate/once": "^3.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",
