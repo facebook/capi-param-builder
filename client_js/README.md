@@ -44,19 +44,9 @@ Type the URL http://localhost:3000/?fbclid=test123 — you'll see `fbc` returned
 
 ## API Usage
 
-### processAndCollectParams(url)
-
-Processes and collects `fbc` and `fbp` parameters, saving them into cookies.
-
-```javascript
-const params = clientParamBuilder.processAndCollectParams(url);
-```
-
-- `url` is optional. Returns an object with `_fbc` and `_fbp` values.
-
 ### processAndCollectAllParams(url, getIpFn)
 
-Extended version that also retrieves client IP addresses and backup click IDs from in-app browsers.
+Processes and collects `fbc` and `fbp` parameters (saving them into cookies), and also retrieves client IP addresses and backup click IDs from in-app browsers.
 
 ```javascript
 const params = await clientParamBuilder.processAndCollectAllParams(url, getIpFn);
@@ -64,10 +54,11 @@ const params = await clientParamBuilder.processAndCollectAllParams(url, getIpFn)
 
 - `url` is optional.
 - `getIpFn` is optional — a user-provided function to retrieve client IP addresses.
+- Returns an object with `_fbc`, `_fbp`, and additional parameter values.
 
 ### getFbc()
 
-Returns the `fbc` value from cookie. Call `processAndCollectParams` first.
+Returns the `fbc` value from cookie. Call `processAndCollectAllParams` first.
 
 ```javascript
 const fbc = clientParamBuilder.getFbc();
@@ -75,7 +66,7 @@ const fbc = clientParamBuilder.getFbc();
 
 ### getFbp()
 
-Returns the `fbp` value from cookie. Call `processAndCollectParams` first.
+Returns the `fbp` value from cookie. Call `processAndCollectAllParams` first.
 
 ```javascript
 const fbp = clientParamBuilder.getFbp();
@@ -99,6 +90,10 @@ const hashedPhone = clientParamBuilder.getNormalizedAndHashedPII('+1 (616) 954-7
 ```
 
 Supported `dataType` values: `phone`, `email`, `first_name`, `last_name`, `date_of_birth`, `gender`, `city`, `state`, `zip_code`, `country`, `external_id`.
+
+### processAndCollectParams(url) *(Deprecated)*
+
+> **Deprecated:** Use `processAndCollectAllParams` instead. This method is kept for backward compatibility only.
 
 ## Development
 
