@@ -3165,11 +3165,6 @@ queue-microtask@^1.2.2:
   version "1.2.3"
   resolved "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz"
 
-randombytes@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/randombytes/-/randombytes-2.1.0.tgz"
-  dependencies:
-    safe-buffer "^5.1.0"
 
 react-is@^18.0.0:
   version "18.3.1"
@@ -3266,9 +3261,6 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-safe-buffer@^5.1.0:
-  version "5.2.1"
-  resolved "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz"
 
 "safer-buffer@>= 2.1.2 < 3.0.0":
   version "2.1.2"
@@ -3298,10 +3290,8 @@ semver@^7.5.3, semver@^7.5.4:
   resolved "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz"
 
 serialize-javascript@^7.0.3:
-  version "7.0.3"
-  resolved "https://registry.npmjs.org/serialize-javascript/-/serialize-javascript-7.0.3.tgz"
-  dependencies:
-    randombytes "^2.1.0"
+  version "7.0.5"
+  resolved "https://registry.npmjs.org/serialize-javascript/-/serialize-javascript-7.0.5.tgz"
 
 shallow-clone@^3.0.0:
   version "3.0.1"
