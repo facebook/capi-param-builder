@@ -13,13 +13,7 @@ The Conversions API parameter builder SDK is a lightweight client-side JavaScrip
 
 ### Installation
 
-Install the package via npm or yarn:
-
-```bash
-npm install meta-capi-param-builder-clientjs
-```
-
-or
+Install the package via yarn:
 
 ```bash
 yarn add meta-capi-param-builder-clientjs
@@ -100,7 +94,7 @@ Supported `dataType` values: `phone`, `email`, `first_name`, `last_name`, `date_
 ### Prerequisites
 
 - Node.js >= 18
-- yarn (`npm install --global yarn`)
+- yarn (install via `corepack enable` or see [yarnpkg.com](https://yarnpkg.com/getting-started/install))
 
 ### Setup
 

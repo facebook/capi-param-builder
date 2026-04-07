@@ -32,6 +32,6 @@ jobs:
         run: yarn build
       - name: Publish to npm
         run: yarn publish --non-interactive
-      - name: Show npm debug log if publish failed
+      - name: Show debug log if publish failed
         if: failure()
-        run: cat /home/runner/.npm/_logs/*.log || echo "No npm log found"
+        run: cat /home/runner/.yarn/*.log 2>/dev/null || echo "No yarn log found"
