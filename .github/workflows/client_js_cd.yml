@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write  # Required for OIDC
   contents: read
 
 jobs:
@@ -31,4 +30,6 @@ jobs:
       - name: Build
         run: yarn build
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
