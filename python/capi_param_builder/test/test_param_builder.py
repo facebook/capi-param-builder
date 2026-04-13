@@ -425,7 +425,3 @@ class TestParamBuilder(unittest.TestCase):
         self.assertEqual("fb.1.123.fbptest.Ag", builder.get_fbp())  # no change for fbp
         self.assertEqual(res, builder.get_cookies_to_set())
         pass
-
-
-if __name__ == "__main__":
-    unittest.main()
