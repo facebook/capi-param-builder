@@ -8,6 +8,8 @@
 const FbcParamConfig = require('./model/FbcParamConfig');
 const CookieSettings = require('./model/CookieSettings');
 const Constants = require('./model/Constants');
+const PlainDataObject = require('./model/PlainDataObject');
+const RequestContextAdaptor = require('./utils/RequestContextAdaptor');
 const net = require('net');
 const { getNormalizedAndHashedPII } = require('./piiUtil/PIIUtil');
 const { getAppendixInfo } = require('./utils/AppendixProvider');
@@ -197,6 +199,22 @@ class ParamBuilder {
     this.cookies_to_set = Object.values(this.cookies_to_set_dict);
     return this.cookies_to_set;
   }
+
+  processRequestFromContext(context = null) {
+    const data = (context instanceof PlainDataObject)
+      ? context
+      : RequestContextAdaptor.extract(context);
+
+    return this.processRequest(
+      data.host,
+      data.query_params,
+      data.cookies,
+      data.referer,
+      data.x_forwarded_for,
+      data.remote_address
+    );
+  }
+
   getCookiesToSet() {
     return this.cookies_to_set;
   }
