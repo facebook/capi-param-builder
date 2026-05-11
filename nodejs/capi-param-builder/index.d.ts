@@ -7,6 +7,25 @@
  */
 
 /**
+ * Supported PII data types for normalization and hashing
+ */
+export declare const PII_DATA_TYPE: {
+  readonly PHONE: 'phone';
+  readonly EMAIL: 'email';
+  readonly FIRST_NAME: 'first_name';
+  readonly LAST_NAME: 'last_name';
+  readonly DATE_OF_BIRTH: 'date_of_birth';
+  readonly GENDER: 'gender';
+  readonly CITY: 'city';
+  readonly STATE: 'state';
+  readonly ZIP_CODE: 'zip_code';
+  readonly COUNTRY: 'country';
+  readonly EXTERNAL_ID: 'external_id';
+};
+
+export type PiiDataType = typeof PII_DATA_TYPE[keyof typeof PII_DATA_TYPE];
+
+/**
  * Cookie settings for setting browser cookies
  */
 export declare class CookieSettings {
@@ -122,7 +141,7 @@ export declare class ParamBuilder {
    * @param dataType The type of PII data (e.g., 'email', 'phone', 'first_name')
    * @returns The normalized and hashed PII value, or null if invalid
    */
-  getNormalizedAndHashedPII(piiValue: string, dataType: string): string | null;
+  getNormalizedAndHashedPII(piiValue: string, dataType: PiiDataType | string): string | null;
 
   // Internal used privat methods
   private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
