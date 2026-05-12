@@ -246,6 +246,11 @@ class ParamBuilder {
       // in case a new host is passed in for the same request
       this.host = host;
       const hostname = this._extractHostFromHttpHost(host);
+      if (!hostname) {
+        this.etld_plus_1 = null;
+        this.sub_domain_index = 0;
+        return;
+      }
       if (this._isIPAddress(hostname)) {
         this.etld_plus_1 = this._maybeBracketIPv6(hostname);
         this.sub_domain_index = 0;
