@@ -345,6 +345,11 @@ final class ParamBuilder
         if ($this->etld_plus_1 === null || $this->host !== $host) {
             // in case a new host is passed in for the same request
             $this->host = $host;
+            if ($host === null || $host === '') {
+                $this->etld_plus_1 = null;
+                $this->sub_domain_index = 0;
+                return;
+            }
             $host = ParamBuilder::extractHostFromHttpHost($host);
 
             if (
