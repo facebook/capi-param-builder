@@ -163,31 +163,29 @@ class ParamBuilder {
         Constants.DEFAULT_1PC_AGE,
         this.etld_plus_1);
     }
-    if (!new_fbc_payload) {
-      this.cookies_to_set = Object.values(this.cookies_to_set_dict);
-      return this.cookies_to_set;
-    }
-    // check if we should overwrite the fbc
-    if (!this.fbc) {
-      const drop_ts = Date.now();
-      this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_net_new}`;
-      this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
-        Constants.FBC_NAME_STRING,
-        this.fbc,
-        Constants.DEFAULT_1PC_AGE,
-        this.etld_plus_1);
-    } else {
-      // extract payload
-      const split = this.fbc.split('.');
-      const old_fbc_payload = split[3];
-      if (new_fbc_payload !== old_fbc_payload) {
+    if (new_fbc_payload) {
+      // check if we should overwrite the fbc
+      if (!this.fbc) {
         const drop_ts = Date.now();
-        this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_modified_new}`;
+        this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_net_new}`;
         this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
           Constants.FBC_NAME_STRING,
           this.fbc,
           Constants.DEFAULT_1PC_AGE,
           this.etld_plus_1);
+      } else {
+        // extract payload
+        const split = this.fbc.split('.');
+        const old_fbc_payload = split[3];
+        if (new_fbc_payload !== old_fbc_payload) {
+          const drop_ts = Date.now();
+          this.fbc = `fb.${this.sub_domain_index}.${drop_ts}.${new_fbc_payload}.${this.appendix_modified_new}`;
+          this.cookies_to_set_dict[Constants.FBC_NAME_STRING] = new CookieSettings(
+            Constants.FBC_NAME_STRING,
+            this.fbc,
+            Constants.DEFAULT_1PC_AGE,
+            this.etld_plus_1);
+        }
       }
     }
 
