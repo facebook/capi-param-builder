@@ -66,9 +66,11 @@ public final class RequestContextAdaptor {
           extractWebFlux(request, h);
         }
       }
-    } catch (Throwable t) {
+    } catch (Exception e) {
       // Silently swallow exceptions and return defaults; callers should not
-      // be punished for an unrecognized request shape.
+      // be punished for an unrecognized request shape. Note: VirtualMachineError,
+      // ThreadDeath, LinkageError, and other Errors propagate intentionally —
+      // those indicate broken process state and should not be hidden.
     }
     return h.build();
   }
@@ -127,11 +129,14 @@ public final class RequestContextAdaptor {
         try {
           Object cookie = Array.get(cookies, i);
           Object name = invokeNoArg(cookie, "getName");
-          Object value = invokeNoArg(cookie, "getValue");
-          if (name instanceof String && value instanceof String) {
-            cookieMap.put((String) name, (String) value);
+          if (name instanceof String) {
+            // Servlet `Cookie.getValue()` may return null per spec; coerce
+            // to empty string so the cookie is preserved (matches PHP /
+            // Python / Ruby which keep `name=` as `""`).
+            Object value = invokeNoArg(cookie, "getValue");
+            cookieMap.put((String) name, value instanceof String ? (String) value : "");
           }
-        } catch (Throwable t) {
+        } catch (Exception e) {
           // Per-cookie isolation: skip only the bad entry.
         }
       }
@@ -171,7 +176,7 @@ public final class RequestContextAdaptor {
 
     Object remote = invokeNoArg(req, "getRemoteAddress");
     if (remote != null) {
-      h.remoteAddress = nilify(remote.toString());
+      h.remoteAddress = nilify(formatInetSocketAddress(remote));
     }
 
     // WebFlux exposes cookies as MultiValueMap<String, HttpCookie>.
@@ -190,11 +195,14 @@ public final class RequestContextAdaptor {
             continue;
           }
           Object cookie = list.get(0);
-          Object value = invokeNoArg(cookie, "getValue");
-          if (value instanceof String) {
-            result.put((String) k, (String) value);
+          if (cookie == null) {
+            continue;
           }
-        } catch (Throwable t) {
+          Object value = invokeNoArg(cookie, "getValue");
+          // Preserve empty string when the cookie value is null, matching
+          // the manual cookie parser and other-language behavior.
+          result.put((String) k, value instanceof String ? (String) value : "");
+        } catch (Exception e) {
           // Per-cookie isolation
         }
       }
@@ -230,7 +238,7 @@ public final class RequestContextAdaptor {
       String value = pair.substring(eq + 1).trim();
       try {
         result.put(key, percentDecode(value));
-      } catch (Throwable t) {
+      } catch (Exception e) {
         // Per-pair isolation: skip only this malformed pair, keep the rest.
       }
     }
@@ -270,7 +278,7 @@ public final class RequestContextAdaptor {
           result.put(key, bucket);
         }
         bucket.add(value);
-      } catch (Throwable t) {
+      } catch (Exception e) {
         // Per-pair isolation
       }
     }
@@ -316,7 +324,7 @@ public final class RequestContextAdaptor {
     try {
       Method m = obj.getClass().getMethod(name);
       return m.invoke(obj);
-    } catch (Throwable t) {
+    } catch (Exception e) {
       return null;
     }
   }
@@ -329,7 +337,7 @@ public final class RequestContextAdaptor {
       Method m = req.getClass().getMethod("getHeader", String.class);
       Object v = m.invoke(req, headerName);
       return v instanceof String ? (String) v : null;
-    } catch (Throwable t) {
+    } catch (Exception e) {
       return null;
     }
   }
@@ -342,9 +350,34 @@ public final class RequestContextAdaptor {
       Method m = headers.getClass().getMethod("getFirst", String.class);
       Object v = m.invoke(headers, headerName);
       return v instanceof String ? (String) v : null;
-    } catch (Throwable t) {
+    } catch (Exception e) {
       return null;
     }
+  }
+
+  /**
+   * Format a Spring WebFlux {@code getRemoteAddress()} return value (typically a {@link
+   * java.net.InetSocketAddress}) as a bare IP string. Plain {@code toString()} on InetSocketAddress
+   * yields {@code "/127.0.0.1:8080"} (with the leading slash and port), which diverges from the
+   * IP-only format produced by the JS / PHP / Python / Ruby SDKs.
+   *
+   * <p>Reflection avoids any compile-time dependency on {@code java.net.InetSocketAddress}.
+   */
+  private static String formatInetSocketAddress(Object addr) {
+    Object inet = invokeNoArg(addr, "getAddress"); // InetSocketAddress -> InetAddress (or null)
+    if (inet != null) {
+      Object hostAddr = invokeNoArg(inet, "getHostAddress");
+      if (hostAddr instanceof String) {
+        return (String) hostAddr;
+      }
+    }
+    // Fallback for unresolved addresses or other shapes: getHostString() returns
+    // the literal hostname/IP string without the leading slash.
+    Object hostString = invokeNoArg(addr, "getHostString");
+    if (hostString instanceof String) {
+      return (String) hostString;
+    }
+    return addr.toString();
   }
 
   private static String stringValue(Object o) {

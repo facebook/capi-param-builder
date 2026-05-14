@@ -10,6 +10,7 @@ package com.facebook.capi.sdk.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.facebook.capi.sdk.model.PlainDataObject;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -163,6 +164,40 @@ public class RequestContextAdaptorTest {
 
     public Map<String, List<FakeWebFluxCookie>> getCookies() {
       return cookies;
+    }
+  }
+
+  /**
+   * Stand-in for ServerHttpRequest where {@code getRemoteAddress()} returns an actual
+   * InetSocketAddress (matches the real Spring API). Without the InetSocketAddress-aware formatter
+   * this would expose the address as {@code "/127.0.0.1:8080"}.
+   */
+  static class FakeWebFluxRequestWithInetAddress {
+    private final FakeHttpHeaders headers;
+    private final FakeUri uri;
+    private final InetSocketAddress remoteAddress;
+
+    FakeWebFluxRequestWithInetAddress(
+        FakeHttpHeaders headers, FakeUri uri, InetSocketAddress remoteAddress) {
+      this.headers = headers;
+      this.uri = uri;
+      this.remoteAddress = remoteAddress;
+    }
+
+    public FakeHttpHeaders getHeaders() {
+      return headers;
+    }
+
+    public FakeUri getURI() {
+      return uri;
+    }
+
+    public InetSocketAddress getRemoteAddress() {
+      return remoteAddress;
+    }
+
+    public Map<String, List<FakeWebFluxCookie>> getCookies() {
+      return Collections.emptyMap();
     }
   }
 
@@ -421,6 +456,21 @@ public class RequestContextAdaptorTest {
   }
 
   @Test
+  @DisplayName("Servlet: cookie with null value is preserved as empty string (not dropped)")
+  void testServletCookieWithNullValuePreservedAsEmpty() {
+    // Servlet's Cookie.getValue() can return null per spec. The other-language
+    // adaptors keep `name=` as empty string; Java should match.
+    FakeCookie[] cookies =
+        new FakeCookie[] {new FakeCookie("nullval", null), new FakeCookie("normal", "value")};
+    FakeServletRequest req =
+        new FakeServletRequest(Collections.<String, String>emptyMap(), null, null, cookies);
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.cookies).containsKey("nullval");
+    assertThat(result.cookies.get("nullval")).isEqualTo("");
+    assertThat(result.cookies.get("normal")).isEqualTo("value");
+  }
+
+  @Test
   @DisplayName("Servlet: getCookies()=null falls back to manual Cookie-header parse")
   void testServletNullCookiesFallsBackToHeaderParse() {
     Map<String, String> headers = new HashMap<String, String>();
@@ -458,6 +508,21 @@ public class RequestContextAdaptorTest {
     assertThat(result.queryParams.get("fbclid")).containsExactly("webfluxTest");
     assertThat(result.cookies.get("_fbp")).isEqualTo("fb.1.111.222");
     assertThat(result.cookies.get("_fbc")).isEqualTo("fb.1.333.abc");
+  }
+
+  @Test
+  @DisplayName("WebFlux: getRemoteAddress() returns InetSocketAddress -> IP only, no slash/port")
+  void testWebFluxRemoteAddressInetSocketAddressFormatted() {
+    // Without the formatter, InetSocketAddress.toString() would produce
+    // "/127.0.0.1:8080" (with leading slash and port), which diverges from the
+    // bare IP format produced by the JS / PHP / Python / Ruby SDKs.
+    FakeWebFluxRequestWithInetAddress req =
+        new FakeWebFluxRequestWithInetAddress(
+            new FakeHttpHeaders(Collections.singletonMap("Host", "example.com")),
+            new FakeUri(""),
+            new InetSocketAddress("127.0.0.1", 8080));
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.remoteAddress).isEqualTo("127.0.0.1");
   }
 
   // ---------------------------------------------------------------------------
