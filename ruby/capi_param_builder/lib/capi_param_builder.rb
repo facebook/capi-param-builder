@@ -7,6 +7,7 @@
 require_relative 'model/fbc_param_configs'
 require_relative 'model/cookie_settings'
 require_relative 'model/etld_plus_one_resolver'
+require_relative 'model/plain_data_object'
 require_relative 'release_config'
 require 'set'
 require 'uri'
