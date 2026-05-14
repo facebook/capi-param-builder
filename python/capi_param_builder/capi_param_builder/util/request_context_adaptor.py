@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import urllib.parse
-from http.cookies import SimpleCookie
 from typing import Any, Dict, List, Optional
 
 from ..model.plain_data_object import PlainDataObject
@@ -20,11 +19,30 @@ def _parse_query_string(query_string: str) -> Dict[str, List[str]]:
 
 
 def _parse_cookie_header(raw_cookie: str) -> Dict[str, str]:
+    """
+    Manual cookie parse with per-pair isolation.
+
+    We avoid `http.cookies.SimpleCookie` because it silently drops the
+    entire batch when one cookie has a name its internal regex rejects
+    (e.g. spaces or brackets, which can appear in third-party / CDN
+    cookies sharing the same Cookie header). It also strips RFC-2109
+    quoted-value quotes, which diverges from the JS / PHP / Ruby
+    adaptors. Splitting on the first `=` per pair preserves base64
+    padding and any literal `=`/`+` in the value.
+    """
     if not raw_cookie:
         return {}
-    sc = SimpleCookie()
-    sc.load(raw_cookie)
-    return {k: v.value for k, v in sc.items()}
+    cookies: Dict[str, str] = {}
+    for pair in raw_cookie.split(";"):
+        eq = pair.find("=")
+        if eq <= 0:
+            # Skip malformed pairs (no `=`) and pairs with an empty key.
+            continue
+        key = pair[:eq].strip()
+        if not key:
+            continue
+        cookies[key] = pair[eq + 1 :].strip()
+    return cookies
 
 
 def _resolve_asgi_scope(request_obj: Any) -> Optional[Dict[str, Any]]:
@@ -40,8 +58,13 @@ def _get_asgi_headers(raw_headers: List, name: str, separator: str = ", ") -> st
     target = name.lower().encode("latin-1")
     matches = []
     for k, v in raw_headers:
-        if k == target:
-            matches.append(v.decode("latin-1", errors="ignore"))
+        # ASGI spec requires lowercase header names, but raw test scopes
+        # sometimes carry mixed-case keys; lowercasing defensively avoids
+        # silently dropping them. latin-1 decode of arbitrary bytes
+        # cannot fail, so no error handler is needed.
+        key = k.lower() if isinstance(k, (bytes, bytearray)) else b""
+        if key == target:
+            matches.append(v.decode("latin-1"))
     return separator.join(matches)
 
 
@@ -111,7 +134,14 @@ class RequestContextAdaptor:
             if scope is not None:
                 raw_headers = scope.get("headers", []) or []
 
-                host = _get_asgi_headers(raw_headers, "host")
+                # HTTP/2 requests may only carry `:authority` (Hypercorn
+                # and some proxy setups don't synthesize a `host` header);
+                # fall back to it before reaching for `scope["server"]`,
+                # which is the local bind address rather than the request
+                # authority.
+                host = _get_asgi_headers(raw_headers, "host") or _get_asgi_headers(
+                    raw_headers, ":authority"
+                )
                 referer = _get_asgi_headers(raw_headers, "referer") or None
                 x_forwarded_for = (
                     _get_asgi_headers(raw_headers, "x-forwarded-for") or None

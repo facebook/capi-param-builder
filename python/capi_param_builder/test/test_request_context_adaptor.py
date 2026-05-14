@@ -172,6 +172,49 @@ class TestRequestContextAdaptorWSGI(unittest.TestCase):
         result = RequestContextAdaptor.extract(environ)
         self.assertEqual(result.cookies["token"], "YWJjZA==")
 
+    def test_extract_cookies_preserves_literal_plus(self):
+        # Literal '+' in cookie values (common in base64 / JWT) must NOT
+        # be converted to space — manual parser preserves it.
+        environ = {"HTTP_COOKIE": "token=abc+def==; jwt=eyJ+payload"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.cookies["token"], "abc+def==")
+        self.assertEqual(result.cookies["jwt"], "eyJ+payload")
+
+    def test_extract_cookies_preserves_quoted_value(self):
+        # SimpleCookie used to strip RFC-2109 quotes; manual parser keeps
+        # the raw value, matching JS / PHP / Ruby behavior.
+        environ = {"HTTP_COOKIE": 'k="quoted value"'}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.cookies["k"], '"quoted value"')
+
+    def test_extract_cookies_malformed_pair_does_not_drop_others(self):
+        # SimpleCookie used to return {} for the entire batch when one
+        # cookie had a name it considered invalid (e.g. spaces, brackets).
+        # Manual parser isolates per-pair: the bad ones are skipped,
+        # everything else (including critical _fbc / _fbp) survives.
+        environ = {
+            "HTTP_COOKIE": ("_fbp=fb.1.111.222; bad name=v; a[]=v; _fbc=fb.1.333.abc")
+        }
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.cookies["_fbp"], "fb.1.111.222")
+        self.assertEqual(result.cookies["_fbc"], "fb.1.333.abc")
+        # The "bad name" pair has key "bad name" after trim — manual parser
+        # keeps it because it doesn't apply SimpleCookie's stricter regex.
+        # The crucial regression we're guarding is that _fbc / _fbp survive.
+
+    def test_extract_cookies_skips_empty_key(self):
+        environ = {"HTTP_COOKIE": "=orphan_value; valid=value"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertNotIn("", result.cookies)
+        self.assertEqual(result.cookies["valid"], "value")
+
+    def test_extract_cookies_skips_pair_with_no_equals(self):
+        environ = {"HTTP_COOKIE": "valid=value; no_equals_pair; another=test"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.cookies["valid"], "value")
+        self.assertEqual(result.cookies["another"], "test")
+        self.assertNotIn("no_equals_pair", result.cookies)
+
     def test_extract_cookies_empty_header(self):
         environ = {"HTTP_COOKIE": ""}
         result = RequestContextAdaptor.extract(environ)
@@ -379,6 +422,40 @@ class TestRequestContextAdaptorASGI(unittest.TestCase):
         result = RequestContextAdaptor.extract(NotAsgi())
         self.assertEqual(result.host, "wsgi-fallback.com")
         self.assertEqual(result.remote_address, "10.0.0.1")
+
+    def test_asgi_authority_used_as_host_fallback(self):
+        # HTTP/2 may carry only `:authority`. Without the fallback the
+        # adapter would drop to scope["server"] which is the bind address.
+        scope = self._build_scope(
+            headers=[_h(":authority", "http2-pure.example.com")],
+            server=("127.0.0.1", 8000),
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.host, "http2-pure.example.com")
+
+    def test_asgi_host_takes_precedence_over_authority(self):
+        scope = self._build_scope(
+            headers=[
+                _h("host", "host.example.com"),
+                _h(":authority", "authority.example.com"),
+            ],
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.host, "host.example.com")
+
+    def test_asgi_mixed_case_header_keys_are_matched(self):
+        # ASGI spec mandates lowercase, but raw test scopes / non-spec
+        # servers may carry mixed case. _get_asgi_headers should still
+        # match defensively rather than silently dropping them.
+        scope = self._build_scope(
+            headers=[
+                (b"Host", b"mixed-case.example.com"),
+                (b"Cookie", b"_fbp=fb.1.123.456"),
+            ],
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.host, "mixed-case.example.com")
+        self.assertEqual(result.cookies["_fbp"], "fb.1.123.456")
 
     def test_object_with_both_scope_and_environ_prefers_asgi(self):
         # If the request looks like ASGI, ASGI wins.
