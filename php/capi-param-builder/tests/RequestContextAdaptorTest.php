@@ -174,7 +174,7 @@ final class RequestContextAdaptorTest extends TestCase
         $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result->query_params);
     }
 
-    public function testExtractQueryParamsGlobalGetTakesPrecedence(): void
+    public function testExtractQueryParamsExplicitOverrideTakesPrecedenceOverGet(): void
     {
         $this->resetGlobals();
         $_GET = ['from_get' => 'true'];
@@ -186,8 +186,19 @@ final class RequestContextAdaptorTest extends TestCase
 
         $result = RequestContextAdaptor::extract($server);
 
-        // $_GET should take precedence over QUERY_STRING
-        $this->assertEquals(['from_get' => 'true'], $result->query_params);
+        // Explicit override (QUERY_STRING in $server) wins over $_GET so
+        // callers in tests / CLI / framework adapters can reliably override.
+        $this->assertEquals(['from_query_string' => 'true'], $result->query_params);
+    }
+
+    public function testExtractQueryParamsFallsBackToGetWhenNoQueryString(): void
+    {
+        $this->resetGlobals();
+        $_GET = ['only_in_get' => 'value'];
+
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
+
+        $this->assertEquals(['only_in_get' => 'value'], $result->query_params);
     }
 
     public function testExtractQueryParamsWithSpecialCharacters(): void
@@ -248,7 +259,7 @@ final class RequestContextAdaptorTest extends TestCase
         $this->assertEquals(['cookie1' => 'value1', 'cookie2' => 'value2'], $result->cookies);
     }
 
-    public function testExtractCookiesGlobalCookieTakesPrecedence(): void
+    public function testExtractCookiesExplicitOverrideTakesPrecedenceOverCookieGlobal(): void
     {
         $this->resetGlobals();
         $_COOKIE = ['from_global' => 'true'];
@@ -260,8 +271,19 @@ final class RequestContextAdaptorTest extends TestCase
 
         $result = RequestContextAdaptor::extract($server);
 
-        // $_COOKIE should take precedence over HTTP_COOKIE
-        $this->assertEquals(['from_global' => 'true'], $result->cookies);
+        // HTTP_COOKIE wins because manual parsing preserves `+` (PHP's
+        // $_COOKIE has already corrupted any base64 `+` -> ` `).
+        $this->assertEquals(['from_header' => 'true'], $result->cookies);
+    }
+
+    public function testExtractCookiesFallsBackToCookieGlobalWhenNoHttpCookie(): void
+    {
+        $this->resetGlobals();
+        $_COOKIE = ['only_in_cookie' => 'value'];
+
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
+
+        $this->assertEquals(['only_in_cookie' => 'value'], $result->cookies);
     }
 
     public function testExtractCookiesWithUrlEncodedValues(): void
@@ -584,9 +606,10 @@ final class RequestContextAdaptorTest extends TestCase
         $result = RequestContextAdaptor::extract($server);
 
         $this->assertEquals('', $result->host);
-        $this->assertEquals('', $result->referer);
-        $this->assertEquals('', $result->x_forwarded_for);
-        $this->assertEquals('', $result->remote_address);
+        // Empty optional headers coalesce to null, matching JS / Python / Ruby.
+        $this->assertNull($result->referer);
+        $this->assertNull($result->x_forwarded_for);
+        $this->assertNull($result->remote_address);
     }
 
     public function testVeryLongHostname(): void
@@ -885,6 +908,58 @@ final class RequestContextAdaptorTest extends TestCase
         $this->assertEquals([], $result->cookies);
     }
 
+    public function testCookiePreservesLiteralPlus(): void
+    {
+        // Cookies are not query strings: a literal `+` (common in base64 /
+        // JWT values) must NOT be converted to space. rawurldecode preserves
+        // it; urldecode would corrupt these values.
+        $this->resetGlobals();
+        $_COOKIE = [];
+
+        $server = [
+            'HTTP_COOKIE' => 'token=abc+def==; jwt=eyJ+payload',
+        ];
+
+        $result = RequestContextAdaptor::extract($server);
+
+        $this->assertEquals('abc+def==', $result->cookies['token']);
+        $this->assertEquals('eyJ+payload', $result->cookies['jwt']);
+    }
+
+    public function testCookieKeyIsTrimmedIndependentlyOfValue(): void
+    {
+        // Whitespace around `=` (e.g., `cookie = value`) should not bleed
+        // into the cookie name; both key and value are trimmed.
+        $this->resetGlobals();
+        $_COOKIE = [];
+
+        $server = [
+            'HTTP_COOKIE' => 'name = value ; other  =  thing',
+        ];
+
+        $result = RequestContextAdaptor::extract($server);
+
+        $this->assertArrayHasKey('name', $result->cookies);
+        $this->assertEquals('value', $result->cookies['name']);
+        $this->assertArrayHasKey('other', $result->cookies);
+        $this->assertEquals('thing', $result->cookies['other']);
+    }
+
+    public function testCookieEmptyKeyIsSkipped(): void
+    {
+        $this->resetGlobals();
+        $_COOKIE = [];
+
+        $server = [
+            'HTTP_COOKIE' => '=orphan_value; valid=value',
+        ];
+
+        $result = RequestContextAdaptor::extract($server);
+
+        $this->assertArrayNotHasKey('', $result->cookies);
+        $this->assertEquals('value', $result->cookies['valid']);
+    }
+
     // =========================================================================
     // Real-World E-commerce Scenarios
     // =========================================================================
@@ -1098,9 +1173,10 @@ final class RequestContextAdaptorTest extends TestCase
 
         $result = RequestContextAdaptor::extract($overrides);
 
-        // Override empty string should win
+        // Override empty string wins for host (still empty); empty optional
+        // header coalesces to null.
         $this->assertEquals('', $result->host);
-        $this->assertEquals('', $result->referer);
+        $this->assertNull($result->referer);
     }
 
     /**

@@ -45,35 +45,51 @@ class RequestContextAdaptor
             $server = array_merge($global_server, $overrides);
 
             if ($server) {
-                // Extract Headers
+                // Extract Headers. Coalesce empty strings to null for the
+                // optional fields so behavior matches JS / Python / Ruby.
                 $host = $server['HTTP_HOST'] ?? '';
-                $referer = $server['HTTP_REFERER'] ?? null;
-                $x_forwarded_for = $server['HTTP_X_FORWARDED_FOR'] ?? null;
-                $remote_address = $server['REMOTE_ADDR'] ?? null;
+                $referer = !empty($server['HTTP_REFERER'])
+                    ? $server['HTTP_REFERER'] : null;
+                $x_forwarded_for = !empty($server['HTTP_X_FORWARDED_FOR'])
+                    ? $server['HTTP_X_FORWARDED_FOR'] : null;
+                $remote_address = !empty($server['REMOTE_ADDR'])
+                    ? $server['REMOTE_ADDR'] : null;
 
-                // Extract Query Params
-                // Priority: $_GET -> Parse QUERY_STRING
-                if (!empty($_GET)) {
+                // Extract Query Params.
+                // Priority: merged $server (which respects overrides) ->
+                // $_GET as a last-resort fallback. This honors the documented
+                // "overrides take priority" contract.
+                if (!empty($server['QUERY_STRING'])) {
+                    parse_str($server['QUERY_STRING'], $query_params);
+                } elseif (!empty($_GET)) {
                     $query_params = $_GET;
-                } elseif (!empty($server['QUERY_STRING'])) {
-                    parse_str($server['QUERY_STRING'], $parsed);
-                    if (is_array($parsed)) {
-                        $query_params = $parsed;
-                    }
                 }
 
-                // Extract Cookies
-                // Priority: $_COOKIE -> Parse HTTP_COOKIE
-                if (!empty($_COOKIE)) {
-                    $cookies = $_COOKIE;
-                } elseif (!empty($server['HTTP_COOKIE'])) {
+                // Extract Cookies.
+                // Always prefer manual parsing of HTTP_COOKIE because PHP
+                // populates $_COOKIE by urldecoding (which converts `+` to
+                // space). For base64 / JWT-style values this corrupts the
+                // payload, so we only fall back to $_COOKIE when no raw
+                // cookie header is available.
+                if (!empty($server['HTTP_COOKIE'])) {
                     $pairs = explode(';', $server['HTTP_COOKIE']);
                     foreach ($pairs as $pair) {
-                        $parts = explode('=', trim($pair), 2);
-                        if (count($parts) === 2) {
-                            $cookies[$parts[0]] = urldecode($parts[1]);
+                        $parts = explode('=', $pair, 2);
+                        if (count($parts) !== 2) {
+                            continue;
                         }
+                        $key = trim($parts[0]);
+                        if ($key === '') {
+                            continue;
+                        }
+                        // rawurldecode preserves literal `+`; urldecode does not.
+                        $cookies[$key] = rawurldecode(trim($parts[1]));
                     }
+                } elseif (!empty($_COOKIE)) {
+                    // NOTE: PHP has already urldecoded $_COOKIE at request
+                    // population time, so any literal `+` in cookie values
+                    // has already become a space. Documented limitation.
+                    $cookies = $_COOKIE;
                 }
             }
         } catch (Throwable $t) {
