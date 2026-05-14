@@ -32,8 +32,8 @@ public class PlainDataObject {
 
   /**
    * Parsed query parameters. Repeated keys are preserved as multi-element lists, matching the
-   * Python / Ruby SDKs (e.g. "?tag=a&tag=b" -> {"tag": ["a", "b"]}). Never null; empty map when
-   * absent.
+   * Python / Ruby SDKs (e.g. {@code ?tag=a&amp;tag=b} -&gt; {@code {"tag": ["a", "b"]}}). Never
+   * null; empty map when absent.
    */
   public Map<String, List<String>> queryParams;
 
