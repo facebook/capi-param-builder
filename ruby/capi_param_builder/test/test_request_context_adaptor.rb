@@ -180,6 +180,49 @@ class TestRequestContextAdaptorRackEnv < Minitest::Test
     assert_equal('eyJ+payload', result.cookies['jwt'])
   end
 
+  def test_extract_cookies_decodes_multibyte_utf8
+    # %E6%97%A5 -> "日" (Japanese for "day"). A correct percent-decoder
+    # must produce a valid UTF-8 string, not raw bytes.
+    env = { 'HTTP_COOKIE' => 'lang=%E6%97%A5%E6%9C%AC%E8%AA%9E' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('日本語', result.cookies['lang'])
+    assert(result.cookies['lang'].valid_encoding?)
+  end
+
+  def test_extract_cookies_handles_preexisting_utf8_with_escape
+    # REGRESSION: Without `.b` (force binary) before gsub, this raised
+    # Encoding::CompatibilityError because the receiver is UTF-8 and
+    # pack("H2") produces ASCII-8BIT bytes. The exception used to bubble
+    # out of percent_decode and lose the entire cookies hash.
+    env = { 'HTTP_COOKIE' => 'mixed=日本+%E6%97%A5' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('日本+日', result.cookies['mixed'])
+    assert(result.cookies['mixed'].valid_encoding?)
+  end
+
+  def test_extract_cookies_scrubs_invalid_percent_encoded_bytes
+    # %FF%FF is not valid UTF-8. Without `.scrub`, the cookie value would
+    # be a String tagged as UTF-8 but with valid_encoding? == false,
+    # which crashes downstream JSON serialization / hashing.
+    env = { 'HTTP_COOKIE' => 'corrupt=%FF%FF; valid=ok' }
+    result = RequestContextAdaptor.extract(env)
+    assert(result.cookies['corrupt'].valid_encoding?)
+    # The valid cookie next to the corrupt one must survive.
+    assert_equal('ok', result.cookies['valid'])
+  end
+
+  def test_extract_cookies_per_pair_isolation_keeps_meta_cookies
+    # Co-tenant cookie that previously triggered an encoding error must
+    # not wipe out the critical _fbc / _fbp cookies in the same header.
+    env = {
+      'HTTP_COOKIE' =>
+        '_fbp=fb.1.111.222; mixed=日本+%E6%97%A5; _fbc=fb.1.333.abc'
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('fb.1.111.222', result.cookies['_fbp'])
+    assert_equal('fb.1.333.abc', result.cookies['_fbc'])
+  end
+
   def test_extract_cookies_with_empty_value
     env = { 'HTTP_COOKIE' => 'empty=; normal=value' }
     result = RequestContextAdaptor.extract(env)

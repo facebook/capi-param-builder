@@ -73,7 +73,12 @@ class RequestContextAdaptor
       next unless parts.size == 2
       key = parts[0].strip
       next if key.empty?
-      hash[key] = percent_decode(parts[1].strip)
+      begin
+        hash[key] = percent_decode(parts[1].strip)
+      rescue StandardError
+        # Per-pair isolation: a single bad cookie (e.g. an encoding error)
+        # must not drop the other valid cookies in the same header.
+      end
     end
   end
   private_class_method :parse_cookie_header
@@ -81,9 +86,18 @@ class RequestContextAdaptor
   # Percent-decode a cookie value WITHOUT converting `+` to space. CGI.unescape
   # applies form decoding (`+` -> ` `), which would corrupt base64 / JWT-like
   # cookie values that legitimately contain `+`.
+  #
+  # Operates on a BINARY copy first so that gsub-ing ASCII-8BIT bytes (from
+  # `pack("H2")`) into a string that already carries UTF-8 multi-byte
+  # characters does not raise `Encoding::CompatibilityError`. After decoding
+  # we relabel as UTF-8 and `scrub` any invalid byte sequences (e.g. lone
+  # `%FF`) so downstream JSON / logging / hashing does not choke on
+  # invalid UTF-8.
   def self.percent_decode(value)
-    value.gsub(/%([0-9a-fA-F]{2})/) { [Regexp.last_match(1)].pack('H2') }
+    value.to_s.b
+         .gsub(/%([0-9a-fA-F]{2})/) { [Regexp.last_match(1)].pack('H2') }
          .force_encoding(Encoding::UTF_8)
+         .scrub
   end
   private_class_method :percent_decode
 
