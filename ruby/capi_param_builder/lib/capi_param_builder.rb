@@ -202,6 +202,28 @@ class ParamBuilder
     return @cookie_to_set
   end
 
+  # Process a request from a context object.
+  #
+  # Accepts either a PlainDataObject (used directly) or any framework
+  # request / Rack-style env Hash that RequestContextAdaptor knows how to
+  # extract from. Nil falls through to the adapter's empty-default behavior.
+  #
+  # Note: PlainDataObject carries x_forwarded_for and remote_address for
+  # parity with the JS / PHP SDKs, but the Ruby ParamBuilder does not yet
+  # implement client-IP attribution; those fields are extracted by the
+  # adapter but ignored here.
+  def process_request_from_context(context = nil)
+    data = context.is_a?(PlainDataObject) ?
+      context : RequestContextAdaptor.extract(context)
+
+    process_request(
+      data.host,
+      data.query_params,
+      data.cookies,
+      data.referer
+    )
+  end
+
   def get_cookies_to_set()
     return @cookie_to_set
   end
@@ -217,6 +239,14 @@ class ParamBuilder
   private def compute_etld_plus_one_for_host(host)
     if @etld_plus_one.nil? || @host.nil?
       @host = host
+      # Guard empty/nil host: Ruby's "".split(".") returns [], so naively
+      # computing size - 1 would yield -1 and emit malformed `fb.-1.…`
+      # cookies. Match Python's behavior: empty host -> nil etld+1, index 0.
+      if host.nil? || host.empty?
+        @etld_plus_one = nil
+        @sub_domain_index = 0
+        return
+      end
       host_name = extract_host_from_http_host(host)
       if is_ip_address(host_name)
         @etld_plus_one = maybe_bracket_ipv6(host_name)

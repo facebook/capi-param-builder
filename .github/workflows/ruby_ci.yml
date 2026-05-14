@@ -33,5 +33,8 @@ jobs:
           ruby-version: ${{ matrix.ruby-versions }}
     - name: Install minitest
       run: gem install minitest
-    - name: Run unit test
-      run: ruby -Ilib:test test/test_param_builder.rb
+    - name: Run unit tests
+      run: |
+        ruby -Ilib:test test/test_param_builder.rb
+        ruby -Ilib:test test/test_request_context_adaptor.rb
+        ruby -Ilib:test test/test_process_request_from_context.rb
