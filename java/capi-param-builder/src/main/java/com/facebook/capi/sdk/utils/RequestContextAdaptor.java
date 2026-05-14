@@ -183,10 +183,10 @@ public final class RequestContextAdaptor {
     Object cookieMap = invokeNoArg(req, "getCookies");
     if (cookieMap instanceof Map) {
       Map<String, String> result = new HashMap<String, String>();
-      for (Map.Entry<?, ?> e : ((Map<?, ?>) cookieMap).entrySet()) {
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) cookieMap).entrySet()) {
         try {
-          Object k = e.getKey();
-          Object v = e.getValue();
+          Object k = entry.getKey();
+          Object v = entry.getValue();
           if (!(k instanceof String) || !(v instanceof List)) {
             continue;
           }
