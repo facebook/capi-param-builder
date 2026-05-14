@@ -11,8 +11,8 @@ import time
 from typing import Final, List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
-from .model import CookieSettings, FbcParamConfigs
-from .util import EtldPlusOneResolver
+from .model import CookieSettings, FbcParamConfigs, PlainDataObject
+from .util import EtldPlusOneResolver, RequestContextAdaptor
 
 DEFAULT_1PC_AGE: Final[int] = 90 * 24 * 3600  # 90 days
 LANGUAGE_TOKEN: Final[str] = "Ag"  # Python
@@ -246,6 +246,34 @@ class ParamBuilder:
             self.fbp = updated_fbp_cookie.value
         self.cookies_to_set = set(self.cookies_to_set_dict.values())
         return self.cookies_to_set
+
+    def process_request_from_context(
+        self, context: Optional[object] = None
+    ) -> set[CookieSettings]:
+        """
+        Process a request from a context object.
+
+        Accepts either a PlainDataObject (used directly) or any framework
+        request / ASGI scope / WSGI environ that RequestContextAdaptor knows
+        how to extract from. None falls through to the adapter's empty-default
+        behavior.
+
+        Note: PlainDataObject carries `x_forwarded_for` and `remote_address`
+        for parity with the JS/PHP SDKs, but the Python ParamBuilder does not
+        yet implement client-IP attribution; those fields are extracted by the
+        adapter but ignored here.
+        """
+        if isinstance(context, PlainDataObject):
+            data = context
+        else:
+            data = RequestContextAdaptor.extract(context)
+
+        return self.process_request(
+            data.host,
+            data.query_params,
+            data.cookies,
+            data.referer,
+        )
 
     def get_cookies_to_set(self) -> Optional[set[CookieSettings]]:
         return self.cookies_to_set
