@@ -197,6 +197,20 @@ data=[
 
 ```
 
+## Framework support
+
+`builder.process_request_from_context(request)` accepts a request object
+directly and extracts host / cookies / query / referer for you. It supports out
+of the box any Rack-based framework:
+
+- Rails (`ActionDispatch::Request`), Sinatra, Hanami, Roda, Cuba — anything
+  exposing `#env` that returns a Rack-style hash
+- Raw Rack `env` `Hash`
+
+For any other framework, you can build a `PlainDataObject` directly and pass it
+in, or fall back to the original `process_request(host, queries, cookies, referer)`
+call.
+
 ## License
 
 Conversions API parameter builder for Ruby is licensed under the LICENSE file in

@@ -200,6 +200,24 @@ data=[
 ]
 ```
 
+## Framework support
+
+`paramBuilder.processRequestFromContext(context)` accepts a request object
+directly and extracts host / cookies / query / referer for you. The adaptor uses
+reflection so the SDK has **no compile-time dependency** on Servlet API or
+Spring jars. It supports out of the box:
+
+- `javax.servlet.http.HttpServletRequest` (Servlet 3.x / 4.x)
+- `jakarta.servlet.http.HttpServletRequest` (Servlet 5.x+, Spring Boot 3+)
+- Spring WebFlux `ServerHttpRequest`
+- Raw `Map<String, Object>` shaped like a CGI / WSGI environ (with `HTTP_HOST`,
+  `HTTP_COOKIE`, `QUERY_STRING`, etc.)
+- `null` (returns empty defaults)
+
+For any other framework, you can build a `PlainDataObject` directly and pass it
+in, or fall back to the original `processRequest(host, queries, cookies, referer)`
+call.
+
 ## License
 
 Conversions API parameter builder for Java is licensed under the LICENSE file in

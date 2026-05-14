@@ -147,6 +147,35 @@ data=[
 ]
 ```
 
+## Framework support
+
+`paramBuilder.process_request_from_context(request)` accepts a request object
+directly and extracts host / cookies / query / referer for you. It supports out
+of the box:
+
+- ASGI: FastAPI, Starlette, Quart, raw ASGI scope dicts (HTTP/2 falls back to
+  `:authority` when `host` is absent)
+- WSGI: Django (`request.META`), Flask / Pyramid / Bottle (`request.environ`),
+  raw WSGI environ dicts
+
+**Frameworks that need a small adjustment:**
+
+- **Tornado** — Tornado's `RequestHandler.request` is not WSGI/ASGI shaped.
+  Build an environ-style dict and pass it:
+  ```python
+  paramBuilder.process_request_from_context({
+      "HTTP_HOST": request.host,
+      "HTTP_REFERER": request.headers.get("Referer"),
+      "QUERY_STRING": request.query,
+      "HTTP_COOKIE": request.headers.get("Cookie", ""),
+      "REMOTE_ADDR": request.remote_ip,
+  })
+  ```
+
+For any other framework, you can build a `PlainDataObject` directly and pass it
+in, or fall back to the original `process_request(host, queries, cookies, referer)`
+call.
+
 ## License
 
 Conversions API parameter builder for Python is licensed under the LICENSE file

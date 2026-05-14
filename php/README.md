@@ -216,6 +216,29 @@ data=[
 ]
 ```
 
+## Framework support
+
+`$param_builder->processRequestFromContext($context)` accepts an environ-style
+array and extracts host / cookies / query / referer for you. It supports out of
+the box:
+
+- `null` (reads from `$_SERVER` / `$_COOKIE` / `$_GET` superglobals)
+- Any associative `array` shaped like `$_SERVER` (with `HTTP_HOST`,
+  `HTTP_COOKIE`, `QUERY_STRING`, etc.)
+
+**Frameworks that need a small adjustment:**
+
+- **Symfony / Laravel** — pass the framework's server bag, not the `Request`
+  object itself:
+  ```php
+  $param_builder->processRequestFromContext($request->server->all());
+  ```
+- **Slim / other PSR-7** — pass `$request->getServerParams()`.
+
+For any other framework, you can build a `PlainDataObject` directly and pass it
+in, or fall back to the original `processRequest($host, $queries, $cookies, $referer)`
+call.
+
 ## License
 
 The Conversions API parameter builder feature for PHP is licensed under the

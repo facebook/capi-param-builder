@@ -206,6 +206,27 @@ data=[
 ]
 ```
 
+## Framework support
+
+`builder.processRequestFromContext(req)` accepts a request object directly and
+extracts host / cookies / query / referer for you. It supports out of the box:
+
+- Native `http.IncomingMessage` (and HTTP/2 — falls back to `:authority` when
+  `host` header is absent)
+- Express, Fastify, Koa (`ctx.req`), NestJS
+
+**Frameworks that need a small adjustment:**
+
+- **Hapi** — Hapi exposes the raw request as `request.raw.req`, not
+  `request.raw`. Pass it explicitly:
+  ```js
+  builder.processRequestFromContext(request.raw.req);
+  ```
+
+For any other framework, you can build a `PlainDataObject` directly and pass it
+in, or fall back to the original `processRequest(host, queries, cookies, referer)`
+call.
+
 ## License
 
 The Conversions API parameter builder feature for NodeJS is licensed under the
