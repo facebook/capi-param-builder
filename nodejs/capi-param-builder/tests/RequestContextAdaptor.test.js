@@ -208,6 +208,19 @@ describe('RequestContextAdaptor', () => {
             const result = RequestContextAdaptor.extract(req);
             expect(result.query_params).toEqual({});
         });
+
+        test('req.query as array is rejected, falls back to URL parse', () => {
+            // typeof [] === 'object' in JS, so without the !Array.isArray
+            // guard the adaptor would silently accept an array as the query
+            // bag and break downstream `queries[paramName]` lookups.
+            const req = {
+                headers: { host: 'example.com' },
+                query: ['not', 'a', 'query', 'object'],
+                url: '/path?fallback=true',
+            };
+            const result = RequestContextAdaptor.extract(req);
+            expect(result.query_params).toEqual({ fallback: 'true' });
+        });
     });
 
     // =========================================================================
@@ -469,6 +482,30 @@ describe('RequestContextAdaptor', () => {
             const result = RequestContextAdaptor.extract(req);
             expect(result.host).toBe('http2-app.com');
             expect(result.remote_address).toBe('::1');
+        });
+
+        test('http2 :authority used as host fallback when host header absent', () => {
+            // Pure HTTP/2 requests may omit the legacy `host` header and
+            // only carry `:authority`. The adaptor should fall back to it.
+            const req = {
+                headers: { ':authority': 'http2-pure.example.com' },
+                socket: { remoteAddress: '::1' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+            expect(result.host).toBe('http2-pure.example.com');
+        });
+
+        test('host header takes precedence over :authority', () => {
+            const req = {
+                headers: {
+                    host: 'host.example.com',
+                    ':authority': 'authority.example.com',
+                },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+            expect(result.host).toBe('host.example.com');
         });
     });
 
@@ -869,16 +906,67 @@ describe('RequestContextAdaptor', () => {
             expect(result.cookies.base64).toBe('dGVzdD1pbj1kYXRh');
         });
 
-        test('cookie with multiple equals signs in value is skipped', () => {
+        test('cookie with multiple equals signs in value is preserved', () => {
             const req = {
                 headers: { cookie: 'complex=a=b=c=d' },
             };
 
             const result = RequestContextAdaptor.extract(req);
 
-            // The strToMap function uses .split('=') which splits on ALL equals signs
-            // This results in more than 2 parts, so the cookie is skipped
-            expect(result.cookies.complex).toBeUndefined();
+            // strToMap now splits on the FIRST `=` only, so values containing
+            // `=` (e.g. base64 padding) are preserved intact.
+            expect(result.cookies.complex).toBe('a=b=c=d');
+        });
+
+        test('base64 padded cookie value is preserved (e.g. _fbc)', () => {
+            const req = {
+                headers: { cookie: '_fbc=fb.1.123.YWJjZA==; _fbp=fb.1.456.7890' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.cookies._fbc).toBe('fb.1.123.YWJjZA==');
+            expect(result.cookies._fbp).toBe('fb.1.456.7890');
+        });
+
+        test('cookie with literal plus is preserved', () => {
+            // Cookies are not query strings: literal `+` (common in base64
+            // / JWT values) must NOT be converted to space.
+            // decodeURIComponent (unlike URLSearchParams) preserves `+`.
+            const req = {
+                headers: { cookie: 'token=abc+def==; jwt=eyJ+payload' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.cookies.token).toBe('abc+def==');
+            expect(result.cookies.jwt).toBe('eyJ+payload');
+        });
+
+        test('one malformed cookie does not drop other valid cookies', () => {
+            // %E0 by itself is an incomplete UTF-8 escape and throws URIError
+            // from decodeURIComponent. Per-pair isolation should skip only
+            // the malformed pair instead of returning {}.
+            const req = {
+                headers: { cookie: 'valid=value; bad=%E0%A4; another=test' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.cookies.valid).toBe('value');
+            expect(result.cookies.another).toBe('test');
+            expect(result.cookies.bad).toBeUndefined();
+        });
+
+        test('cookie with empty key (orphan = at start) is skipped', () => {
+            const req = {
+                headers: { cookie: '=orphan; valid=value' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.cookies['']).toBeUndefined();
+            expect(result.cookies.valid).toBe('value');
         });
 
         test('empty cookie header', () => {

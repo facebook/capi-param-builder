@@ -10,24 +10,34 @@
 const PlainDataObject = require('../model/PlainDataObject');
 
 /**
- * Helper: Safe Splitter for parsing cookie strings
+ * Helper: Safe Splitter for parsing cookie strings.
+ *
+ * Splits each pair on the FIRST `=` only, so values containing literal `=`
+ * (e.g. base64 padding in `_fbc=fb.1.123.YWJjZA==`) are preserved intact.
+ * Decode failures are isolated per pair so one malformed `%XX` does not
+ * drop every cookie.
+ *
  * @param {string} str - The string to parse
  * @param {string} delimiter - The delimiter to split on
  * @returns {Object.<string, string>} - The parsed key-value pairs
  */
 function strToMap(str, delimiter) {
-  try {
-    return str.split(delimiter)
-      .map(v => v.split('='))
-      .reduce((acc, v) => {
-        if (v.length === 2) {
-          acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(v[1].trim());
-        }
-        return acc;
-      }, {});
-  } catch (e) {
-    return {};
+  const acc = {};
+  for (const pair of str.split(delimiter)) {
+    const eq = pair.indexOf('=');
+    if (eq <= 0) {
+      // Skip malformed pairs (no `=`) and pairs with empty key.
+      continue;
+    }
+    const rawKey = pair.substring(0, eq).trim();
+    const rawVal = pair.substring(eq + 1).trim();
+    try {
+      acc[decodeURIComponent(rawKey)] = decodeURIComponent(rawVal);
+    } catch (e) {
+      // Per-pair isolation: skip only the malformed pair, keep the rest.
+    }
   }
+  return acc;
 }
 
 /**
@@ -84,8 +94,9 @@ class RequestContextAdaptor {
       const request = req.req || req.raw || req;
       const headers = request.headers || {};
 
-      // Host
-      host = headers['host'] || '';
+      // Host. HTTP/2 requests may only provide `:authority` (Node's http2
+      // server does not synthesize a `host` header), so fall back to it.
+      host = headers['host'] || headers[':authority'] || '';
 
       // Referer & XFF
       referer = headers['referer'] || headers['referrer'] || null;
@@ -96,16 +107,20 @@ class RequestContextAdaptor {
         remote_address = request.socket.remoteAddress;
       }
 
-      // Query Params (Try framework first, then fallback to manual)
-      if (req.query && typeof req.query === 'object') {
+      // Query Params (Try framework first, then fallback to manual).
+      // Reject arrays explicitly: `typeof [] === 'object'` is true in JS
+      // and an array would silently get stored as the query bag, breaking
+      // downstream `queries[paramName]` lookups.
+      if (req.query && typeof req.query === 'object' && !Array.isArray(req.query)) {
         query_params = req.query;
       } else if (request.url) {
         // Fallback: Manually parse using our safe helper
         query_params = parseQueryString(request.url);
       }
 
-      // Cookies (Try framework first, then fallback to manual)
-      if (req.cookies && typeof req.cookies === 'object') {
+      // Cookies (Try framework first, then fallback to manual). Same
+      // array-rejection rationale as above.
+      if (req.cookies && typeof req.cookies === 'object' && !Array.isArray(req.cookies)) {
         cookies = req.cookies;
       } else if (headers['cookie']) {
         cookies = strToMap(headers['cookie'], ';');
