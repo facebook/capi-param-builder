@@ -5,5 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 from .etld_plus_one_resolver import EtldPlusOneResolver
+from .request_context_adaptor import RequestContextAdaptor
 
-__all__ = ["EtldPlusOneResolver"]
+__all__ = ["EtldPlusOneResolver", "RequestContextAdaptor"]

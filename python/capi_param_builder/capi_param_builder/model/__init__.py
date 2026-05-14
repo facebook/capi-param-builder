@@ -6,5 +6,6 @@
 
 from .cookie_settings import CookieSettings
 from .fbc_param_configs import FbcParamConfigs
+from .plain_data_object import PlainDataObject
 
-__all__ = ["CookieSettings", "FbcParamConfigs"]
+__all__ = ["CookieSettings", "FbcParamConfigs", "PlainDataObject"]
