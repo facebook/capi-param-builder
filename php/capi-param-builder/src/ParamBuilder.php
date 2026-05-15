@@ -33,6 +33,7 @@ final class ParamBuilder
     private $fbp = null;
     private $fbi = null;
     private $referrer_url = null;
+    private $event_source_url = null;
 
     // perf optimization - save etld+1
     private $host = null;
@@ -299,6 +300,9 @@ final class ParamBuilder
 
     public function processRequestFromContext($context = null)
     {
+        // Reset event_source_url
+        $this->event_source_url = null;
+
         // 1. Normalize input into PlainDataObject
         $data = ($context instanceof PlainDataObject)
             ? $context
@@ -306,7 +310,7 @@ final class ParamBuilder
 
         // 2. Delegate to the existing API
         // This prevents code duplication by reusing existing logic.
-        return $this->processRequest(
+        $result = $this->processRequest(
             $data->host,
             $data->query_params,
             $data->cookies,
@@ -314,6 +318,11 @@ final class ParamBuilder
             $data->x_forwarded_for,
             $data->remote_address
         );
+
+        // 3. Construct event_source_url from full request context
+        $this->constructEventSourceUrl($data);
+
+        return $result;
     }
 
     public function getCookiesToSet()
@@ -339,6 +348,28 @@ final class ParamBuilder
     public function getReferrerUrl()
     {
         return $this->referrer_url;
+    }
+
+    public function getEventSourceUrl()
+    {
+        return $this->event_source_url;
+    }
+
+    private function constructEventSourceUrl($data)
+    {
+        if ($data === null || empty($data->host)) {
+            $this->event_source_url = null;
+            return;
+        }
+
+        $url = ($data->scheme ?? 'http') . '://';
+        $url .= $data->host;
+
+        if (!empty($data->request_uri)) {
+            $url .= $data->request_uri;
+        }
+
+        $this->event_source_url = $url;
     }
 
     public function getNormalizedAndHashedPII($piiValue, $dataType)
