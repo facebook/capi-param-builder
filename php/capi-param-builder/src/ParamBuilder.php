@@ -32,6 +32,7 @@ final class ParamBuilder
     private $fbc = null;
     private $fbp = null;
     private $fbi = null;
+    private $referrer_url = null;
 
     // perf optimization - save etld+1
     private $host = null;
@@ -237,6 +238,8 @@ final class ParamBuilder
         $this->etld_plus_1 = null;
         $this->sub_domain_index = 0;
 
+        $this->referrer_url = $referer;
+
         // Pre-process if cookie already exists
         $this->fbc = ParamBuilder::preProcess($cookies, FBC_NAME, $host);
         $this->fbp = ParamBuilder::preProcess($cookies, FBP_NAME, $host);
@@ -331,6 +334,11 @@ final class ParamBuilder
     public function getClientIpAddress()
     {
         return $this->fbi;
+    }
+
+    public function getReferrerUrl()
+    {
+        return $this->referrer_url;
     }
 
     public function getNormalizedAndHashedPII($piiValue, $dataType)
