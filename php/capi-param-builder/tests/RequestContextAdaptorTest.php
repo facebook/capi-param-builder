@@ -1382,4 +1382,422 @@ final class RequestContextAdaptorTest extends TestCase
         // Override wins for X-Forwarded-For
         $this->assertEquals('203.0.113.50, 10.0.0.1', $result->x_forwarded_for);
     }
+
+    // =========================================================================
+    // scheme Extraction Tests — HTTPS Values
+    // =========================================================================
+
+    public function testSchemeHttpsFromOn(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'on']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeHttpsFromOne(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => '1']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeHttpsFromYes(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'yes']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeHttpsFromArbitraryString(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'anystring']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeHttpsFromOnUppercase(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'ON']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeFromRequestScheme(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_SCHEME' => 'https']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeRequestSchemeTakesPrecedenceOverHttps(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'REQUEST_SCHEME' => 'http',
+            'HTTPS' => 'on',
+        ]);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    // =========================================================================
+    // scheme Extraction Tests — HTTP Values
+    // =========================================================================
+
+    public function testSchemeHttpFromOff(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'off']);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeHttpFromOffUppercase(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'OFF']);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeHttpFromOffMixedCase(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'Off']);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeHttpFromEmptyString(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => '']);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeHttpFromMissingKey(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    // =========================================================================
+    // request_uri Extraction Tests
+    // =========================================================================
+
+    public function testRequestUriSimplePath(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => '/products/list']);
+        $this->assertEquals('/products/list', $result->request_uri);
+    }
+
+    public function testRequestUriRootPath(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => '/']);
+        $this->assertEquals('/', $result->request_uri);
+    }
+
+    public function testRequestUriWithEncodedSpaces(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => '/search%20results/my%20page']);
+        $this->assertEquals('/search%20results/my%20page', $result->request_uri);
+    }
+
+    public function testRequestUriWithEncodedSlashes(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => '/path%2Fencoded%2Fslashes']);
+        $this->assertEquals('/path%2Fencoded%2Fslashes', $result->request_uri);
+    }
+
+    public function testRequestUriWithMultipleQueryParams(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'REQUEST_URI' => '/api?page=1&limit=10&sort=name&order=asc',
+        ]);
+        $this->assertEquals('/api?page=1&limit=10&sort=name&order=asc', $result->request_uri);
+    }
+
+    public function testRequestUriWithFragment(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'REQUEST_URI' => '/page#section-2',
+        ]);
+        $this->assertEquals('/page#section-2', $result->request_uri);
+    }
+
+    public function testRequestUriWithQueryAndFragment(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'REQUEST_URI' => '/page?key=value#anchor',
+        ]);
+        $this->assertEquals('/page?key=value#anchor', $result->request_uri);
+    }
+
+    public function testRequestUriWithDoubleSlashes(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'REQUEST_URI' => '//double//slashes//path',
+        ]);
+        $this->assertEquals('//double//slashes//path', $result->request_uri);
+    }
+
+    public function testRequestUriMissingKey(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTP_HOST' => 'example.com']);
+        $this->assertNull($result->request_uri);
+    }
+
+    public function testRequestUriWithMixedEncodings(): void
+    {
+        $this->resetGlobals();
+        $uri = '/search?q=hello%20world&tag=%E4%B8%AD%E6%96%87';
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => $uri]);
+        $this->assertEquals($uri, $result->request_uri);
+    }
+
+    // =========================================================================
+    // $_SERVER Global Fallback for scheme and request_uri
+    // =========================================================================
+
+    public function testSchemeFromGlobalServerWhenNoOverrides(): void
+    {
+        $_SERVER = ['HTTPS' => 'on'];
+
+        $result = RequestContextAdaptor::extract(null);
+
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testRequestUriFromGlobalServerWhenNoOverrides(): void
+    {
+        $_SERVER = ['REQUEST_URI' => '/global/path?key=val'];
+
+        $result = RequestContextAdaptor::extract(null);
+
+        $this->assertEquals('/global/path?key=val', $result->request_uri);
+    }
+
+    public function testSchemeFromGlobalServerWithEmptyOverrides(): void
+    {
+        $_SERVER = ['HTTPS' => '1'];
+
+        $result = RequestContextAdaptor::extract([]);
+
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testRequestUriFromGlobalServerWithEmptyOverrides(): void
+    {
+        $_SERVER = ['REQUEST_URI' => '/from-global'];
+
+        $result = RequestContextAdaptor::extract([]);
+
+        $this->assertEquals('/from-global', $result->request_uri);
+    }
+
+    // =========================================================================
+    // Override Precedence for scheme and request_uri
+    // =========================================================================
+
+    public function testSchemeOverrideTakesPrecedenceOverGlobal(): void
+    {
+        $_SERVER = ['HTTPS' => 'on'];
+
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'off']);
+
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeOverrideEnablesHttpsWhenGlobalDisabled(): void
+    {
+        $_SERVER = ['HTTPS' => 'off'];
+
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'on']);
+
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testRequestUriOverrideTakesPrecedenceOverGlobal(): void
+    {
+        $_SERVER = ['REQUEST_URI' => '/global-uri'];
+
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => '/override-uri']);
+
+        $this->assertEquals('/override-uri', $result->request_uri);
+    }
+
+    public function testRequestUriOverrideCanSetToNull(): void
+    {
+        $_SERVER = ['REQUEST_URI' => '/global-uri'];
+
+        $result = RequestContextAdaptor::extract(['REQUEST_URI' => null]);
+
+        $this->assertNull($result->request_uri);
+    }
+
+    // =========================================================================
+    // Non-Interference: scheme/request_uri with Other Fields
+    // =========================================================================
+
+    public function testSchemeDoesNotInterfereWithOtherFields(): void
+    {
+        $this->resetGlobals();
+        $_COOKIE = ['sid' => 'abc'];
+        $_GET = ['page' => '1'];
+
+        $server = [
+            'HTTP_HOST' => 'secure.example.com',
+            'HTTPS' => 'on',
+            'HTTP_REFERER' => 'https://referrer.com',
+            'HTTP_X_FORWARDED_FOR' => '8.8.8.8',
+            'REMOTE_ADDR' => '192.168.1.1',
+        ];
+
+        $result = RequestContextAdaptor::extract($server);
+
+        $this->assertSame('https', $result->scheme);
+        $this->assertEquals('secure.example.com', $result->host);
+        $this->assertEquals('https://referrer.com', $result->referer);
+        $this->assertEquals('8.8.8.8', $result->x_forwarded_for);
+        $this->assertEquals('192.168.1.1', $result->remote_address);
+        $this->assertEquals(['page' => '1'], $result->query_params);
+        $this->assertEquals(['sid' => 'abc'], $result->cookies);
+    }
+
+    public function testRequestUriDoesNotInterfereWithOtherFields(): void
+    {
+        $this->resetGlobals();
+        $_COOKIE = ['token' => 'xyz'];
+        $_GET = ['q' => 'search'];
+
+        $server = [
+            'HTTP_HOST' => 'api.example.com',
+            'REQUEST_URI' => '/api/v2/search?q=search',
+            'HTTP_REFERER' => 'https://app.example.com',
+            'HTTP_X_FORWARDED_FOR' => '10.0.0.5',
+            'REMOTE_ADDR' => '172.16.0.1',
+        ];
+
+        $result = RequestContextAdaptor::extract($server);
+
+        $this->assertEquals('/api/v2/search?q=search', $result->request_uri);
+        $this->assertEquals('api.example.com', $result->host);
+        $this->assertEquals('https://app.example.com', $result->referer);
+        $this->assertEquals('10.0.0.5', $result->x_forwarded_for);
+        $this->assertEquals('172.16.0.1', $result->remote_address);
+        $this->assertEquals(['q' => 'search'], $result->query_params);
+        $this->assertEquals(['token' => 'xyz'], $result->cookies);
+    }
+
+    public function testBothSchemeAndRequestUriWithAllFields(): void
+    {
+        $this->resetGlobals();
+        $_COOKIE = ['_fbp' => 'fb.1.123.456'];
+        $_GET = ['fbclid' => 'IwAR3test'];
+
+        $server = [
+            'HTTP_HOST' => 'shop.example.com',
+            'HTTPS' => 'on',
+            'REQUEST_URI' => '/checkout?fbclid=IwAR3test',
+            'HTTP_REFERER' => 'https://facebook.com/ad',
+            'HTTP_X_FORWARDED_FOR' => '203.0.113.50',
+            'REMOTE_ADDR' => '10.0.0.1',
+        ];
+
+        $result = RequestContextAdaptor::extract($server);
+
+        $this->assertSame('https', $result->scheme);
+        $this->assertEquals('/checkout?fbclid=IwAR3test', $result->request_uri);
+        $this->assertEquals('shop.example.com', $result->host);
+        $this->assertEquals('https://facebook.com/ad', $result->referer);
+        $this->assertEquals('203.0.113.50', $result->x_forwarded_for);
+        $this->assertEquals('10.0.0.1', $result->remote_address);
+        $this->assertEquals(['fbclid' => 'IwAR3test'], $result->query_params);
+        $this->assertEquals(['_fbp' => 'fb.1.123.456'], $result->cookies);
+    }
+
+    // =========================================================================
+    // Null/Empty Server Context — Safe Defaults
+    // =========================================================================
+
+    public function testExtractNullProducesSafeDefaults(): void
+    {
+        $this->resetGlobals();
+
+        $result = RequestContextAdaptor::extract(null);
+
+        $this->assertEquals('', $result->host);
+        $this->assertEquals([], $result->query_params);
+        $this->assertEquals([], $result->cookies);
+        $this->assertNull($result->referer);
+        $this->assertNull($result->x_forwarded_for);
+        $this->assertNull($result->remote_address);
+        $this->assertNull($result->scheme);
+        $this->assertNull($result->request_uri);
+    }
+
+    public function testExtractEmptyArrayProducesSafeDefaults(): void
+    {
+        $this->resetGlobals();
+
+        $result = RequestContextAdaptor::extract([]);
+
+        $this->assertEquals('', $result->host);
+        $this->assertEquals([], $result->query_params);
+        $this->assertEquals([], $result->cookies);
+        $this->assertNull($result->referer);
+        $this->assertNull($result->x_forwarded_for);
+        $this->assertNull($result->remote_address);
+        $this->assertNull($result->scheme);
+        $this->assertNull($result->request_uri);
+    }
+
+    // =========================================================================
+    // REQUEST_SCHEME Tests
+    // =========================================================================
+
+    public function testSchemeFromRequestSchemeHttps(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_SCHEME' => 'https']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeFromRequestSchemeHttp(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_SCHEME' => 'http']);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeFromRequestSchemeIsLowercased(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['REQUEST_SCHEME' => 'HTTPS']);
+        $this->assertSame('https', $result->scheme);
+    }
+
+    public function testSchemeRequestSchemePrecedenceOverHttpsFlag(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'REQUEST_SCHEME' => 'http',
+            'HTTPS' => 'on',
+        ]);
+        $this->assertSame('http', $result->scheme);
+    }
+
+    public function testSchemeFallsBackToHttpsFlagWhenRequestSchemeMissing(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract(['HTTPS' => 'on']);
+        $this->assertSame('https', $result->scheme);
+    }
 }
+
