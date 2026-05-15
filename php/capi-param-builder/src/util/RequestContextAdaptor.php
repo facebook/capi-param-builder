@@ -30,6 +30,8 @@ class RequestContextAdaptor
         $referer = null;          // Defaults to null for ?string
         $x_forwarded_for = null;    // Defaults to null for ?string
         $remote_address = null;    // Defaults to null for ?string
+        $scheme = null;           // Defaults to null for ?string
+        $request_uri = null;      // Defaults to null for ?string
 
         try {
             // MERGE LOGIC:
@@ -54,6 +56,19 @@ class RequestContextAdaptor
                     ? $server['HTTP_X_FORWARDED_FOR'] : null;
                 $remote_address = !empty($server['REMOTE_ADDR'])
                     ? $server['REMOTE_ADDR'] : null;
+
+                // Extract scheme
+                if (!empty($server['REQUEST_SCHEME'])) {
+                    $scheme = strtolower($server['REQUEST_SCHEME']);
+                } else {
+                    $https_value = $server['HTTPS'] ?? '';
+                    $scheme = (!empty($https_value) && strtolower($https_value) !== 'off')
+                        ? 'https'
+                        : 'http';
+                }
+
+                // Extract Request URI
+                $request_uri = $server['REQUEST_URI'] ?? null;
 
                 // Extract Query Params.
                 // Priority: merged $server (which respects overrides) ->
@@ -103,7 +118,9 @@ class RequestContextAdaptor
             $cookies,
             $referer,
             $x_forwarded_for,
-            $remote_address
+            $remote_address,
+            $scheme,
+            $request_uri
         );
     }
 }
