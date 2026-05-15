@@ -16,6 +16,8 @@ class PlainDataObject
     public ?string $referer;
     public ?string $x_forwarded_for;
     public ?string $remote_address;
+    public ?string $scheme;
+    public ?string $request_uri;
 
     public function __construct(
         string $host,
@@ -23,7 +25,9 @@ class PlainDataObject
         array $cookies,
         ?string $referer,
         ?string $x_forwarded_for,
-        ?string $remote_address
+        ?string $remote_address,
+        ?string $scheme = null,
+        ?string $request_uri = null
     ) {
         $this->host = $host;
         $this->query_params = $query_params;
@@ -31,5 +35,7 @@ class PlainDataObject
         $this->referer = $referer;
         $this->x_forwarded_for = $x_forwarded_for;
         $this->remote_address = $remote_address;
+        $this->scheme = $scheme;
+        $this->request_uri = $request_uri;
     }
 }
