@@ -294,7 +294,7 @@ final class EventSourceUrlTest extends TestCase
         $this->assertEquals('http://www.example.com/path', $builder->getEventSourceUrl());
     }
 
-    public function testEventSourceUrlHttpWhenSchemeNull(): void
+    public function testEventSourceUrlNullWhenSchemeNull(): void
     {
         $builder = new ParamBuilder();
         $data = new PlainDataObject(
@@ -308,7 +308,7 @@ final class EventSourceUrlTest extends TestCase
             '/path'
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('http://www.example.com/path', $builder->getEventSourceUrl());
+        $this->assertNull($builder->getEventSourceUrl());
     }
 
     public function testEventSourceUrlNullWhenAllNull(): void
@@ -328,7 +328,7 @@ final class EventSourceUrlTest extends TestCase
         $this->assertNull($builder->getEventSourceUrl());
     }
 
-    public function testEventSourceUrlHostOnly(): void
+    public function testEventSourceUrlNullWhenHostOnlyNoScheme(): void
     {
         $builder = new ParamBuilder();
         $data = new PlainDataObject(
@@ -342,7 +342,7 @@ final class EventSourceUrlTest extends TestCase
             null
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('http://host.example.com', $builder->getEventSourceUrl());
+        $this->assertNull($builder->getEventSourceUrl());
     }
 
     public function testEventSourceUrlPreservesQueryString(): void

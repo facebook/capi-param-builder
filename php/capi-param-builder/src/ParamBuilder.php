@@ -357,12 +357,12 @@ final class ParamBuilder
 
     private function constructEventSourceUrl($data)
     {
-        if ($data === null || empty($data->host)) {
+        if ($data === null || empty($data->host) || empty($data->scheme)) {
             $this->event_source_url = null;
             return;
         }
 
-        $url = ($data->scheme ?? 'http') . '://';
+        $url = $data->scheme . '://';
         $url .= $data->host;
 
         if (!empty($data->request_uri)) {
