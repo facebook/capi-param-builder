@@ -18,6 +18,7 @@ module.exports = {
     filename: `[name].bundle.js`,
     library: `[name]`,
     libraryTarget: `umd`,
+    umdNamedDefine: true,
   },
   resolve: {
     extensions: [`.js`],
