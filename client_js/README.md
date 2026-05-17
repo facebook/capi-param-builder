@@ -47,8 +47,22 @@ const params = await clientParamBuilder.processAndCollectAllParams(url, getIpFn)
 ```
 
 - `url` is optional.
-- `getIpFn` is optional — a user-provided function to retrieve client IP addresses.
+- `getIpFn` is optional — a user-provided function to retrieve client IP addresses. Prefer IPv6 (more precise than IPv4); fall back to IPv4 if IPv6 is not available.
 - Returns an object with `_fbc`, `_fbp`, and additional parameter values.
+
+#### `getIpFn`
+
+- **Input:** none.
+- **Output:** `string | Promise<string>` — the client's **IPv6 address**, with a fallback to **IPv4** if IPv6 is unavailable.
+
+```javascript
+const getIpFn = async () =>
+  (await fetch('https://api64.ipify.org')).text();
+
+await clientParamBuilder.processAndCollectAllParams(null, getIpFn);
+```
+
+> **Note:** The implementation above is for **demo purposes only**. You should implement your own logic to collect client IPv6 addresses.
 
 ### getFbc()
 
