@@ -33,6 +33,7 @@ class ParamBuilder {
     this.fbc = null;
     this.fbp = null;
     this.fbi = null;
+    this.referrerUrl = null;
 
     // perf optimization - save etld+1
     this.host = null;
@@ -135,6 +136,8 @@ class ParamBuilder {
     this.sub_domain_index = 0;
     this._computeETLDPlus1ForHost(host);
 
+    this.referrerUrl = referer;
+
     // capture existing cookies
     this.fbc = this._preprocessCookie(cookies, Constants.FBC_NAME_STRING);
     this.fbp = this._preprocessCookie(cookies, Constants.FBP_NAME_STRING);
@@ -224,6 +227,9 @@ class ParamBuilder {
   }
   getClientIpAddress() {
     return this.fbi;
+  }
+  getReferrerUrl() {
+    return this.referrerUrl;
   }
 
   getNormalizedAndHashedPII(piiValue, dataType) {

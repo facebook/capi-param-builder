@@ -136,6 +136,12 @@ export declare class ParamBuilder {
   getClientIpAddress(): string | null;
 
   /**
+   * Get the referrer URL from the last processed request
+   * @returns The referrer URL or null if not available
+   */
+  getReferrerUrl(): string | null;
+
+  /**
    * Normalize and hash PII data
    * @param piiValue The PII value to normalize and hash
    * @param dataType The type of PII data (e.g., 'email', 'phone', 'first_name')
