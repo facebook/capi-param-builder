@@ -77,6 +77,8 @@ class RequestContextAdaptor {
     let referer = null;
     let x_forwarded_for = null;
     let remote_address = null;
+    let scheme = null;
+    let request_uri = null;
 
     if (!req) {
       return new PlainDataObject(
@@ -85,7 +87,9 @@ class RequestContextAdaptor {
         cookies,
         referer,
         x_forwarded_for,
-        remote_address
+        remote_address,
+        scheme,
+        request_uri
       );
     }
 
@@ -126,6 +130,16 @@ class RequestContextAdaptor {
         cookies = strToMap(headers['cookie'], ';');
       }
 
+      // Scheme
+      if (req.protocol) {
+        scheme = req.protocol;
+      } else {
+        scheme = (request.socket && request.socket.encrypted) ? 'https' : 'http';
+      }
+
+      // Request URI
+      request_uri = req.originalUrl || request.url || null;
+
     } catch (e) {
       // Silently ignore exceptions and return the object with default values
     }
@@ -137,7 +151,9 @@ class RequestContextAdaptor {
       cookies,
       referer,
       x_forwarded_for,
-      remote_address
+      remote_address,
+      scheme,
+      request_uri
     );
   }
 }
