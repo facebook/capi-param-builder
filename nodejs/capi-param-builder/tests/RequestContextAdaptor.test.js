@@ -1351,4 +1351,160 @@ describe('RequestContextAdaptor', () => {
             expect(result.host).toBe('example.com');
         });
     });
+
+    // =========================================================================
+    // Scheme Extraction Tests
+    // =========================================================================
+
+    describe('Scheme Extraction', () => {
+        test('scheme is https when socket.encrypted is truthy', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                socket: { encrypted: true },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.scheme).toBe('https');
+        });
+
+        test('scheme is https when req.protocol is https', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                protocol: 'https',
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.scheme).toBe('https');
+        });
+
+        test('scheme is http when neither socket.encrypted nor req.protocol present', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                socket: {},
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.scheme).toBe('http');
+        });
+
+        test('req.protocol takes precedence over socket.encrypted', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                protocol: 'http',
+                socket: { encrypted: true },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.scheme).toBe('http');
+        });
+
+        test('scheme defaults to http when socket is missing', () => {
+            const req = {
+                headers: { host: 'example.com' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.scheme).toBe('http');
+        });
+    });
+
+    // =========================================================================
+    // Request URI Extraction Tests
+    // =========================================================================
+
+    describe('Request URI Extraction', () => {
+        test('request_uri from req.originalUrl (Express)', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                originalUrl: '/app/page?id=42',
+                url: '/page?id=42',
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.request_uri).toBe('/app/page?id=42');
+        });
+
+        test('request_uri from request.url (native Node.js)', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                url: '/api/data?key=value',
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.request_uri).toBe('/api/data?key=value');
+        });
+
+        test('request_uri with path and query string', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                url: '/search?q=test&page=2&lang=en',
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.request_uri).toBe('/search?q=test&page=2&lang=en');
+        });
+
+        test('request_uri is null when no url present', () => {
+            const req = {
+                headers: { host: 'example.com' },
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.request_uri).toBeNull();
+        });
+
+        test('originalUrl takes precedence over url', () => {
+            const req = {
+                headers: { host: 'example.com' },
+                originalUrl: '/mounted/path/resource',
+                url: '/resource',
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.request_uri).toBe('/mounted/path/resource');
+        });
+    });
+
+    // =========================================================================
+    // URL Extraction Does Not Affect Existing Fields
+    // =========================================================================
+
+    describe('URL extraction does not affect existing field extraction', () => {
+        test('scheme and request_uri coexist with all other extracted fields', () => {
+            const req = {
+                headers: {
+                    host: 'shop.example.com',
+                    referer: 'https://google.com/search',
+                    'x-forwarded-for': '203.0.113.50',
+                    cookie: 'session=abc123',
+                },
+                socket: { remoteAddress: '10.0.0.1', encrypted: true },
+                url: '/products?category=shoes',
+                query: { category: 'shoes' },
+                protocol: 'https',
+                originalUrl: '/v2/products?category=shoes',
+            };
+
+            const result = RequestContextAdaptor.extract(req);
+
+            expect(result.host).toBe('shop.example.com');
+            expect(result.referer).toBe('https://google.com/search');
+            expect(result.x_forwarded_for).toBe('203.0.113.50');
+            expect(result.remote_address).toBe('10.0.0.1');
+            expect(result.query_params).toEqual({ category: 'shoes' });
+            expect(result.cookies).toEqual({ session: 'abc123' });
+            expect(result.scheme).toBe('https');
+            expect(result.request_uri).toBe('/v2/products?category=shoes');
+        });
+    });
 });
