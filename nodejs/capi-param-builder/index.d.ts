@@ -47,6 +47,8 @@ export declare class PlainDataObject {
   public referer: string | null;
   public x_forwarded_for: string | null;
   public remote_address: string | null;
+  public scheme: string | null;
+  public request_uri: string | null;
 
   constructor(
     host: string,
@@ -54,7 +56,9 @@ export declare class PlainDataObject {
     cookies: Cookies,
     referer: string | null,
     x_forwarded_for: string | null,
-    remote_address: string | null
+    remote_address: string | null,
+    scheme?: string | null,
+    request_uri?: string | null
   );
 }
 

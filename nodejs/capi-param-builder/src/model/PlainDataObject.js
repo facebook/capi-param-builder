@@ -15,6 +15,8 @@ class PlainDataObject {
    * @param {?string} referer
    * @param {?string} x_forwarded_for
    * @param {?string} remote_address
+   * @param {?string} scheme
+   * @param {?string} request_uri
    */
   constructor(
     host,
@@ -22,7 +24,9 @@ class PlainDataObject {
     cookies,
     referer,
     x_forwarded_for,
-    remote_address
+    remote_address,
+    scheme = null,
+    request_uri = null
   ) {
     this.host = host;
     this.query_params = query_params;
@@ -30,6 +34,8 @@ class PlainDataObject {
     this.referer = referer;
     this.x_forwarded_for = x_forwarded_for;
     this.remote_address = remote_address;
+    this.scheme = scheme;
+    this.request_uri = request_uri;
   }
 }
 
