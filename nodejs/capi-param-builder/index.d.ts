@@ -146,6 +146,19 @@ export declare class ParamBuilder {
   getReferrerUrl(): string | null;
 
   /**
+   * Get the event source URL constructed from the last processed request context
+   * @returns The event source URL or null if host was not available
+   */
+  getEventSourceUrl(): string | null;
+
+  /**
+   * Process an incoming request using a context object or PlainDataObject
+   * @param context The request context or PlainDataObject
+   * @returns Array of CookieSettings to be set
+   */
+  processRequestFromContext(context?: PlainDataObject | object | null): CookieSettings[];
+
+  /**
    * Normalize and hash PII data
    * @param piiValue The PII value to normalize and hash
    * @param dataType The type of PII data (e.g., 'email', 'phone', 'first_name')
@@ -177,4 +190,5 @@ export declare class ParamBuilder {
   private _getLanguageToken(value: string): string | null;
   private _getClientIpLanguageTokenFromCookie(cookies: Cookies | null): string | null;
   private _getClientIp(cookies: Cookies | null, xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
+  private _constructEventSourceUrl(data: PlainDataObject): string | null;
 }

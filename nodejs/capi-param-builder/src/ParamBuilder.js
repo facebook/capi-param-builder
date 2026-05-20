@@ -34,6 +34,7 @@ class ParamBuilder {
     this.fbp = null;
     this.fbi = null;
     this.referrerUrl = null;
+    this.eventSourceUrl = null;
 
     // perf optimization - save etld+1
     this.host = null;
@@ -134,6 +135,7 @@ class ParamBuilder {
     this.cookies_to_set_dict = {};
     this.etld_plus_1 = null;
     this.sub_domain_index = 0;
+    this.eventSourceUrl = null;
     this._computeETLDPlus1ForHost(host);
 
     this.referrerUrl = referer;
@@ -206,7 +208,7 @@ class ParamBuilder {
       ? context
       : RequestContextAdaptor.extract(context);
 
-    return this.processRequest(
+    const result = this.processRequest(
       data.host,
       data.query_params,
       data.cookies,
@@ -214,6 +216,8 @@ class ParamBuilder {
       data.x_forwarded_for,
       data.remote_address
     );
+    this.eventSourceUrl = this._constructEventSourceUrl(data);
+    return result;
   }
 
   getCookiesToSet() {
@@ -230,6 +234,20 @@ class ParamBuilder {
   }
   getReferrerUrl() {
     return this.referrerUrl;
+  }
+  getEventSourceUrl() {
+    return this.eventSourceUrl;
+  }
+
+  _constructEventSourceUrl(data) {
+    if (!data || !data.host || !data.scheme) {
+      return null;
+    }
+    let url = data.scheme + '://' + data.host;
+    if (data.request_uri) {
+      url += data.request_uri;
+    }
+    return url;
   }
 
   getNormalizedAndHashedPII(piiValue, dataType) {
