@@ -614,3 +614,308 @@ class TestRequestContextAdaptorErrorRecovery(unittest.TestCase):
         environ = {"SERVER_NAME": "example.com", "SERVER_PORT": 8080}
         result = RequestContextAdaptor.extract(environ)
         self.assertEqual(result.host, "example.com:8080")
+
+
+class TestRequestContextAdaptorWSGIScheme(unittest.TestCase):
+    def test_scheme_from_request_scheme(self):
+        environ = {"REQUEST_SCHEME": "https"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_from_wsgi_url_scheme(self):
+        environ = {"wsgi.url_scheme": "https"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_request_scheme_takes_precedence_over_wsgi_url_scheme(self):
+        environ = {"REQUEST_SCHEME": "https", "wsgi.url_scheme": "http"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_https_fallback_on(self):
+        environ = {"HTTPS": "on"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_https_fallback_ON_case_insensitive(self):
+        environ = {"HTTPS": "ON"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_https_fallback_off(self):
+        environ = {"HTTPS": "off"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "http")
+
+    def test_scheme_https_fallback_empty(self):
+        environ = {"HTTPS": ""}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "http")
+
+    def test_scheme_https_fallback_1(self):
+        environ = {"HTTPS": "1"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_lowercased_from_request_scheme(self):
+        environ = {"REQUEST_SCHEME": "HTTPS"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_lowercased_from_wsgi_url_scheme(self):
+        environ = {"wsgi.url_scheme": "HTTP"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "http")
+
+    def test_scheme_defaults_to_http_when_no_env_vars(self):
+        environ = {"HTTP_HOST": "example.com"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.scheme, "http")
+
+    def test_scheme_from_flask_request(self):
+        request = _WsgiRequest({"REQUEST_SCHEME": "https", "HTTP_HOST": "flask.com"})
+        result = RequestContextAdaptor.extract(request)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_from_django_request(self):
+        request = _DjangoRequest({"wsgi.url_scheme": "https", "HTTP_HOST": "dj.com"})
+        result = RequestContextAdaptor.extract(request)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_does_not_affect_other_fields(self):
+        environ = {
+            "HTTP_HOST": "example.com",
+            "HTTP_REFERER": "https://ref.com",
+            "REMOTE_ADDR": "1.2.3.4",
+            "REQUEST_SCHEME": "https",
+        }
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.host, "example.com")
+        self.assertEqual(result.referer, "https://ref.com")
+        self.assertEqual(result.remote_address, "1.2.3.4")
+        self.assertEqual(result.scheme, "https")
+
+
+class TestRequestContextAdaptorWSGIRequestUri(unittest.TestCase):
+    def test_request_uri_from_request_uri_env(self):
+        environ = {"REQUEST_URI": "/api/v1/users?page=2"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/api/v1/users?page=2")
+
+    def test_request_uri_fallback_path_info_only(self):
+        environ = {"PATH_INFO": "/api/v1/users"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/api/v1/users")
+
+    def test_request_uri_fallback_path_info_with_query_string(self):
+        environ = {"PATH_INFO": "/search", "QUERY_STRING": "q=hello&page=1"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/search?q=hello&page=1")
+
+    def test_request_uri_prefers_request_uri_over_path_info(self):
+        environ = {
+            "REQUEST_URI": "/original?raw=true",
+            "PATH_INFO": "/decoded",
+            "QUERY_STRING": "raw=true",
+        }
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/original?raw=true")
+
+    def test_request_uri_none_when_no_path_info_or_request_uri(self):
+        environ = {"HTTP_HOST": "example.com"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertIsNone(result.request_uri)
+
+    def test_request_uri_wsgi_empty_path_with_query_prepends_slash(self):
+        environ = {"PATH_INFO": "", "QUERY_STRING": "orphan=query"}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/?orphan=query")
+
+    def test_request_uri_fallback_includes_script_name(self):
+        environ = {
+            "SCRIPT_NAME": "/api",
+            "PATH_INFO": "/users",
+            "QUERY_STRING": "page=1",
+        }
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/api/users?page=1")
+
+    def test_request_uri_fallback_script_name_only(self):
+        environ = {"SCRIPT_NAME": "/app", "PATH_INFO": ""}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/app")
+
+    def test_request_uri_path_info_ignores_empty_query_string(self):
+        environ = {"PATH_INFO": "/page", "QUERY_STRING": ""}
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.request_uri, "/page")
+
+    def test_request_uri_does_not_affect_other_fields(self):
+        environ = {
+            "HTTP_HOST": "example.com",
+            "REQUEST_URI": "/foo",
+            "REMOTE_ADDR": "10.0.0.1",
+        }
+        result = RequestContextAdaptor.extract(environ)
+        self.assertEqual(result.host, "example.com")
+        self.assertEqual(result.remote_address, "10.0.0.1")
+        self.assertEqual(result.request_uri, "/foo")
+
+
+class TestRequestContextAdaptorASGIScheme(unittest.TestCase):
+    def _build_scope(self, **overrides):
+        scope = {
+            "type": "http",
+            "headers": [],
+            "query_string": b"",
+            "client": ("127.0.0.1", 12345),
+        }
+        scope.update(overrides)
+        return scope
+
+    def test_scheme_from_scope(self):
+        scope = self._build_scope(scheme="https")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_http_from_scope(self):
+        scope = self._build_scope(scheme="http")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.scheme, "http")
+
+    def test_scheme_ws_from_websocket_scope(self):
+        scope = self._build_scope(type="websocket", scheme="ws")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.scheme, "ws")
+
+    def test_scheme_wss_from_websocket_scope(self):
+        scope = self._build_scope(type="websocket", scheme="wss")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.scheme, "wss")
+
+    def test_scheme_lowercased_from_scope(self):
+        scope = self._build_scope(scheme="HTTPS")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_none_when_not_in_scope(self):
+        scope = self._build_scope()
+        result = RequestContextAdaptor.extract(scope)
+        self.assertIsNone(result.scheme)
+
+    def test_scheme_from_starlette_request(self):
+        scope = self._build_scope(scheme="https")
+        request = _AsgiRequest(scope)
+        result = RequestContextAdaptor.extract(request)
+        self.assertEqual(result.scheme, "https")
+
+    def test_scheme_does_not_affect_other_fields(self):
+        scope = self._build_scope(
+            scheme="https",
+            headers=[_h("host", "example.com")],
+            client=("10.0.0.1", 8080),
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.host, "example.com")
+        self.assertEqual(result.remote_address, "10.0.0.1")
+        self.assertEqual(result.scheme, "https")
+
+
+class TestRequestContextAdaptorASGIRequestUri(unittest.TestCase):
+    def _build_scope(self, **overrides):
+        scope = {
+            "type": "http",
+            "headers": [],
+            "query_string": b"",
+            "client": ("127.0.0.1", 12345),
+        }
+        scope.update(overrides)
+        return scope
+
+    def test_request_uri_from_path_only(self):
+        scope = self._build_scope(path="/api/data")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/api/data")
+
+    def test_request_uri_from_path_and_query(self):
+        scope = self._build_scope(path="/search", query_string=b"q=test&page=1")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/search?q=test&page=1")
+
+    def test_request_uri_none_when_no_path(self):
+        scope = self._build_scope()
+        result = RequestContextAdaptor.extract(scope)
+        self.assertIsNone(result.request_uri)
+
+    def test_request_uri_empty_path_with_query_prepends_slash(self):
+        scope = self._build_scope(path="", query_string=b"key=val")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/?key=val")
+
+    def test_request_uri_prefers_raw_path_over_path(self):
+        scope = self._build_scope(
+            path="/products/café",
+            raw_path=b"/products/caf%C3%A9",
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/products/caf%C3%A9")
+
+    def test_request_uri_falls_back_to_path_when_no_raw_path(self):
+        scope = self._build_scope(path="/simple/path")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/simple/path")
+
+    def test_request_uri_raw_path_with_query(self):
+        scope = self._build_scope(
+            path="/products/café",
+            raw_path=b"/products/caf%C3%A9",
+            query_string=b"id=42",
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/products/caf%C3%A9?id=42")
+
+    def test_request_uri_root_path(self):
+        scope = self._build_scope(path="/")
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.request_uri, "/")
+
+    def test_request_uri_from_starlette_request(self):
+        scope = self._build_scope(path="/items", query_string=b"id=42")
+        request = _AsgiRequest(scope)
+        result = RequestContextAdaptor.extract(request)
+        self.assertEqual(result.request_uri, "/items?id=42")
+
+    def test_request_uri_does_not_affect_other_fields(self):
+        scope = self._build_scope(
+            path="/endpoint",
+            query_string=b"a=1",
+            headers=[_h("host", "example.com")],
+            client=("10.0.0.1", 5000),
+        )
+        result = RequestContextAdaptor.extract(scope)
+        self.assertEqual(result.host, "example.com")
+        self.assertEqual(result.remote_address, "10.0.0.1")
+        self.assertEqual(result.request_uri, "/endpoint?a=1")
+
+
+class TestRequestContextAdaptorSchemeRequestUriDefault(unittest.TestCase):
+    def test_none_request_returns_none_scheme_and_request_uri(self):
+        result = RequestContextAdaptor.extract(None)
+        self.assertIsNone(result.scheme)
+        self.assertIsNone(result.request_uri)
+
+    def test_no_args_returns_none_scheme_and_request_uri(self):
+        result = RequestContextAdaptor.extract()
+        self.assertIsNone(result.scheme)
+        self.assertIsNone(result.request_uri)
+
+    def test_empty_dict_returns_none_scheme_and_request_uri(self):
+        result = RequestContextAdaptor.extract({})
+        self.assertIsNone(result.scheme)
+        self.assertIsNone(result.request_uri)
+
+    def test_unsupported_type_returns_none_scheme_and_request_uri(self):
+        for bad in ("not a request", 42, ["a", "b"]):
+            result = RequestContextAdaptor.extract(bad)
+            self.assertIsNone(result.scheme)
+            self.assertIsNone(result.request_uri)
