@@ -60,6 +60,7 @@ class ParamBuilder:
         self.etld_plus_one: Optional[str] = None
         self.domain_list: Optional[List] = None
         self.etld_plus_one_resolver: Optional[EtldPlusOneResolver] = None
+        self.event_source_url: Optional[str] = None
         ## Appendix with version number
         self.appendix_net_new: str = self._get_appendix(APPENDIX_NET_NEW)
         self.appendix_modified_new: str = self._get_appendix(APPENDIX_MODIFIED_NEW)
@@ -231,6 +232,7 @@ class ParamBuilder:
         self._compute_etld_plus_one_for_host(host)
         self.cookies_to_set = set()
         self.cookies_to_set_dict = {}
+        self.event_source_url = None
         self.fbc = self._pre_process_cookies(cookies, FBC_COOKIE_NAME)
         self.fbp = self._pre_process_cookies(cookies, FBP_COOKIE_NAME)
         # Get new fbc payload
@@ -270,12 +272,14 @@ class ParamBuilder:
         else:
             data = RequestContextAdaptor.extract(context)
 
-        return self.process_request(
+        result = self.process_request(
             data.host,
             data.query_params,
             data.cookies,
             data.referer,
         )
+        self.event_source_url = self._construct_event_source_url(data)
+        return result
 
     def get_cookies_to_set(self) -> Optional[set[CookieSettings]]:
         return self.cookies_to_set
@@ -288,6 +292,20 @@ class ParamBuilder:
 
     def get_referrer_url(self) -> Optional[str]:
         return self.referrer_url
+
+    def get_event_source_url(self) -> Optional[str]:
+        return self.event_source_url
+
+    def _construct_event_source_url(
+        self, data: Optional[PlainDataObject]
+    ) -> Optional[str]:
+        if data is None or not data.host or not data.scheme:
+            return None
+
+        url = data.scheme + "://" + data.host
+        if data.request_uri:
+            url += data.request_uri
+        return url
 
     def _get_updated_fbc_cookie(
         self, existing_fbc: Optional[str], new_fbc_payload: Optional[str]
