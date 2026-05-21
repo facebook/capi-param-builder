@@ -52,6 +52,7 @@ class ParamBuilder:
         ]
         self.fbc: Optional[str] = None
         self.fbp: Optional[str] = None
+        self.referrer_url: Optional[str] = None
         self.sub_domain_index: int = 0
         self.cookies_to_set: set[CookieSettings] = set()
         self.cookies_to_set_dict: dict[str, CookieSettings] = {}
@@ -226,6 +227,7 @@ class ParamBuilder:
         cookies: dict[str, str],
         referer: Optional[str] = None,
     ) -> set[CookieSettings]:
+        self.referrer_url = referer
         self._compute_etld_plus_one_for_host(host)
         self.cookies_to_set = set()
         self.cookies_to_set_dict = {}
@@ -283,6 +285,9 @@ class ParamBuilder:
 
     def get_fbp(self) -> Optional[str]:
         return self.fbp
+
+    def get_referrer_url(self) -> Optional[str]:
+        return self.referrer_url
 
     def _get_updated_fbc_cookie(
         self, existing_fbc: Optional[str], new_fbc_payload: Optional[str]
