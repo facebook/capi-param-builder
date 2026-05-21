@@ -117,6 +117,8 @@ class RequestContextAdaptor:
         referer = None
         x_forwarded_for = None
         remote_address = None
+        scheme = None
+        request_uri = None
 
         if request_obj is None:
             return PlainDataObject(
@@ -126,6 +128,8 @@ class RequestContextAdaptor:
                 referer,
                 x_forwarded_for,
                 remote_address,
+                scheme,
+                request_uri,
             )
 
         try:
@@ -169,6 +173,25 @@ class RequestContextAdaptor:
                     _get_asgi_headers(raw_headers, "cookie", separator="; ")
                 )
 
+                raw_scheme = scope.get("scheme")
+                if isinstance(raw_scheme, str) and raw_scheme:
+                    # RFC 3986 §3.1: scheme is case-insensitive; normalize like PHP strtolower().
+                    scheme = raw_scheme.lower()
+
+                # Prefer raw_path (percent-encoded original) over path (decoded by ASGI server).
+                raw_path_bytes = scope.get("raw_path")
+                if raw_path_bytes and isinstance(raw_path_bytes, (bytes, bytearray)):
+                    path = raw_path_bytes.decode("latin-1")
+                else:
+                    path = scope.get("path", "")
+                # ASGI spec requires path to start with "/"; defensive fallback for non-conformant servers.
+                if not path and qs:
+                    path = "/"
+                if qs:
+                    request_uri = f"{path}?{qs}"
+                else:
+                    request_uri = path or None
+
                 return PlainDataObject(
                     host,
                     query_params,
@@ -176,6 +199,8 @@ class RequestContextAdaptor:
                     referer,
                     x_forwarded_for,
                     remote_address,
+                    scheme,
+                    request_uri,
                 )
 
             # --- STRATEGY B: WSGI (Django, Flask, raw WSGI dict) ---
@@ -191,6 +216,33 @@ class RequestContextAdaptor:
                 )
                 cookies = _parse_cookie_header(environ.get("HTTP_COOKIE", "") or "")
 
+                scheme_val = environ.get("REQUEST_SCHEME") or environ.get(
+                    "wsgi.url_scheme"
+                )
+                if scheme_val:
+                    # RFC 3986 §3.1: scheme is case-insensitive; normalize like PHP strtolower().
+                    scheme = scheme_val.lower()
+                else:
+                    https_val = environ.get("HTTPS", "")
+                    if https_val and str(https_val).lower() != "off":
+                        scheme = "https"
+                    else:
+                        scheme = "http"
+
+                request_uri_val = environ.get("REQUEST_URI")
+                if request_uri_val:
+                    request_uri = request_uri_val
+                else:
+                    # Full external path = SCRIPT_NAME (mount prefix) + PATH_INFO.
+                    script_name = environ.get("SCRIPT_NAME", "")
+                    path_info = environ.get("PATH_INFO", "")
+                    full_path = script_name + path_info
+                    qs_val = environ.get("QUERY_STRING", "") or ""
+                    if not full_path and qs_val:
+                        full_path = "/"
+                    if full_path:
+                        request_uri = f"{full_path}?{qs_val}" if qs_val else full_path
+
         except Exception:
             # Silently ignore exceptions and return the object with default values
             pass
@@ -202,4 +254,6 @@ class RequestContextAdaptor:
             referer,
             x_forwarded_for,
             remote_address,
+            scheme,
+            request_uri,
         )
