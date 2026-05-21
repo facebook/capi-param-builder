@@ -21,3 +21,5 @@ class PlainDataObject:
     referer: Optional[str]
     x_forwarded_for: Optional[str]
     remote_address: Optional[str]
+    scheme: Optional[str] = None
+    request_uri: Optional[str] = None
