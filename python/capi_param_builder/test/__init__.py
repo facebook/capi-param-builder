@@ -6,5 +6,18 @@
 
 from .test_etld_plus_one_resolver import TestEtldPlusOneResolver
 from .test_param_builder import TestParamBuilder
+from .test_plain_data_object import (
+    TestPlainDataObjectBackwardCompat,
+    TestPlainDataObjectEqualityAndRepr,
+    TestPlainDataObjectRequestUri,
+    TestPlainDataObjectScheme,
+)
 
-__all__ = ["TestParamBuilder", "TestEtldPlusOneResolver"]
+__all__ = [
+    "TestParamBuilder",
+    "TestEtldPlusOneResolver",
+    "TestPlainDataObjectBackwardCompat",
+    "TestPlainDataObjectScheme",
+    "TestPlainDataObjectRequestUri",
+    "TestPlainDataObjectEqualityAndRepr",
+]
