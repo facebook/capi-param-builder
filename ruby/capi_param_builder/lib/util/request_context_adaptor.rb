@@ -24,10 +24,13 @@ class RequestContextAdaptor
     referer = nil
     x_forwarded_for = nil
     remote_address = nil
+    scheme = nil
+    request_uri = nil
 
     if request_obj.nil?
       return PlainDataObject.new(
-        host, query_params, cookies, referer, x_forwarded_for, remote_address
+        host, query_params, cookies, referer, x_forwarded_for, remote_address,
+        scheme, request_uri
       )
     end
 
@@ -41,13 +44,17 @@ class RequestContextAdaptor
 
         query_params = parse_query_string(env['QUERY_STRING'])
         cookies = parse_cookie_header(env['HTTP_COOKIE'])
+
+        scheme = extract_scheme(env)
+        request_uri = extract_request_uri(env)
       end
     rescue StandardError
       # Silently swallow exceptions and return the object with default values.
     end
 
     PlainDataObject.new(
-      host, query_params, cookies, referer, x_forwarded_for, remote_address
+      host, query_params, cookies, referer, x_forwarded_for, remote_address,
+      scheme, request_uri
     )
   end
 
@@ -126,6 +133,33 @@ class RequestContextAdaptor
     "#{bracketed}:#{port}"
   end
   private_class_method :format_host_port
+
+  def self.extract_scheme(env)
+    raw_str = (env['REQUEST_SCHEME'] || env['rack.url_scheme']).to_s
+    return raw_str.downcase unless raw_str.empty?
+
+    https_str = env['HTTPS'].to_s
+    return 'https' if !https_str.empty? && https_str.downcase != 'off'
+    nil
+  end
+  private_class_method :extract_scheme
+
+  def self.extract_request_uri(env)
+    raw = env['REQUEST_URI']
+    return raw.to_s if raw && !raw.to_s.empty?
+
+    script_name = env['SCRIPT_NAME'].to_s
+    path_info = env['PATH_INFO'].to_s
+    uri = script_name + path_info
+    query_string = env['QUERY_STRING']
+    has_qs = query_string && !query_string.to_s.empty?
+
+    return nil if uri.empty? && !has_qs
+    uri = '/' if uri.empty?
+    uri = "#{uri}?#{query_string}" if has_qs
+    uri
+  end
+  private_class_method :extract_request_uri
 
   def self.nilify(value)
     return nil if value.nil?
