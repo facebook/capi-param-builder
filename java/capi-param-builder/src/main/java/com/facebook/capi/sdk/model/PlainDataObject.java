@@ -52,6 +52,12 @@ public class PlainDataObject {
   /** Remote address (peer IP), or null if unavailable. */
   public String remoteAddress;
 
+  /** URL scheme (e.g. "http" or "https"), or null if unavailable. */
+  public String scheme;
+
+  /** Request URI (path + query string, e.g. "/foo?bar=1"), or null if unavailable. */
+  public String requestUri;
+
   /**
    * @param host Host header value; null is coerced to empty string
    * @param queryParams Parsed query parameters; null is coerced to empty map. Defensively
@@ -68,12 +74,37 @@ public class PlainDataObject {
       String referer,
       String xForwardedFor,
       String remoteAddress) {
+    this(host, queryParams, cookies, referer, xForwardedFor, remoteAddress, null, null);
+  }
+
+  /**
+   * @param host Host header value; null is coerced to empty string
+   * @param queryParams Parsed query parameters; null is coerced to empty map. Defensively
+   *     deep-copied.
+   * @param cookies Parsed cookies; null is coerced to empty map. Defensively shallow-copied.
+   * @param referer Referer header (nullable)
+   * @param xForwardedFor X-Forwarded-For header (nullable)
+   * @param remoteAddress Remote peer address (nullable)
+   * @param scheme URL scheme (nullable)
+   * @param requestUri Request URI — path + query string (nullable)
+   */
+  public PlainDataObject(
+      String host,
+      Map<String, List<String>> queryParams,
+      Map<String, String> cookies,
+      String referer,
+      String xForwardedFor,
+      String remoteAddress,
+      String scheme,
+      String requestUri) {
     this.host = host == null ? "" : host;
     this.queryParams = copyQueryParams(queryParams);
     this.cookies = cookies == null ? new HashMap<>() : new HashMap<>(cookies);
     this.referer = referer;
     this.xForwardedFor = xForwardedFor;
     this.remoteAddress = remoteAddress;
+    this.scheme = scheme;
+    this.requestUri = requestUri;
   }
 
   private static Map<String, List<String>> copyQueryParams(Map<String, List<String>> source) {
@@ -112,6 +143,14 @@ public class PlainDataObject {
     return remoteAddress;
   }
 
+  public String getScheme() {
+    return scheme;
+  }
+
+  public String getRequestUri() {
+    return requestUri;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -126,12 +165,15 @@ public class PlainDataObject {
         && Objects.equals(cookies, other.cookies)
         && Objects.equals(referer, other.referer)
         && Objects.equals(xForwardedFor, other.xForwardedFor)
-        && Objects.equals(remoteAddress, other.remoteAddress);
+        && Objects.equals(remoteAddress, other.remoteAddress)
+        && Objects.equals(scheme, other.scheme)
+        && Objects.equals(requestUri, other.requestUri);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(host, queryParams, cookies, referer, xForwardedFor, remoteAddress);
+    return Objects.hash(
+        host, queryParams, cookies, referer, xForwardedFor, remoteAddress, scheme, requestUri);
   }
 
   @Override
@@ -148,6 +190,10 @@ public class PlainDataObject {
         + xForwardedFor
         + ", remoteAddress="
         + remoteAddress
+        + ", scheme="
+        + scheme
+        + ", requestUri="
+        + requestUri
         + '}';
   }
 }
