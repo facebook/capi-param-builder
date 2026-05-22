@@ -33,13 +33,27 @@ public class RequestContextAdaptorTest {
     private final String queryString;
     private final String remoteAddr;
     private final FakeCookie[] cookies;
+    private final String scheme;
+    private final String requestURI;
 
     FakeServletRequest(
         Map<String, String> headers, String queryString, String remoteAddr, FakeCookie[] cookies) {
+      this(headers, queryString, remoteAddr, cookies, null, null);
+    }
+
+    FakeServletRequest(
+        Map<String, String> headers,
+        String queryString,
+        String remoteAddr,
+        FakeCookie[] cookies,
+        String scheme,
+        String requestURI) {
       this.headers = headers == null ? Collections.<String, String>emptyMap() : headers;
       this.queryString = queryString;
       this.remoteAddr = remoteAddr;
       this.cookies = cookies;
+      this.scheme = scheme;
+      this.requestURI = requestURI;
     }
 
     public String getHeader(String name) {
@@ -62,6 +76,14 @@ public class RequestContextAdaptorTest {
 
     public FakeCookie[] getCookies() {
       return cookies;
+    }
+
+    public String getScheme() {
+      return scheme;
+    }
+
+    public String getRequestURI() {
+      return requestURI;
     }
   }
 
@@ -101,12 +123,28 @@ public class RequestContextAdaptorTest {
     }
   }
 
-  /** Stand-in for java.net.URI exposing only getRawQuery(). */
+  /** Stand-in for java.net.URI exposing getRawQuery(), getScheme(), and getRawPath(). */
   static class FakeUri {
+    private final String scheme;
+    private final String rawPath;
     private final String rawQuery;
 
     FakeUri(String rawQuery) {
+      this(null, null, rawQuery);
+    }
+
+    FakeUri(String scheme, String rawPath, String rawQuery) {
+      this.scheme = scheme;
+      this.rawPath = rawPath;
       this.rawQuery = rawQuery;
+    }
+
+    public String getScheme() {
+      return scheme;
+    }
+
+    public String getRawPath() {
+      return rawPath;
     }
 
     public String getRawQuery() {
@@ -551,5 +589,373 @@ public class RequestContextAdaptorTest {
     assertThat(result.cookies.get("_fbp")).isEqualTo("fb.1.123.456");
     assertThat(result.cookies.get("_fbc")).isEqualTo("fb.1.789.abc");
     assertThat(result.queryParams.get("fbclid")).containsExactly("IwAR3xYz_test_fbclid_value");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Servlet: scheme and requestUri extraction
+  // ---------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("Servlet: scheme extracted from getScheme()")
+  void testServletSchemeExtraction() {
+    FakeServletRequest req =
+        new FakeServletRequest(
+            Collections.<String, String>emptyMap(), null, null, null, "https", "/index.html");
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isEqualTo("https");
+  }
+
+  @Test
+  @DisplayName("Servlet: scheme http extracted from getScheme()")
+  void testServletSchemeHttp() {
+    FakeServletRequest req =
+        new FakeServletRequest(
+            Collections.<String, String>emptyMap(), null, null, null, "http", null);
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isEqualTo("http");
+  }
+
+  @Test
+  @DisplayName("Servlet: null scheme returns null")
+  void testServletSchemeNull() {
+    FakeServletRequest req =
+        new FakeServletRequest(
+            Collections.<String, String>emptyMap(), null, null, null, null, null);
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isNull();
+  }
+
+  @Test
+  @DisplayName("Servlet: empty scheme coalesces to null via nilify")
+  void testServletSchemeEmptyIsNull() {
+    FakeServletRequest req =
+        new FakeServletRequest(Collections.<String, String>emptyMap(), null, null, null, "", null);
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isNull();
+  }
+
+  @Test
+  @DisplayName("Servlet: requestUri from getRequestURI() with query string appended")
+  void testServletRequestUriWithQueryString() {
+    FakeServletRequest req =
+        new FakeServletRequest(
+            Collections.<String, String>emptyMap(),
+            "foo=bar&baz=1",
+            null,
+            null,
+            "https",
+            "/api/test");
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isEqualTo("/api/test?foo=bar&baz=1");
+  }
+
+  @Test
+  @DisplayName("Servlet: requestUri from getRequestURI() without query string")
+  void testServletRequestUriWithoutQueryString() {
+    FakeServletRequest req =
+        new FakeServletRequest(
+            Collections.<String, String>emptyMap(), null, null, null, "http", "/path/only");
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isEqualTo("/path/only");
+  }
+
+  @Test
+  @DisplayName("Servlet: null getRequestURI() returns null requestUri")
+  void testServletRequestUriNull() {
+    FakeServletRequest req =
+        new FakeServletRequest(
+            Collections.<String, String>emptyMap(), "q=1", null, null, "http", null);
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isNull();
+  }
+
+  @Test
+  @DisplayName("Servlet: scheme and requestUri don't affect other fields")
+  void testServletSchemeRequestUriDoNotAffectOtherFields() {
+    Map<String, String> headers = new HashMap<String, String>();
+    headers.put("Host", "test.example.com");
+    headers.put("Referer", "https://ref.com");
+    FakeCookie[] cookies = new FakeCookie[] {new FakeCookie("_fbp", "fb.1.111.222")};
+    FakeServletRequest req =
+        new FakeServletRequest(headers, "k=v", "10.0.0.1", cookies, "https", "/page");
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.host).isEqualTo("test.example.com");
+    assertThat(result.referer).isEqualTo("https://ref.com");
+    assertThat(result.remoteAddress).isEqualTo("10.0.0.1");
+    assertThat(result.queryParams.get("k")).containsExactly("v");
+    assertThat(result.cookies.get("_fbp")).isEqualTo("fb.1.111.222");
+    assertThat(result.scheme).isEqualTo("https");
+    assertThat(result.requestUri).isEqualTo("/page?k=v");
+  }
+
+  // ---------------------------------------------------------------------------
+  // WebFlux: scheme and requestUri extraction
+  // ---------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("WebFlux: scheme extracted from URI.getScheme()")
+  void testWebFluxSchemeExtraction() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("https", "/path", null),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isEqualTo("https");
+  }
+
+  @Test
+  @DisplayName("WebFlux: scheme http extracted from URI.getScheme()")
+  void testWebFluxSchemeHttp() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("http", "/", null),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isEqualTo("http");
+  }
+
+  @Test
+  @DisplayName("WebFlux: null URI scheme returns null")
+  void testWebFluxSchemeNull() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri(null, null, null),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isNull();
+  }
+
+  @Test
+  @DisplayName("WebFlux: empty URI scheme coalesces to null via nilify")
+  void testWebFluxSchemeEmptyIsNull() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("", "/path", null),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.scheme).isNull();
+  }
+
+  @Test
+  @DisplayName("WebFlux: requestUri from URI.getRawPath() with query appended")
+  void testWebFluxRequestUriWithQuery() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("https", "/api/data", "page=1&size=10"),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isEqualTo("/api/data?page=1&size=10");
+  }
+
+  @Test
+  @DisplayName("WebFlux: requestUri from URI.getRawPath() without query")
+  void testWebFluxRequestUriWithoutQuery() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("https", "/static/page", null),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isEqualTo("/static/page");
+  }
+
+  @Test
+  @DisplayName("WebFlux: null getRawPath() returns null requestUri")
+  void testWebFluxRequestUriNullPath() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("https", null, "q=1"),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isNull();
+  }
+
+  @Test
+  @DisplayName("WebFlux: empty getRawPath() coalesces to null via nilify")
+  void testWebFluxRequestUriEmptyPath() {
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(Collections.<String, String>emptyMap()),
+            new FakeUri("https", "", null),
+            null,
+            Collections.<String, List<FakeWebFluxCookie>>emptyMap());
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.requestUri).isNull();
+  }
+
+  @Test
+  @DisplayName("WebFlux: scheme and requestUri don't affect other fields")
+  void testWebFluxSchemeRequestUriDoNotAffectOtherFields() {
+    Map<String, String> first = new HashMap<String, String>();
+    first.put("Host", "webflux.test.com");
+    first.put("Referer", "https://origin.com");
+    Map<String, List<FakeWebFluxCookie>> cookies = new HashMap<String, List<FakeWebFluxCookie>>();
+    cookies.put("_fbp", Arrays.asList(new FakeWebFluxCookie("_fbp", "fb.1.99.88")));
+    FakeWebFluxRequest req =
+        new FakeWebFluxRequest(
+            new FakeHttpHeaders(first),
+            new FakeUri("https", "/page", "k=v"),
+            "192.168.1.1",
+            cookies);
+    PlainDataObject result = RequestContextAdaptor.extract(req);
+    assertThat(result.host).isEqualTo("webflux.test.com");
+    assertThat(result.referer).isEqualTo("https://origin.com");
+    assertThat(result.remoteAddress).isEqualTo("192.168.1.1");
+    assertThat(result.queryParams.get("k")).containsExactly("v");
+    assertThat(result.cookies.get("_fbp")).isEqualTo("fb.1.99.88");
+    assertThat(result.scheme).isEqualTo("https");
+    assertThat(result.requestUri).isEqualTo("/page?k=v");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Map: scheme extraction with HTTPS fallback
+  // ---------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("Map: scheme from REQUEST_SCHEME")
+  void testMapSchemeFromRequestScheme() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("REQUEST_SCHEME", "https");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isEqualTo("https");
+  }
+
+  @Test
+  @DisplayName("Map: scheme from REQUEST_SCHEME takes precedence over HTTPS key")
+  void testMapSchemeRequestSchemePrecedence() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("REQUEST_SCHEME", "http");
+    env.put("HTTPS", "on");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isEqualTo("http");
+  }
+
+  @Test
+  @DisplayName("Map: HTTPS=on fallback sets scheme to https")
+  void testMapSchemeHttpsFallbackOn() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("HTTPS", "on");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isEqualTo("https");
+  }
+
+  @Test
+  @DisplayName("Map: HTTPS=1 fallback sets scheme to https")
+  void testMapSchemeHttpsFallback1() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("HTTPS", "1");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isEqualTo("https");
+  }
+
+  @Test
+  @DisplayName("Map: HTTPS=off fallback returns null scheme")
+  void testMapSchemeHttpsFallbackOff() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("HTTPS", "off");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isNull();
+  }
+
+  @Test
+  @DisplayName("Map: no REQUEST_SCHEME and no HTTPS returns null scheme")
+  void testMapSchemeDefaultsToNull() {
+    Map<String, String> env = new HashMap<String, String>();
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isNull();
+  }
+
+  @Test
+  @DisplayName("Map: empty REQUEST_SCHEME falls back to HTTPS logic")
+  void testMapSchemeEmptyRequestSchemeFallback() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("REQUEST_SCHEME", "");
+    env.put("HTTPS", "on");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.scheme).isEqualTo("https");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Map: requestUri extraction
+  // ---------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("Map: requestUri from REQUEST_URI")
+  void testMapRequestUri() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("REQUEST_URI", "/api/events?pixel=12345");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.requestUri).isEqualTo("/api/events?pixel=12345");
+  }
+
+  @Test
+  @DisplayName("Map: missing REQUEST_URI returns null requestUri")
+  void testMapRequestUriMissing() {
+    Map<String, String> env = new HashMap<String, String>();
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.requestUri).isNull();
+  }
+
+  @Test
+  @DisplayName("Map: empty REQUEST_URI coalesces to null via nilify")
+  void testMapRequestUriEmpty() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("REQUEST_URI", "");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.requestUri).isNull();
+  }
+
+  @Test
+  @DisplayName("Map: scheme and requestUri don't affect other fields")
+  void testMapSchemeRequestUriDoNotAffectOtherFields() {
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("HTTP_HOST", "map.example.com");
+    env.put("HTTP_REFERER", "https://ref.com");
+    env.put("REMOTE_ADDR", "172.16.0.1");
+    env.put("REQUEST_SCHEME", "https");
+    env.put("REQUEST_URI", "/checkout");
+    env.put("QUERY_STRING", "id=42");
+    env.put("HTTP_COOKIE", "_fbp=fb.1.1.2");
+    PlainDataObject result = RequestContextAdaptor.extract(env);
+    assertThat(result.host).isEqualTo("map.example.com");
+    assertThat(result.referer).isEqualTo("https://ref.com");
+    assertThat(result.remoteAddress).isEqualTo("172.16.0.1");
+    assertThat(result.queryParams.get("id")).containsExactly("42");
+    assertThat(result.cookies.get("_fbp")).isEqualTo("fb.1.1.2");
+    assertThat(result.scheme).isEqualTo("https");
+    assertThat(result.requestUri).isEqualTo("/checkout");
+  }
+
+  // ---------------------------------------------------------------------------
+  // null / unknown request: scheme and requestUri safe defaults
+  // ---------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("extract(null) returns null scheme and null requestUri")
+  void testExtractNullSchemeAndRequestUri() {
+    PlainDataObject result = RequestContextAdaptor.extract(null);
+    assertThat(result.scheme).isNull();
+    assertThat(result.requestUri).isNull();
+  }
+
+  @Test
+  @DisplayName("extract(unsupported type) returns null scheme and null requestUri")
+  void testExtractUnsupportedTypeSchemeAndRequestUri() {
+    PlainDataObject result = RequestContextAdaptor.extract(Integer.valueOf(99));
+    assertThat(result.scheme).isNull();
+    assertThat(result.requestUri).isNull();
   }
 }
