@@ -30,6 +30,7 @@ public class ParamBuilder {
 
   private String fbc;
   private String fbp;
+  private String referrerUrl;
   URIUtils uriUtils;
   CookieUtils cookieUtils = new CookieUtils(fbcParamConfigs, Version.VERSION);
   List<CookieSetting> cookiesToSet;
@@ -55,7 +56,9 @@ public class ParamBuilder {
     uriUtils = new URIUtils(etldPlus1Resolver);
   }
 
-  /** Constructor for ParamBuilder. Prefered domainList or ETLD+1 option for more accurate result */
+  /**
+   * Constructor for ParamBuilder. Preferred domainList or ETLD+1 option for more accurate result
+   */
   public ParamBuilder() {
     uriUtils = new URIUtils();
   }
@@ -94,6 +97,7 @@ public class ParamBuilder {
    */
   public List<CookieSetting> processRequest(
       String host, Map<String, String[]> queries, Map<String, String> cookies, String referrer) {
+    this.referrerUrl = referrer;
     Map<String, CookieSetting> updatedCookiesMap = new HashMap<>();
     cookiesToSet = null; // reset cookiesToSet
     // Get etld+1 and subdomain index
@@ -201,5 +205,14 @@ public class ParamBuilder {
    */
   public String getFbp() {
     return this.fbp;
+  }
+
+  /**
+   * Return referrerUrl value
+   *
+   * @return referrerUrl
+   */
+  public String getReferrerUrl() {
+    return this.referrerUrl;
   }
 }
