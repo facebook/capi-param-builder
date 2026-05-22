@@ -432,3 +432,203 @@ class TestRequestContextAdaptorErrorRecovery < Minitest::Test
     assert_equal('example.com:8080', result.host)
   end
 end
+
+class TestRequestContextAdaptorScheme < Minitest::Test
+  def test_scheme_from_request_scheme
+    env = { 'REQUEST_SCHEME' => 'https' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('https', result.scheme)
+  end
+
+  def test_scheme_from_request_scheme_case_insensitive
+    env = { 'REQUEST_SCHEME' => 'HTTPS' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('https', result.scheme)
+  end
+
+  def test_scheme_from_rack_url_scheme
+    env = { 'rack.url_scheme' => 'https' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('https', result.scheme)
+  end
+
+  def test_request_scheme_takes_precedence_over_rack_url_scheme
+    env = {
+      'REQUEST_SCHEME' => 'https',
+      'rack.url_scheme' => 'http'
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('https', result.scheme)
+  end
+
+  def test_scheme_https_fallback_on
+    env = { 'HTTPS' => 'on' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('https', result.scheme)
+  end
+
+  def test_scheme_https_fallback_nonstandard_truthy
+    env = { 'HTTPS' => '1' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('https', result.scheme)
+  end
+
+  def test_scheme_https_fallback_off
+    env = { 'HTTPS' => 'off' }
+    result = RequestContextAdaptor.extract(env)
+    assert_nil(result.scheme)
+  end
+
+  def test_scheme_https_fallback_empty_string
+    env = { 'HTTPS' => '' }
+    result = RequestContextAdaptor.extract(env)
+    assert_nil(result.scheme)
+  end
+
+  def test_scheme_nil_when_no_scheme_env_vars
+    env = { 'HTTP_HOST' => 'example.com' }
+    result = RequestContextAdaptor.extract(env)
+    assert_nil(result.scheme)
+  end
+
+  def test_scheme_nil_for_nil_request
+    result = RequestContextAdaptor.extract(nil)
+    assert_nil(result.scheme)
+  end
+
+  def test_scheme_nil_for_empty_request
+    result = RequestContextAdaptor.extract
+    assert_nil(result.scheme)
+  end
+
+  def test_scheme_http_explicit
+    env = { 'REQUEST_SCHEME' => 'http' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('http', result.scheme)
+  end
+
+  def test_scheme_from_rack_request_object
+    request = FakeRackRequest.new('rack.url_scheme' => 'https')
+    result = RequestContextAdaptor.extract(request)
+    assert_equal('https', result.scheme)
+  end
+end
+
+class TestRequestContextAdaptorRequestUri < Minitest::Test
+  def test_request_uri_from_request_uri
+    env = { 'REQUEST_URI' => '/path/to/resource?key=val' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/path/to/resource?key=val', result.request_uri)
+  end
+
+  def test_request_uri_from_script_name_and_path_info
+    env = {
+      'SCRIPT_NAME' => '/app',
+      'PATH_INFO' => '/page'
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/app/page', result.request_uri)
+  end
+
+  def test_request_uri_from_path_info_only
+    env = { 'PATH_INFO' => '/hello' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/hello', result.request_uri)
+  end
+
+  def test_request_uri_from_script_name_only
+    env = { 'SCRIPT_NAME' => '/myapp' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/myapp', result.request_uri)
+  end
+
+  def test_request_uri_fallback_with_query_string
+    env = {
+      'SCRIPT_NAME' => '/app',
+      'PATH_INFO' => '/index',
+      'QUERY_STRING' => 'foo=bar&baz=qux'
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/app/index?foo=bar&baz=qux', result.request_uri)
+  end
+
+  def test_request_uri_takes_precedence_over_fallback
+    env = {
+      'REQUEST_URI' => '/original?a=1',
+      'SCRIPT_NAME' => '/app',
+      'PATH_INFO' => '/other',
+      'QUERY_STRING' => 'b=2'
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/original?a=1', result.request_uri)
+  end
+
+  def test_request_uri_nil_when_no_path_components
+    env = { 'HTTP_HOST' => 'example.com' }
+    result = RequestContextAdaptor.extract(env)
+    assert_nil(result.request_uri)
+  end
+
+  def test_request_uri_empty_path_with_query_prepends_slash
+    env = { 'QUERY_STRING' => 'fbclid=abc123' }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/?fbclid=abc123', result.request_uri)
+  end
+
+  def test_request_uri_nil_for_nil_request
+    result = RequestContextAdaptor.extract(nil)
+    assert_nil(result.request_uri)
+  end
+
+  def test_request_uri_nil_for_empty_request
+    result = RequestContextAdaptor.extract
+    assert_nil(result.request_uri)
+  end
+
+  def test_request_uri_fallback_ignores_empty_query_string
+    env = {
+      'PATH_INFO' => '/page',
+      'QUERY_STRING' => ''
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('/page', result.request_uri)
+  end
+
+  def test_request_uri_from_rack_request_object
+    request = FakeRackRequest.new(
+      'REQUEST_URI' => '/api/v1/data'
+    )
+    result = RequestContextAdaptor.extract(request)
+    assert_equal('/api/v1/data', result.request_uri)
+  end
+end
+
+class TestRequestContextAdaptorSchemeRequestUriWithExistingFields < Minitest::Test
+  def test_scheme_and_request_uri_alongside_other_fields
+    env = {
+      'HTTP_HOST' => 'api.example.com',
+      'HTTP_REFERER' => 'https://referrer.com',
+      'HTTP_X_FORWARDED_FOR' => '8.8.8.8',
+      'REMOTE_ADDR' => '10.0.0.1',
+      'QUERY_STRING' => 'page=1',
+      'HTTP_COOKIE' => '_fbp=fb.1.111.222',
+      'REQUEST_SCHEME' => 'https',
+      'REQUEST_URI' => '/v2/events?page=1'
+    }
+    result = RequestContextAdaptor.extract(env)
+    assert_equal('api.example.com', result.host)
+    assert_equal('https://referrer.com', result.referer)
+    assert_equal('8.8.8.8', result.x_forwarded_for)
+    assert_equal('10.0.0.1', result.remote_address)
+    assert_equal({ 'page' => ['1'] }, result.query_params)
+    assert_equal('fb.1.111.222', result.cookies['_fbp'])
+    assert_equal('https', result.scheme)
+    assert_equal('/v2/events?page=1', result.request_uri)
+  end
+
+  def test_empty_hash_returns_defaults_for_scheme_and_request_uri
+    result = RequestContextAdaptor.extract({})
+    assert_nil(result.scheme)
+    assert_nil(result.request_uri)
+  end
+end
