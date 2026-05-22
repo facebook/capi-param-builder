@@ -43,6 +43,7 @@ class ParamBuilder
     @appendix_modified_new = get_appendix(APPENDIX_MODIFIED_NEW)
     @appendix_no_change = get_appendix(APPENDIX_NO_CHANGE)
     @referrer_url = nil
+    @event_source_url = nil
 
     if input.nil?
       return
@@ -178,6 +179,7 @@ class ParamBuilder
   end
 
   def process_request(host, queries, cookies, referer=nil)
+    @event_source_url = nil
     compute_etld_plus_one_for_host(host)
     @cookie_to_set_dict = {}
     @cookie_to_set = Set.new()
@@ -225,6 +227,10 @@ class ParamBuilder
       data.cookies,
       data.referer
     )
+
+    @event_source_url = construct_event_source_url(data)
+
+    return @cookie_to_set
   end
 
   def get_cookies_to_set()
@@ -241,6 +247,10 @@ class ParamBuilder
 
   def get_referrer_url()
     return @referrer_url
+  end
+
+  def get_event_source_url()
+    return @event_source_url
   end
 
   private def compute_etld_plus_one_for_host(host)
@@ -323,6 +333,18 @@ class ParamBuilder
       return host_name.split(".", 2)[1]
     end
     return host_name
+  end
+
+  private def construct_event_source_url(data)
+    return nil if data.nil?
+    return nil if data.host.nil? || data.host.empty?
+    return nil if data.scheme.nil? || data.scheme.empty?
+
+    url = "#{data.scheme.downcase}://#{data.host}"
+    if !data.request_uri.nil? && !data.request_uri.empty?
+      url += data.request_uri
+    end
+    url
   end
 
   private def get_updated_fbc_cookie(existing_fbc = nil, new_fbc_payload)
