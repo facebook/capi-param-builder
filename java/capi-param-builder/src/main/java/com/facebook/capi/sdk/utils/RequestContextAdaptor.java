@@ -96,6 +96,18 @@ public final class RequestContextAdaptor {
     if (cookieHeader != null && !cookieHeader.isEmpty()) {
       h.cookies = parseCookieHeader(cookieHeader);
     }
+
+    String requestScheme = stringValue(env.get("REQUEST_SCHEME"));
+    if (requestScheme != null && !requestScheme.isEmpty()) {
+      h.scheme = requestScheme.toLowerCase(java.util.Locale.ROOT);
+    } else {
+      String https = stringValue(env.get("HTTPS"));
+      if (https != null && !https.isEmpty() && !"off".equalsIgnoreCase(https)) {
+        h.scheme = "https";
+      }
+    }
+
+    h.requestUri = nilify(stringValue(env.get("REQUEST_URI")));
   }
 
   // ---------------------------------------------------------------------------
@@ -149,6 +161,21 @@ public final class RequestContextAdaptor {
         h.cookies = parseCookieHeader(raw);
       }
     }
+
+    Object schemeObj = invokeNoArg(req, "getScheme");
+    if (schemeObj instanceof String) {
+      String raw = nilify((String) schemeObj);
+      h.scheme = raw != null ? raw.toLowerCase(java.util.Locale.ROOT) : null;
+    }
+
+    Object requestUriObj = invokeNoArg(req, "getRequestURI");
+    if (requestUriObj instanceof String) {
+      String uri = (String) requestUriObj;
+      if (qs instanceof String) {
+        uri = uri + "?" + (String) qs;
+      }
+      h.requestUri = nilify(uri);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -171,6 +198,21 @@ public final class RequestContextAdaptor {
       Object rawQuery = invokeNoArg(uri, "getRawQuery");
       if (rawQuery instanceof String) {
         h.queryParams = parseQueryString((String) rawQuery);
+      }
+
+      Object schemeObj = invokeNoArg(uri, "getScheme");
+      if (schemeObj instanceof String) {
+        String raw = nilify((String) schemeObj);
+        h.scheme = raw != null ? raw.toLowerCase(java.util.Locale.ROOT) : null;
+      }
+
+      Object rawPath = invokeNoArg(uri, "getRawPath");
+      if (rawPath instanceof String) {
+        String requestUri = (String) rawPath;
+        if (rawQuery instanceof String) {
+          requestUri = requestUri + "?" + (String) rawQuery;
+        }
+        h.requestUri = nilify(requestUri);
       }
     }
 
@@ -399,9 +441,12 @@ public final class RequestContextAdaptor {
     String referer = null;
     String xForwardedFor = null;
     String remoteAddress = null;
+    String scheme = null;
+    String requestUri = null;
 
     PlainDataObject build() {
-      return new PlainDataObject(host, queryParams, cookies, referer, xForwardedFor, remoteAddress);
+      return new PlainDataObject(
+          host, queryParams, cookies, referer, xForwardedFor, remoteAddress, scheme, requestUri);
     }
   }
 }
