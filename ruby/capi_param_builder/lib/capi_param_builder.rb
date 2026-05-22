@@ -42,6 +42,7 @@ class ParamBuilder
     @appendix_net_new = get_appendix(APPENDIX_NET_NEW)
     @appendix_modified_new = get_appendix(APPENDIX_MODIFIED_NEW)
     @appendix_no_change = get_appendix(APPENDIX_NO_CHANGE)
+    @referrer_url = nil
 
     if input.nil?
       return
@@ -183,6 +184,8 @@ class ParamBuilder
     @fbc = pre_process_cookies(cookies, FBC_NAME)
     @fbp = pre_process_cookies(cookies, FBP_NAME)
 
+    @referrer_url = referer
+
     # Get new fbc payload
     new_fbc_payload = get_new_fbc_payload_from_url(queries, referer)
 
@@ -234,6 +237,10 @@ class ParamBuilder
 
   def get_fbp()
     return @fbp
+  end
+
+  def get_referrer_url()
+    return @referrer_url
   end
 
   private def compute_etld_plus_one_for_host(host)
