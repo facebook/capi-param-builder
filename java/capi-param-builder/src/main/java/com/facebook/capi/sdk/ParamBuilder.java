@@ -31,6 +31,7 @@ public class ParamBuilder {
   private String fbc;
   private String fbp;
   private String referrerUrl;
+  private String eventSourceUrl;
   URIUtils uriUtils;
   CookieUtils cookieUtils = new CookieUtils(fbcParamConfigs, Version.VERSION);
   List<CookieSetting> cookiesToSet;
@@ -98,6 +99,7 @@ public class ParamBuilder {
   public List<CookieSetting> processRequest(
       String host, Map<String, String[]> queries, Map<String, String> cookies, String referrer) {
     this.referrerUrl = referrer;
+    this.eventSourceUrl = null;
     Map<String, CookieSetting> updatedCookiesMap = new HashMap<>();
     cookiesToSet = null; // reset cookiesToSet
     // Get etld+1 and subdomain index
@@ -151,8 +153,10 @@ public class ParamBuilder {
         context instanceof PlainDataObject
             ? (PlainDataObject) context
             : RequestContextAdaptor.extract(context);
-    return processRequest(
-        data.host, toStringArrayMap(data.queryParams), data.cookies, data.referer);
+    List<CookieSetting> result =
+        processRequest(data.host, toStringArrayMap(data.queryParams), data.cookies, data.referer);
+    this.eventSourceUrl = constructEventSourceUrl(data);
+    return result;
   }
 
   /**
@@ -214,5 +218,29 @@ public class ParamBuilder {
    */
   public String getReferrerUrl() {
     return this.referrerUrl;
+  }
+
+  /**
+   * Return eventSourceUrl value
+   *
+   * @return eventSourceUrl
+   */
+  public String getEventSourceUrl() {
+    return this.eventSourceUrl;
+  }
+
+  private String constructEventSourceUrl(PlainDataObject data) {
+    if (data == null
+        || data.host == null
+        || data.host.isEmpty()
+        || data.scheme == null
+        || data.scheme.isEmpty()) {
+      return null;
+    }
+    String url = data.scheme + "://" + data.host;
+    if (data.requestUri != null && !data.requestUri.isEmpty()) {
+      url += data.requestUri;
+    }
+    return url;
   }
 }
