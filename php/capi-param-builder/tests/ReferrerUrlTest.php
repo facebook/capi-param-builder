@@ -10,9 +10,11 @@ use PHPUnit\Framework\TestCase;
 use FacebookAds\ParamBuilder;
 use FacebookAds\PlainDataObject;
 use FacebookAds\RequestContextAdaptor;
+use FacebookAds\AppendixProvider;
 
 require_once __DIR__ . '/../src/ParamBuilder.php';
 require_once __DIR__ . '/../src/util/RequestContextAdaptor.php';
+require_once __DIR__ . '/../src/util/AppendixProvider.php';
 require_once __DIR__ . '/../src/model/PlainDataObject.php';
 require_once __DIR__ . '/../src/model/Constants.php';
 
@@ -21,12 +23,18 @@ final class ReferrerUrlTest extends TestCase
     private $original_server;
     private $original_get;
     private $original_cookie;
+    private $no_change_suffix;
+    private $net_new_suffix;
 
     protected function setUp(): void
     {
         $this->original_server = $_SERVER ?? [];
         $this->original_get = $_GET ?? [];
         $this->original_cookie = $_COOKIE ?? [];
+        $this->no_change_suffix =
+            '.' . AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
+        $this->net_new_suffix =
+            '.' . AppendixProvider::getAppendix(APPENDIX_NET_NEW);
     }
 
     protected function tearDown(): void
@@ -57,7 +65,10 @@ final class ReferrerUrlTest extends TestCase
             [],
             $referer
         );
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithFbclidInQueryParamsViaContext(): void
@@ -73,7 +84,10 @@ final class ReferrerUrlTest extends TestCase
             null
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithOnlyFbclidParam(): void
@@ -86,7 +100,10 @@ final class ReferrerUrlTest extends TestCase
             [],
             $referer
         );
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     // =========================================================================
@@ -98,7 +115,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'http://insecure.example.com/page';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerHttpsUrl(): void
@@ -106,7 +126,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://secure.example.com/page';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithPath(): void
@@ -114,7 +137,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://blog.example.com/2024/01/post-title';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithQueryParams(): void
@@ -122,7 +148,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://search.example.com/results?q=test&page=3&lang=en';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithFragment(): void
@@ -130,7 +159,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://docs.example.com/guide#section-2';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithQueryAndFragment(): void
@@ -138,7 +170,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://app.example.com/search?q=test#results';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithInternationalizedDomain(): void
@@ -146,7 +181,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://xn--e1afmapc.xn--p1ai/path';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testReferrerWithPort(): void
@@ -154,7 +192,10 @@ final class ReferrerUrlTest extends TestCase
         $builder = new ParamBuilder();
         $referer = 'https://dev.example.com:8443/api/callback';
         $builder->processRequest('example.com', [], [], $referer);
-        $this->assertEquals($referer, $builder->getReferrerUrl());
+        $this->assertEquals(
+            $referer . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     // =========================================================================
@@ -173,7 +214,7 @@ final class ReferrerUrlTest extends TestCase
             '10.0.0.1'
         );
         $this->assertEquals(
-            'https://facebook.com/ads/click',
+            'https://facebook.com/ads/click' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -190,7 +231,7 @@ final class ReferrerUrlTest extends TestCase
             null
         );
         $this->assertEquals(
-            'https://referrer.com/page',
+            'https://referrer.com/page' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -212,7 +253,7 @@ final class ReferrerUrlTest extends TestCase
         );
         $builder->processRequestFromContext($data);
         $this->assertEquals(
-            'https://partner.example.com/landing',
+            'https://partner.example.com/landing' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -232,7 +273,7 @@ final class ReferrerUrlTest extends TestCase
         );
         $builder->processRequestFromContext($data);
         $this->assertEquals(
-            'https://google.com/search?q=shoes',
+            'https://google.com/search?q=shoes' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -250,7 +291,7 @@ final class ReferrerUrlTest extends TestCase
             'HTTP_REFERER' => 'https://facebook.com/ad',
         ]);
         $this->assertEquals(
-            'https://facebook.com/ad',
+            'https://facebook.com/ad' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -268,7 +309,7 @@ final class ReferrerUrlTest extends TestCase
             'HTTP_X_FORWARDED_FOR' => '203.0.113.50',
         ]);
         $this->assertEquals(
-            'https://instagram.com/stories',
+            'https://instagram.com/stories' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -300,7 +341,7 @@ final class ReferrerUrlTest extends TestCase
             'https://first-referrer.com/page'
         );
         $this->assertEquals(
-            'https://first-referrer.com/page',
+            'https://first-referrer.com/page' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
 
@@ -321,7 +362,10 @@ final class ReferrerUrlTest extends TestCase
             null
         );
         $builder->processRequestFromContext($data1);
-        $this->assertEquals('https://first.com', $builder->getReferrerUrl());
+        $this->assertEquals(
+            'https://first.com' . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
 
         $data2 = new PlainDataObject(
             'example.com',
@@ -346,7 +390,7 @@ final class ReferrerUrlTest extends TestCase
             'https://first.com/page'
         );
         $this->assertEquals(
-            'https://first.com/page',
+            'https://first.com/page' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
 
@@ -357,7 +401,7 @@ final class ReferrerUrlTest extends TestCase
             'https://second.com/other'
         );
         $this->assertEquals(
-            'https://second.com/other',
+            'https://second.com/other' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
     }
@@ -373,7 +417,7 @@ final class ReferrerUrlTest extends TestCase
             'https://via-processrequest.com'
         );
         $this->assertEquals(
-            'https://via-processrequest.com',
+            'https://via-processrequest.com' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
 
@@ -456,11 +500,11 @@ final class ReferrerUrlTest extends TestCase
         );
         $builder->processRequestFromContext($data);
         $this->assertEquals(
-            'https://facebook.com/ad',
+            'https://facebook.com/ad' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
         $this->assertEquals(
-            'https://shop.example.com/products',
+            'https://shop.example.com/products' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -481,7 +525,7 @@ final class ReferrerUrlTest extends TestCase
         $builder->processRequestFromContext($data);
         $this->assertNull($builder->getReferrerUrl());
         $this->assertEquals(
-            'https://shop.example.com/checkout',
+            'https://shop.example.com/checkout' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -502,11 +546,11 @@ final class ReferrerUrlTest extends TestCase
         $builder->processRequestFromContext($data);
 
         $this->assertEquals(
-            'https://facebook.com/campaign',
+            'https://facebook.com/campaign' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
         $this->assertEquals(
-            'https://www.myshop.com/landing?utm=fb',
+            'https://www.myshop.com/landing?utm=fb' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -521,7 +565,7 @@ final class ReferrerUrlTest extends TestCase
             'https://referrer.com/page'
         );
         $this->assertEquals(
-            'https://referrer.com/page',
+            'https://referrer.com/page' . $this->no_change_suffix,
             $builder->getReferrerUrl()
         );
         $this->assertNull($builder->getEventSourceUrl());

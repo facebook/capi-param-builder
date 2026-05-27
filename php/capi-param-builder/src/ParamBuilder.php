@@ -240,6 +240,9 @@ final class ParamBuilder
         $this->sub_domain_index = 0;
 
         $this->referrer_url = $referer;
+        if (is_string($this->referrer_url) && $this->referrer_url !== '') {
+            $this->referrer_url .= '.' . $this->appendix_no_change;
+        }
 
         // Pre-process if cookie already exists
         $this->fbc = ParamBuilder::preProcess($cookies, FBC_NAME, $host);
@@ -370,6 +373,9 @@ final class ParamBuilder
         }
 
         $this->event_source_url = $url;
+        if (is_string($this->event_source_url) && $this->event_source_url !== '') {
+            $this->event_source_url .= '.' . $this->appendix_net_new;
+        }
     }
 
     public function getNormalizedAndHashedPII($piiValue, $dataType)

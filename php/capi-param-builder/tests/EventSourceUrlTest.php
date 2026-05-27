@@ -10,9 +10,11 @@ use PHPUnit\Framework\TestCase;
 use FacebookAds\ParamBuilder;
 use FacebookAds\PlainDataObject;
 use FacebookAds\RequestContextAdaptor;
+use FacebookAds\AppendixProvider;
 
 require_once __DIR__ . '/../src/ParamBuilder.php';
 require_once __DIR__ . '/../src/util/RequestContextAdaptor.php';
+require_once __DIR__ . '/../src/util/AppendixProvider.php';
 require_once __DIR__ . '/../src/model/PlainDataObject.php';
 require_once __DIR__ . '/../src/model/Constants.php';
 
@@ -21,12 +23,18 @@ final class EventSourceUrlTest extends TestCase
     private $original_server;
     private $original_get;
     private $original_cookie;
+    private $no_change_suffix;
+    private $net_new_suffix;
 
     protected function setUp(): void
     {
         $this->original_server = $_SERVER ?? [];
         $this->original_get = $_GET ?? [];
         $this->original_cookie = $_COOKIE ?? [];
+        $this->no_change_suffix =
+            '.' . AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
+        $this->net_new_suffix =
+            '.' . AppendixProvider::getAppendix(APPENDIX_NET_NEW);
     }
 
     protected function tearDown(): void
@@ -274,7 +282,10 @@ final class EventSourceUrlTest extends TestCase
             '/path'
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('https://www.example.com/path', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://www.example.com/path' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     public function testEventSourceUrlHttpWithHostAndUri(): void
@@ -291,7 +302,10 @@ final class EventSourceUrlTest extends TestCase
             '/path'
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('http://www.example.com/path', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'http://www.example.com/path' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     public function testEventSourceUrlNullWhenSchemeNull(): void
@@ -360,7 +374,7 @@ final class EventSourceUrlTest extends TestCase
         );
         $builder->processRequestFromContext($data);
         $this->assertEquals(
-            'https://www.example.com/search?q=test&page=2',
+            'https://www.example.com/search?q=test&page=2' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -379,7 +393,10 @@ final class EventSourceUrlTest extends TestCase
             null
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('https://secure.example.com', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://secure.example.com' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     // =========================================================================
@@ -395,7 +412,10 @@ final class EventSourceUrlTest extends TestCase
             'HTTPS' => 'on',
             'REQUEST_URI' => '/path',
         ]);
-        $this->assertEquals('https://www.example.com/path', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://www.example.com/path' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     public function testEventSourceUrlFromServerArrayHttpsEmptyString(): void
@@ -407,7 +427,10 @@ final class EventSourceUrlTest extends TestCase
             'HTTPS' => '',
             'REQUEST_URI' => '/path',
         ]);
-        $this->assertEquals('http://www.example.com/path', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'http://www.example.com/path' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     public function testEventSourceUrlFromServerArrayHttpsOff(): void
@@ -419,7 +442,10 @@ final class EventSourceUrlTest extends TestCase
             'HTTPS' => 'off',
             'REQUEST_URI' => '/path',
         ]);
-        $this->assertEquals('http://www.example.com/path', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'http://www.example.com/path' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     // =========================================================================
@@ -438,7 +464,10 @@ final class EventSourceUrlTest extends TestCase
             null
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('https://facebook.com/ad', $builder->getReferrerUrl());
+        $this->assertEquals(
+            'https://facebook.com/ad' . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     public function testGetReferrerUrlReturnsNullWhenNoReferer(): void
@@ -465,7 +494,10 @@ final class EventSourceUrlTest extends TestCase
             [],
             'https://referrer.com/page'
         );
-        $this->assertEquals('https://referrer.com/page', $builder->getReferrerUrl());
+        $this->assertEquals(
+            'https://referrer.com/page' . $this->no_change_suffix,
+            $builder->getReferrerUrl()
+        );
     }
 
     // =========================================================================
@@ -487,7 +519,7 @@ final class EventSourceUrlTest extends TestCase
         );
         $builder->processRequestFromContext($data);
         $this->assertEquals(
-            'https://shop.example.com/products?id=42',
+            'https://shop.example.com/products?id=42' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -502,7 +534,7 @@ final class EventSourceUrlTest extends TestCase
             'REQUEST_URI' => '/checkout',
         ]);
         $this->assertEquals(
-            'https://shop.example.com/checkout',
+            'https://shop.example.com/checkout' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -556,11 +588,17 @@ final class EventSourceUrlTest extends TestCase
             '/first'
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('https://example.com/first', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://example.com/first' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
 
         // processRequest() does not reset event_source_url (it's owned by processRequestFromContext)
         $builder->processRequest('example.com', [], [], null);
-        $this->assertEquals('https://example.com/first', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://example.com/first' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
 
         // processRequestFromContext() with empty host resets it
         $emptyData = new PlainDataObject('', [], [], null, null, null);
@@ -583,7 +621,10 @@ final class EventSourceUrlTest extends TestCase
             '/page1'
         );
         $builder->processRequestFromContext($data1);
-        $this->assertEquals('https://first.example.com/page1', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://first.example.com/page1' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
 
         $data2 = new PlainDataObject(
             '',
@@ -618,7 +659,7 @@ final class EventSourceUrlTest extends TestCase
         );
         $builder->processRequestFromContext($data);
         $this->assertEquals(
-            'http://example.com/path?key=val&foo=bar#section',
+            'http://example.com/path?key=val&foo=bar#section' . $this->net_new_suffix,
             $builder->getEventSourceUrl()
         );
     }
@@ -637,7 +678,10 @@ final class EventSourceUrlTest extends TestCase
             ''
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('https://example.com', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'https://example.com' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 
     public function testEventSourceUrlWithRootUri(): void
@@ -654,6 +698,9 @@ final class EventSourceUrlTest extends TestCase
             '/'
         );
         $builder->processRequestFromContext($data);
-        $this->assertEquals('http://example.com/', $builder->getEventSourceUrl());
+        $this->assertEquals(
+            'http://example.com/' . $this->net_new_suffix,
+            $builder->getEventSourceUrl()
+        );
     }
 }
