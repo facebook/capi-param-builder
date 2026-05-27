@@ -11,10 +11,16 @@
 const pb = require('../src/ParamBuilder');
 const ParamBuilder = pb.ParamBuilder;
 const PlainDataObject = require('../src/model/PlainDataObject');
+const Constants = require('../src/model/Constants');
+const { getAppendixInfo } = require('../src/utils/AppendixProvider');
 
 const DUMMY_TIMESTAMP = 1234567890;
 
 jest.mock('../package.json', () => ({version: '1.0.0'}));
+
+// Computed once after the package.json mock so the suffix reflects v1.0.0.
+const NO_CHANGE_SUFFIX = `.${getAppendixInfo(Constants.APPENDIX_NO_CHANGE)}`;
+const NET_NEW_SUFFIX = `.${getAppendixInfo(Constants.APPENDIX_NET_NEW)}`;
 
 describe('ParamBuilder.getReferrerUrl', () => {
   beforeAll(() => {
@@ -37,7 +43,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('example.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('referrer with fbclid in query is not stripped or modified', () => {
@@ -46,7 +52,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('example.com', null, null, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
       expect(builder.getReferrerUrl()).toContain('fbclid=abc123');
     });
 
@@ -56,7 +62,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('[::1]:8080', null, undefined, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
   });
 
@@ -106,7 +112,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
         '10.0.0.1'
       );
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('referrer stored even when fbclid comes from query not referer', () => {
@@ -120,7 +126,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
         referer
       );
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
       expect(builder.getFbc()).toMatch(/\.fromQuery\./);
     });
   });
@@ -145,7 +151,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequestFromContext(dataObject);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('with PlainDataObject without referer', () => {
@@ -180,7 +186,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
       builder.processRequestFromContext(req);
 
       expect(builder.getReferrerUrl()).toBe(
-        'https://facebook.com/ad?fbclid=IwAR_raw'
+        'https://facebook.com/ad?fbclid=IwAR_raw' + NO_CHANGE_SUFFIX
       );
     });
 
@@ -212,7 +218,9 @@ describe('ParamBuilder.getReferrerUrl', () => {
         {},
         'https://first-referer.com'
       );
-      expect(builder.getReferrerUrl()).toBe('https://first-referer.com');
+      expect(builder.getReferrerUrl()).toBe(
+        'https://first-referer.com' + NO_CHANGE_SUFFIX
+      );
 
       builder.processRequest(
         'second.example.com',
@@ -220,7 +228,9 @@ describe('ParamBuilder.getReferrerUrl', () => {
         {},
         'https://second-referer.com'
       );
-      expect(builder.getReferrerUrl()).toBe('https://second-referer.com');
+      expect(builder.getReferrerUrl()).toBe(
+        'https://second-referer.com' + NO_CHANGE_SUFFIX
+      );
     });
 
     test('referrer resets to null when second call has no referer', () => {
@@ -232,7 +242,9 @@ describe('ParamBuilder.getReferrerUrl', () => {
         {},
         'https://has-referer.com'
       );
-      expect(builder.getReferrerUrl()).toBe('https://has-referer.com');
+      expect(builder.getReferrerUrl()).toBe(
+        'https://has-referer.com' + NO_CHANGE_SUFFIX
+      );
 
       builder.processRequest('example.com', {}, {});
       expect(builder.getReferrerUrl()).toBeNull();
@@ -250,7 +262,9 @@ describe('ParamBuilder.getReferrerUrl', () => {
         null
       );
       builder.processRequestFromContext(dataObject1);
-      expect(builder.getReferrerUrl()).toBe('https://first.com/page');
+      expect(builder.getReferrerUrl()).toBe(
+        'https://first.com/page' + NO_CHANGE_SUFFIX
+      );
 
       const dataObject2 = new PlainDataObject(
         'second.example.com',
@@ -261,7 +275,9 @@ describe('ParamBuilder.getReferrerUrl', () => {
         null
       );
       builder.processRequestFromContext(dataObject2);
-      expect(builder.getReferrerUrl()).toBe('https://second.com/page');
+      expect(builder.getReferrerUrl()).toBe(
+        'https://second.com/page' + NO_CHANGE_SUFFIX
+      );
     });
   });
 
@@ -306,7 +322,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('HTTPS URL', () => {
@@ -315,7 +331,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('URL with query parameters', () => {
@@ -324,7 +340,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('URL with fragment', () => {
@@ -333,7 +349,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('URL with query and fragment', () => {
@@ -342,7 +358,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('URL with port', () => {
@@ -351,7 +367,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
 
     test('URL without protocol (bare hostname)', () => {
@@ -360,7 +376,7 @@ describe('ParamBuilder.getReferrerUrl', () => {
 
       builder.processRequest('landing.com', {}, {}, referer);
 
-      expect(builder.getReferrerUrl()).toBe(referer);
+      expect(builder.getReferrerUrl()).toBe(referer + NO_CHANGE_SUFFIX);
     });
   });
 });

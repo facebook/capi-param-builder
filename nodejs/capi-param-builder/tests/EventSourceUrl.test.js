@@ -11,10 +11,15 @@
 const pb = require('../src/ParamBuilder');
 const ParamBuilder = pb.ParamBuilder;
 const PlainDataObject = require('../src/model/PlainDataObject');
+const Constants = require('../src/model/Constants');
+const { getAppendixInfo } = require('../src/utils/AppendixProvider');
 
 const DUMMY_TIMESTAMP = 1234567890;
 
 jest.mock('../package.json', () => ({version: '1.0.0'}));
+
+const NO_CHANGE_SUFFIX = `.${getAppendixInfo(Constants.APPENDIX_NO_CHANGE)}`;
+const NET_NEW_SUFFIX = `.${getAppendixInfo(Constants.APPENDIX_NET_NEW)}`;
 
 describe('ParamBuilder.getEventSourceUrl', () => {
   beforeAll(() => {
@@ -47,7 +52,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
 
       builder.processRequestFromContext(dataObject);
 
-      expect(builder.getEventSourceUrl()).toBe('https://example.com/path/to/page');
+      expect(builder.getEventSourceUrl()).toBe(
+        'https://example.com/path/to/page' + NET_NEW_SUFFIX
+      );
     });
 
     test('scheme=http with host and URI produces http URL', () => {
@@ -66,7 +73,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
 
       builder.processRequestFromContext(dataObject);
 
-      expect(builder.getEventSourceUrl()).toBe('http://example.com/landing');
+      expect(builder.getEventSourceUrl()).toBe(
+        'http://example.com/landing' + NET_NEW_SUFFIX
+      );
     });
 
     test('scheme=null with host and URI returns null', () => {
@@ -111,7 +120,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(dataObject);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'https://example.com:8080/path/to/page'
+        'https://example.com:8080/path/to/page' + NET_NEW_SUFFIX
       );
     });
   });
@@ -194,7 +203,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
 
       builder.processRequestFromContext(dataObject);
 
-      expect(builder.getEventSourceUrl()).toBe('https://example.com');
+      expect(builder.getEventSourceUrl()).toBe(
+        'https://example.com' + NET_NEW_SUFFIX
+      );
     });
   });
 
@@ -220,7 +231,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(dataObject);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'https://shop.example.com/products?category=shoes&page=2'
+        'https://shop.example.com/products?category=shoes&page=2' + NET_NEW_SUFFIX
       );
     });
 
@@ -241,7 +252,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(dataObject);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'https://example.com/landing?fbclid=test123&utm=campaign'
+        'https://example.com/landing?fbclid=test123&utm=campaign' + NET_NEW_SUFFIX
       );
     });
   });
@@ -267,7 +278,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
 
       builder.processRequestFromContext(dataObject);
 
-      expect(builder.getEventSourceUrl()).toBe('https://example.com/page');
+      expect(builder.getEventSourceUrl()).toBe(
+        'https://example.com/page' + NET_NEW_SUFFIX
+      );
     });
 
     test('processRequest returns null for event_source_url', () => {
@@ -293,7 +306,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       );
 
       builder.processRequestFromContext(dataObject);
-      expect(builder.getEventSourceUrl()).toBe('https://example.com/first');
+      expect(builder.getEventSourceUrl()).toBe(
+        'https://example.com/first' + NET_NEW_SUFFIX
+      );
 
       builder.processRequest('example.com', {}, {});
       expect(builder.getEventSourceUrl()).toBeNull();
@@ -320,7 +335,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       );
       builder.processRequestFromContext(dataObject1);
       expect(builder.getEventSourceUrl()).toBe(
-        'https://first.example.com/first-page'
+        'https://first.example.com/first-page' + NET_NEW_SUFFIX
       );
 
       const dataObject2 = new PlainDataObject(
@@ -335,7 +350,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       );
       builder.processRequestFromContext(dataObject2);
       expect(builder.getEventSourceUrl()).toBe(
-        'http://second.example.com/second-page'
+        'http://second.example.com/second-page' + NET_NEW_SUFFIX
       );
     });
 
@@ -353,7 +368,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
         '/page'
       );
       builder.processRequestFromContext(dataObject1);
-      expect(builder.getEventSourceUrl()).toBe('https://example.com/page');
+      expect(builder.getEventSourceUrl()).toBe(
+        'https://example.com/page' + NET_NEW_SUFFIX
+      );
 
       const dataObject2 = new PlainDataObject(
         null,
@@ -397,7 +414,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(req);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'https://express-app.com/dashboard?tab=overview'
+        'https://express-app.com/dashboard?tab=overview' + NET_NEW_SUFFIX
       );
     });
 
@@ -418,7 +435,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(req);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'https://secure.example.com/api/data?key=value'
+        'https://secure.example.com/api/data?key=value' + NET_NEW_SUFFIX
       );
     });
 
@@ -436,7 +453,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(req);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'http://plain.example.com/page'
+        'http://plain.example.com/page' + NET_NEW_SUFFIX
       );
     });
 
@@ -450,7 +467,7 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(req);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'http://minimal.example.com'
+        'http://minimal.example.com' + NET_NEW_SUFFIX
       );
     });
   });
@@ -477,10 +494,10 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       builder.processRequestFromContext(dataObject);
 
       expect(builder.getEventSourceUrl()).toBe(
-        'https://landing.example.com/landing'
+        'https://landing.example.com/landing' + NET_NEW_SUFFIX
       );
       expect(builder.getReferrerUrl()).toBe(
-        'https://facebook.com/ad?fbclid=IwAR_test'
+        'https://facebook.com/ad?fbclid=IwAR_test' + NO_CHANGE_SUFFIX
       );
     });
 
@@ -500,7 +517,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
 
       builder.processRequestFromContext(dataObject);
 
-      expect(builder.getEventSourceUrl()).toBe('https://example.com/page');
+      expect(builder.getEventSourceUrl()).toBe(
+        'https://example.com/page' + NET_NEW_SUFFIX
+      );
       expect(builder.getReferrerUrl()).toBeNull();
     });
 
@@ -536,7 +555,9 @@ describe('ParamBuilder.getEventSourceUrl', () => {
       const urlWithoutReferer = builder.getEventSourceUrl();
 
       expect(urlWithReferer).toBe(urlWithoutReferer);
-      expect(urlWithReferer).toBe('https://example.com/my-page');
+      expect(urlWithReferer).toBe(
+        'https://example.com/my-page' + NET_NEW_SUFFIX
+      );
     });
   });
 });

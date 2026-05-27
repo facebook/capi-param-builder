@@ -139,6 +139,9 @@ class ParamBuilder {
     this._computeETLDPlus1ForHost(host);
 
     this.referrerUrl = referer;
+    if (typeof this.referrerUrl === 'string' && this.referrerUrl !== '') {
+      this.referrerUrl = `${this.referrerUrl}.${this.appendix_no_change}`;
+    }
 
     // capture existing cookies
     this.fbc = this._preprocessCookie(cookies, Constants.FBC_NAME_STRING);
@@ -246,6 +249,9 @@ class ParamBuilder {
     let url = data.scheme + '://' + data.host;
     if (data.request_uri) {
       url += data.request_uri;
+    }
+    if (typeof url === 'string' && url !== '') {
+      url = `${url}.${this.appendix_net_new}`;
     }
     return url;
   }
