@@ -99,6 +99,9 @@ public class ParamBuilder {
   public List<CookieSetting> processRequest(
       String host, Map<String, String[]> queries, Map<String, String> cookies, String referrer) {
     this.referrerUrl = referrer;
+    if (this.referrerUrl != null && !this.referrerUrl.isEmpty()) {
+      this.referrerUrl = this.referrerUrl + "." + this.cookieUtils.getAppendixNoChange();
+    }
     this.eventSourceUrl = null;
     Map<String, CookieSetting> updatedCookiesMap = new HashMap<>();
     cookiesToSet = null; // reset cookiesToSet
@@ -240,6 +243,9 @@ public class ParamBuilder {
     String url = data.scheme + "://" + data.host;
     if (data.requestUri != null && !data.requestUri.isEmpty()) {
       url += data.requestUri;
+    }
+    if (url != null && !url.isEmpty()) {
+      url = url + "." + this.cookieUtils.getAppendixNetNew();
     }
     return url;
   }

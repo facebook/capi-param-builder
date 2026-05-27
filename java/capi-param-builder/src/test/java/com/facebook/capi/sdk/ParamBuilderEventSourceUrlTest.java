@@ -24,6 +24,13 @@ import org.junit.jupiter.api.Test;
 public class ParamBuilderEventSourceUrlTest {
 
   private static final String SDK_VERSION = "1.0.1";
+  // Base64url-encoded appendix tokens for SDK_VERSION="1.0.1" with the Java
+  // LANGUAGE_TOKEN_INDEX (0x03). Bytes: [DEFAULT_FORMAT=0x01, LANG_INDEX=0x03,
+  // type_byte, major, minor, patch].
+  //   NO_CHANGE (type 0x00) → [01 03 00 01 00 01] → "AQMAAQAB"
+  //   NET_NEW   (type 0x02) → [01 03 02 01 00 01] → "AQMCAQAB"
+  private static final String NO_CHANGE_SUFFIX = ".AQMAAQAB";
+  private static final String NET_NEW_SUFFIX = ".AQMCAQAB";
 
   private ParamBuilder builder;
 
@@ -58,14 +65,16 @@ public class ParamBuilderEventSourceUrlTest {
     @DisplayName("scheme=https + host + URI -> https://host/uri")
     void testHttpsScheme() {
       builder.processRequestFromContext(pdo("www.example.com", null, "https", "/path"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://www.example.com/path");
+      assertThat(builder.getEventSourceUrl())
+          .isEqualTo("https://www.example.com/path" + NET_NEW_SUFFIX);
     }
 
     @Test
     @DisplayName("scheme=http + host + URI -> http://host/uri")
     void testHttpScheme() {
       builder.processRequestFromContext(pdo("www.example.com", null, "http", "/path"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("http://www.example.com/path");
+      assertThat(builder.getEventSourceUrl())
+          .isEqualTo("http://www.example.com/path" + NET_NEW_SUFFIX);
     }
 
     @Test
@@ -131,14 +140,14 @@ public class ParamBuilderEventSourceUrlTest {
     @DisplayName("Host only (no requestUri) -> scheme://host")
     void testHostOnly() {
       builder.processRequestFromContext(pdo("example.com", null, "https", null));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com");
+      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com" + NET_NEW_SUFFIX);
     }
 
     @Test
     @DisplayName("Empty requestUri -> scheme://host")
     void testEmptyRequestUri() {
       builder.processRequestFromContext(pdo("example.com", null, "https", ""));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com");
+      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com" + NET_NEW_SUFFIX);
     }
 
     @Test
@@ -147,14 +156,15 @@ public class ParamBuilderEventSourceUrlTest {
       builder.processRequestFromContext(
           pdo("www.example.com", null, "https", "/search?q=test&page=2"));
       assertThat(builder.getEventSourceUrl())
-          .isEqualTo("https://www.example.com/search?q=test&page=2");
+          .isEqualTo("https://www.example.com/search?q=test&page=2" + NET_NEW_SUFFIX);
     }
 
     @Test
     @DisplayName("Host with port preserved")
     void testHostWithPort() {
       builder.processRequestFromContext(pdo("localhost:8080", null, "http", "/api/test"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("http://localhost:8080/api/test");
+      assertThat(builder.getEventSourceUrl())
+          .isEqualTo("http://localhost:8080/api/test" + NET_NEW_SUFFIX);
     }
 
     @Test
@@ -163,14 +173,14 @@ public class ParamBuilderEventSourceUrlTest {
       builder.processRequestFromContext(
           pdo("example.com", null, "https", "/path?key=val&foo=bar#section"));
       assertThat(builder.getEventSourceUrl())
-          .isEqualTo("https://example.com/path?key=val&foo=bar#section");
+          .isEqualTo("https://example.com/path?key=val&foo=bar#section" + NET_NEW_SUFFIX);
     }
 
     @Test
     @DisplayName("Root path /")
     void testRootPath() {
       builder.processRequestFromContext(pdo("example.com", null, "https", "/"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com/");
+      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com/" + NET_NEW_SUFFIX);
     }
   }
 
@@ -182,7 +192,8 @@ public class ParamBuilderEventSourceUrlTest {
     @DisplayName("processRequestFromContext sets eventSourceUrl")
     void testFromContextSetsUrl() {
       builder.processRequestFromContext(pdo("shop.example.com", null, "https", "/products?id=42"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://shop.example.com/products?id=42");
+      assertThat(builder.getEventSourceUrl())
+          .isEqualTo("https://shop.example.com/products?id=42" + NET_NEW_SUFFIX);
     }
 
     @Test
@@ -208,7 +219,7 @@ public class ParamBuilderEventSourceUrlTest {
     @DisplayName("eventSourceUrl resets between processRequestFromContext calls")
     void testResetBetweenContextCalls() {
       builder.processRequestFromContext(pdo("first.com", null, "https", "/page1"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://first.com/page1");
+      assertThat(builder.getEventSourceUrl()).isEqualTo("https://first.com/page1" + NET_NEW_SUFFIX);
 
       builder.processRequestFromContext(pdo(null, null, null, null));
       assertThat(builder.getEventSourceUrl()).isNull();
@@ -218,7 +229,8 @@ public class ParamBuilderEventSourceUrlTest {
     @DisplayName("eventSourceUrl resets when processRequest called after processRequestFromContext")
     void testResetOnDirectProcessRequest() {
       builder.processRequestFromContext(pdo("example.com", null, "https", "/first"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://example.com/first");
+      assertThat(builder.getEventSourceUrl())
+          .isEqualTo("https://example.com/first" + NET_NEW_SUFFIX);
 
       builder.processRequest("example.com", new HashMap<String, String[]>(), null);
       assertThat(builder.getEventSourceUrl()).isNull();
@@ -228,10 +240,10 @@ public class ParamBuilderEventSourceUrlTest {
     @DisplayName("eventSourceUrl updates to new value on subsequent context call")
     void testUpdateOnSubsequentCall() {
       builder.processRequestFromContext(pdo("first.com", null, "https", "/a"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://first.com/a");
+      assertThat(builder.getEventSourceUrl()).isEqualTo("https://first.com/a" + NET_NEW_SUFFIX);
 
       builder.processRequestFromContext(pdo("second.com", null, "http", "/b"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("http://second.com/b");
+      assertThat(builder.getEventSourceUrl()).isEqualTo("http://second.com/b" + NET_NEW_SUFFIX);
     }
   }
 
@@ -244,8 +256,9 @@ public class ParamBuilderEventSourceUrlTest {
     void testReferrerDoesNotAffectEventSourceUrl() {
       builder.processRequestFromContext(
           pdo("shop.example.com", "https://facebook.com/ad", "https", "/products"));
-      assertThat(builder.getEventSourceUrl()).isEqualTo("https://shop.example.com/products");
-      assertThat(builder.getReferrerUrl()).isEqualTo("https://facebook.com/ad");
+      assertThat(builder.getEventSourceUrl())
+          .isEqualTo("https://shop.example.com/products" + NET_NEW_SUFFIX);
+      assertThat(builder.getReferrerUrl()).isEqualTo("https://facebook.com/ad" + NO_CHANGE_SUFFIX);
     }
 
     @Test
@@ -253,7 +266,7 @@ public class ParamBuilderEventSourceUrlTest {
     void testEventSourceUrlNullDoesNotAffectReferrer() {
       builder.processRequestFromContext(pdo(null, "https://facebook.com/ad", null, null));
       assertThat(builder.getEventSourceUrl()).isNull();
-      assertThat(builder.getReferrerUrl()).isEqualTo("https://facebook.com/ad");
+      assertThat(builder.getReferrerUrl()).isEqualTo("https://facebook.com/ad" + NO_CHANGE_SUFFIX);
     }
 
     @Test
@@ -261,7 +274,8 @@ public class ParamBuilderEventSourceUrlTest {
     void testProcessRequestSetsReferrerNotEventSourceUrl() {
       builder.processRequest(
           "example.com", new HashMap<String, String[]>(), null, "https://referrer.com/page");
-      assertThat(builder.getReferrerUrl()).isEqualTo("https://referrer.com/page");
+      assertThat(builder.getReferrerUrl())
+          .isEqualTo("https://referrer.com/page" + NO_CHANGE_SUFFIX);
       assertThat(builder.getEventSourceUrl()).isNull();
     }
   }

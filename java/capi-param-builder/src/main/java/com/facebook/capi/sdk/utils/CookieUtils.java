@@ -99,6 +99,28 @@ public class CookieUtils {
     this.subDomainIndex = subdoainIndex;
   }
 
+  /**
+   * Get the precomputed NO_CHANGE appendix token. Exposed so {@link
+   * com.facebook.capi.sdk.ParamBuilder} can tag the {@code referrerUrl} field with the SDK language
+   * token without duplicating the version-parsing logic.
+   *
+   * @return base64url-encoded NO_CHANGE appendix
+   */
+  public String getAppendixNoChange() {
+    return this.APPENDIX_NO_CHANGE;
+  }
+
+  /**
+   * Get the precomputed NET_NEW appendix token. Exposed so {@link
+   * com.facebook.capi.sdk.ParamBuilder} can tag the {@code eventSourceUrl} field with the SDK
+   * language token without duplicating the version-parsing logic.
+   *
+   * @return base64url-encoded NET_NEW appendix
+   */
+  public String getAppendixNetNew() {
+    return this.APPENDIX_NET_NEW;
+  }
+
   private void buildParamConfigs(StringBuilder builder, String query, String prefix, String value) {
     boolean isClickID = Constants.FBCLID_STRING.equals(query);
     String separator = isClickID ? "" : "_";

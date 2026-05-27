@@ -29,6 +29,13 @@ import org.junit.jupiter.api.Test;
 public class ParamBuilderReferrerUrlTest {
 
   private static final String SDK_VERSION = "1.0.1";
+  // Base64url-encoded appendix tokens for SDK_VERSION="1.0.1" with the Java
+  // LANGUAGE_TOKEN_INDEX (0x03). Bytes: [DEFAULT_FORMAT=0x01, LANG_INDEX=0x03,
+  // type_byte, major, minor, patch].
+  //   NO_CHANGE (type 0x00) → [01 03 00 01 00 01] → "AQMAAQAB"
+  //   NET_NEW   (type 0x02) → [01 03 02 01 00 01] → "AQMCAQAB"
+  private static final String NO_CHANGE_SUFFIX = ".AQMAAQAB";
+  private static final String NET_NEW_SUFFIX = ".AQMCAQAB";
 
   private ParamBuilder builder;
 
@@ -95,7 +102,7 @@ public class ParamBuilderReferrerUrlTest {
     String referrer = "https://facebook.com/ad?fbclid=IwAR_abc123&utm_source=fb";
     Map<String, String[]> queries = new HashMap<String, String[]>();
     builder.processRequest("example.com", queries, null, referrer);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referrer);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referrer + NO_CHANGE_SUFFIX);
     assertThat(builder.getFbc()).endsWith(".IwAR_abc123." + "AQMCAQAB");
   }
 
@@ -107,7 +114,7 @@ public class ParamBuilderReferrerUrlTest {
     Map<String, String[]> queries = new HashMap<String, String[]>();
     queries.put(Constants.FBCLID_STRING, new String[] {"fromQuery"});
     builder.processRequest("example.com", queries, null, referrer);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referrer);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referrer + NO_CHANGE_SUFFIX);
     assertThat(builder.getFbc()).endsWith(".fromQuery." + "AQMCAQAB");
   }
 
@@ -151,7 +158,7 @@ public class ParamBuilderReferrerUrlTest {
     cookies.put(Constants.FBC_COOKIE_NAME, "fb.1.1234.existingFbc");
     cookies.put(Constants.FBP_COOKIE_NAME, "fb.1.5678.existingFbp");
     builder.processRequest("shop.example.com", queries, cookies, referrer);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referrer);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referrer + NO_CHANGE_SUFFIX);
   }
 
   @Test
@@ -160,7 +167,7 @@ public class ParamBuilderReferrerUrlTest {
     String referrer = "https://google.com/search?q=shoes";
     Map<String, String[]> queries = new HashMap<String, String[]>();
     builder.processRequest("shop.example.com", queries, null, referrer);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referrer);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referrer + NO_CHANGE_SUFFIX);
     assertThat(builder.getFbc()).isNull();
   }
 
@@ -179,7 +186,7 @@ public class ParamBuilderReferrerUrlTest {
             new HashMap<String, String>(),
             referer);
     builder.processRequestFromContext(data);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referer);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referer + NO_CHANGE_SUFFIX);
   }
 
   @Test
@@ -207,7 +214,8 @@ public class ParamBuilderReferrerUrlTest {
     headers.put("Referer", "https://facebook.com/ad?fbclid=servletTest");
     FakeServletRequest req = new FakeServletRequest(headers, null);
     builder.processRequestFromContext(req);
-    assertThat(builder.getReferrerUrl()).isEqualTo("https://facebook.com/ad?fbclid=servletTest");
+    assertThat(builder.getReferrerUrl())
+        .isEqualTo("https://facebook.com/ad?fbclid=servletTest" + NO_CHANGE_SUFFIX);
   }
 
   @Test
@@ -231,7 +239,8 @@ public class ParamBuilderReferrerUrlTest {
     env.put("HTTP_HOST", "api.example.com");
     env.put("HTTP_REFERER", "https://facebook.com/ad?fbclid=mapTest");
     builder.processRequestFromContext(env);
-    assertThat(builder.getReferrerUrl()).isEqualTo("https://facebook.com/ad?fbclid=mapTest");
+    assertThat(builder.getReferrerUrl())
+        .isEqualTo("https://facebook.com/ad?fbclid=mapTest" + NO_CHANGE_SUFFIX);
   }
 
   @Test
@@ -253,11 +262,11 @@ public class ParamBuilderReferrerUrlTest {
   void testResetBetweenConsecutiveCalls() {
     String referrer1 = "https://facebook.com/ad1?fbclid=first";
     builder.processRequest("example.com", new HashMap<String, String[]>(), null, referrer1);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referrer1);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referrer1 + NO_CHANGE_SUFFIX);
 
     String referrer2 = "https://google.com/search?q=second";
     builder.processRequest("example.com", new HashMap<String, String[]>(), null, referrer2);
-    assertThat(builder.getReferrerUrl()).isEqualTo(referrer2);
+    assertThat(builder.getReferrerUrl()).isEqualTo(referrer2 + NO_CHANGE_SUFFIX);
   }
 
   @Test
@@ -265,7 +274,7 @@ public class ParamBuilderReferrerUrlTest {
   void testResetToNullOnSecondCall() {
     builder.processRequest(
         "example.com", new HashMap<String, String[]>(), null, "https://first.com");
-    assertThat(builder.getReferrerUrl()).isEqualTo("https://first.com");
+    assertThat(builder.getReferrerUrl()).isEqualTo("https://first.com" + NO_CHANGE_SUFFIX);
 
     builder.processRequest("example.com", new HashMap<String, String[]>(), null);
     assertThat(builder.getReferrerUrl()).isNull();
@@ -281,7 +290,7 @@ public class ParamBuilderReferrerUrlTest {
             new HashMap<String, String>(),
             "https://first.com/ref");
     builder.processRequestFromContext(data1);
-    assertThat(builder.getReferrerUrl()).isEqualTo("https://first.com/ref");
+    assertThat(builder.getReferrerUrl()).isEqualTo("https://first.com/ref" + NO_CHANGE_SUFFIX);
 
     PlainDataObject data2 =
         pdo(
@@ -319,7 +328,8 @@ public class ParamBuilderReferrerUrlTest {
   @DisplayName("Whitespace-only referrer stored as-is and does not produce fbc")
   void testWhitespaceReferrerStoredAsIs() {
     builder.processRequest("example.com", new HashMap<String, String[]>(), null, "   ");
-    assertThat(builder.getReferrerUrl()).isEqualTo("   ");
+    // Whitespace-only string is non-empty, so the appendix is still appended.
+    assertThat(builder.getReferrerUrl()).isEqualTo("   " + NO_CHANGE_SUFFIX);
     assertThat(builder.getFbc()).isNull();
   }
 }
