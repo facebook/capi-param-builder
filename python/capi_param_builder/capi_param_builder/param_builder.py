@@ -229,6 +229,8 @@ class ParamBuilder:
         referer: Optional[str] = None,
     ) -> set[CookieSettings]:
         self.referrer_url = referer
+        if isinstance(self.referrer_url, str) and self.referrer_url != "":
+            self.referrer_url = self.referrer_url + "." + self.appendix_no_change
         self._compute_etld_plus_one_for_host(host)
         self.cookies_to_set = set()
         self.cookies_to_set_dict = {}
@@ -305,6 +307,8 @@ class ParamBuilder:
         url = data.scheme + "://" + data.host
         if data.request_uri:
             url += data.request_uri
+        if isinstance(url, str) and url != "":
+            url = url + "." + self.appendix_net_new
         return url
 
     def _get_updated_fbc_cookie(

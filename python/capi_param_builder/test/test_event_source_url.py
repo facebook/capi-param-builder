@@ -49,6 +49,9 @@ class _BaseTest(unittest.TestCase):
         )
         self.mock_version = self.version_patcher.start()
         self.mock_version.return_value = "1.0.1"
+        _probe = ParamBuilder()
+        self.no_change_suffix: str = "." + _probe.appendix_no_change
+        self.net_new_suffix: str = "." + _probe.appendix_net_new
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -75,7 +78,8 @@ class TestConstructEventSourceUrl(_BaseTest):
         builder.process_request_from_context(data)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://example.com/path/to/page"
+            builder.get_event_source_url(),
+            "https://example.com/path/to/page" + self.net_new_suffix,
         )
 
     def test_http_scheme_with_host_and_uri(self):
@@ -93,7 +97,10 @@ class TestConstructEventSourceUrl(_BaseTest):
 
         builder.process_request_from_context(data)
 
-        self.assertEqual(builder.get_event_source_url(), "http://example.com/page")
+        self.assertEqual(
+            builder.get_event_source_url(),
+            "http://example.com/page" + self.net_new_suffix,
+        )
 
     def test_scheme_none_returns_none(self):
         builder = ParamBuilder()
@@ -162,7 +169,8 @@ class TestConstructEventSourceUrl(_BaseTest):
         builder.process_request_from_context(data)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://example.com:8443/api/v1"
+            builder.get_event_source_url(),
+            "https://example.com:8443/api/v1" + self.net_new_suffix,
         )
 
     def test_query_string_preserved(self):
@@ -182,7 +190,7 @@ class TestConstructEventSourceUrl(_BaseTest):
 
         self.assertEqual(
             builder.get_event_source_url(),
-            "https://example.com/search?q=test&page=1",
+            "https://example.com/search?q=test&page=1" + self.net_new_suffix,
         )
 
     def test_scheme_and_host_only_no_uri(self):
@@ -200,7 +208,10 @@ class TestConstructEventSourceUrl(_BaseTest):
 
         builder.process_request_from_context(data)
 
-        self.assertEqual(builder.get_event_source_url(), "https://example.com")
+        self.assertEqual(
+            builder.get_event_source_url(),
+            "https://example.com" + self.net_new_suffix,
+        )
 
     def test_empty_host_returns_none(self):
         builder = ParamBuilder()
@@ -287,7 +298,8 @@ class TestEventSourceUrlReset(_BaseTest):
         )
         builder.process_request_from_context(data1)
         self.assertEqual(
-            builder.get_event_source_url(), "https://first.example.com/page1"
+            builder.get_event_source_url(),
+            "https://first.example.com/page1" + self.net_new_suffix,
         )
 
         data2 = PlainDataObject(
@@ -302,7 +314,8 @@ class TestEventSourceUrlReset(_BaseTest):
         )
         builder.process_request_from_context(data2)
         self.assertEqual(
-            builder.get_event_source_url(), "http://second.example.com/page2"
+            builder.get_event_source_url(),
+            "http://second.example.com/page2" + self.net_new_suffix,
         )
 
     def test_reset_to_none_when_second_call_has_no_scheme(self):
@@ -354,10 +367,13 @@ class TestEventSourceUrlIndependenceFromReferrer(_BaseTest):
 
         builder.process_request_from_context(data)
 
-        self.assertEqual(builder.get_event_source_url(), "https://example.com/landing")
+        self.assertEqual(
+            builder.get_event_source_url(),
+            "https://example.com/landing" + self.net_new_suffix,
+        )
         self.assertEqual(
             builder.get_referrer_url(),
-            "https://facebook.com/ad?fbclid=ref123",
+            "https://facebook.com/ad?fbclid=ref123" + self.no_change_suffix,
         )
 
     def test_event_source_url_set_without_referrer(self):
@@ -375,7 +391,10 @@ class TestEventSourceUrlIndependenceFromReferrer(_BaseTest):
 
         builder.process_request_from_context(data)
 
-        self.assertEqual(builder.get_event_source_url(), "https://example.com/page")
+        self.assertEqual(
+            builder.get_event_source_url(),
+            "https://example.com/page" + self.net_new_suffix,
+        )
         self.assertIsNone(builder.get_referrer_url())
 
 
@@ -394,7 +413,8 @@ class TestEventSourceUrlViaWsgi(_BaseTest):
         builder.process_request_from_context(environ)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://wsgi-app.com/api/v1/resource"
+            builder.get_event_source_url(),
+            "https://wsgi-app.com/api/v1/resource" + self.net_new_suffix,
         )
 
     def test_wsgi_environ_with_query_string(self):
@@ -409,7 +429,8 @@ class TestEventSourceUrlViaWsgi(_BaseTest):
         builder.process_request_from_context(environ)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://wsgi-app.com/search?q=test"
+            builder.get_event_source_url(),
+            "https://wsgi-app.com/search?q=test" + self.net_new_suffix,
         )
 
     def test_django_request_sets_event_source_url(self):
@@ -425,7 +446,8 @@ class TestEventSourceUrlViaWsgi(_BaseTest):
         builder.process_request_from_context(request)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://django-app.com/dashboard"
+            builder.get_event_source_url(),
+            "https://django-app.com/dashboard" + self.net_new_suffix,
         )
 
     def test_flask_request_sets_event_source_url(self):
@@ -440,7 +462,10 @@ class TestEventSourceUrlViaWsgi(_BaseTest):
 
         builder.process_request_from_context(request)
 
-        self.assertEqual(builder.get_event_source_url(), "http://flask-app.com/health")
+        self.assertEqual(
+            builder.get_event_source_url(),
+            "http://flask-app.com/health" + self.net_new_suffix,
+        )
 
 
 # =============================================================================
@@ -458,7 +483,8 @@ class TestEventSourceUrlViaAsgi(_BaseTest):
         builder.process_request_from_context(scope)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://asgi-app.com/api/data"
+            builder.get_event_source_url(),
+            "https://asgi-app.com/api/data" + self.net_new_suffix,
         )
 
     def test_asgi_scope_with_query_string(self):
@@ -473,7 +499,8 @@ class TestEventSourceUrlViaAsgi(_BaseTest):
         builder.process_request_from_context(scope)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://asgi-app.com/search?q=hello"
+            builder.get_event_source_url(),
+            "https://asgi-app.com/search?q=hello" + self.net_new_suffix,
         )
 
     def test_starlette_request_sets_event_source_url(self):
@@ -488,7 +515,8 @@ class TestEventSourceUrlViaAsgi(_BaseTest):
         builder.process_request_from_context(request)
 
         self.assertEqual(
-            builder.get_event_source_url(), "https://starlette-app.com/endpoint"
+            builder.get_event_source_url(),
+            "https://starlette-app.com/endpoint" + self.net_new_suffix,
         )
 
 

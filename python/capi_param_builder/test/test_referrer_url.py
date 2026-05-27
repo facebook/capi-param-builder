@@ -50,6 +50,11 @@ class _BaseTest(unittest.TestCase):
         )
         self.mock_version = self.version_patcher.start()
         self.mock_version.return_value = "1.0.1"
+        # Compute expected suffixes via a probe builder so the values stay
+        # in sync with the appendix algorithm and the mocked version.
+        _probe = ParamBuilder()
+        self.no_change_suffix: str = "." + _probe.appendix_no_change
+        self.net_new_suffix: str = "." + _probe.appendix_net_new
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -62,7 +67,7 @@ class TestReferrerUrlViaProcessRequest(_BaseTest):
         referer = "https://facebook.com/ad?fbclid=IwAR_clickId123"
         builder.process_request("example.com", {}, {}, referer)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_returns_none_when_no_referer(self):
         builder = ParamBuilder()
@@ -88,18 +93,18 @@ class TestReferrerUrlViaProcessRequest(_BaseTest):
             referer,
         )
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_reset_between_consecutive_calls(self):
         builder = ParamBuilder()
 
         referer1 = "https://facebook.com/ad1?fbclid=first"
         builder.process_request("example.com", {}, {}, referer1)
-        self.assertEqual(builder.get_referrer_url(), referer1)
+        self.assertEqual(builder.get_referrer_url(), referer1 + self.no_change_suffix)
 
         referer2 = "https://facebook.com/ad2?fbclid=second"
         builder.process_request("example.com", {}, {}, referer2)
-        self.assertEqual(builder.get_referrer_url(), referer2)
+        self.assertEqual(builder.get_referrer_url(), referer2 + self.no_change_suffix)
 
     def test_reset_to_none_on_subsequent_call_without_referer(self):
         builder = ParamBuilder()
@@ -139,7 +144,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
 
         builder.process_request_from_context(data)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_plain_data_object_without_referer(self):
         builder = ParamBuilder()
@@ -159,7 +164,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
 
         builder.process_request_from_context(environ)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_wsgi_environ_without_referer(self):
         builder = ParamBuilder()
@@ -184,7 +189,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
 
         builder.process_request_from_context(request)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_flask_request_with_referer(self):
         builder = ParamBuilder()
@@ -198,7 +203,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
 
         builder.process_request_from_context(request)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_asgi_scope_with_referer(self):
         builder = ParamBuilder()
@@ -212,7 +217,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
 
         builder.process_request_from_context(scope)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_asgi_request_with_referer(self):
         builder = ParamBuilder()
@@ -227,7 +232,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
 
         builder.process_request_from_context(request)
 
-        self.assertEqual(builder.get_referrer_url(), referer)
+        self.assertEqual(builder.get_referrer_url(), referer + self.no_change_suffix)
 
     def test_asgi_scope_without_referer(self):
         builder = ParamBuilder()
@@ -246,7 +251,7 @@ class TestReferrerUrlViaProcessRequestFromContext(_BaseTest):
         referer1 = "https://facebook.com/ad1"
         data1 = PlainDataObject("example.com", {}, {}, referer1, None, None)
         builder.process_request_from_context(data1)
-        self.assertEqual(builder.get_referrer_url(), referer1)
+        self.assertEqual(builder.get_referrer_url(), referer1 + self.no_change_suffix)
 
         data2 = PlainDataObject("example.com", {}, {}, None, None, None)
         builder.process_request_from_context(data2)
