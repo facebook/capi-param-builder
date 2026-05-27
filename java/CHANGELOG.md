@@ -3,7 +3,10 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+## v1.3.0
 - Adding support for taking request context as input to the SDK.
+- Adding support to get referrer url and event source url from the SDK.
 
 ## v1.1.1
 - Improve the is_new flag with more breakdown on net new and modified new option.
