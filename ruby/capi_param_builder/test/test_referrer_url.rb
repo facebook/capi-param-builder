@@ -16,6 +16,12 @@ Minitest.after_run do
   ReleaseConfig::VERSION = ORIGINAL_VERSION_TRU
 end
 
+# Computed once after the version override so the suffix reflects v1.0.1.
+# A probe builder reads the actual appendix values produced by the SDK.
+_probe_tru = ParamBuilder.new
+NO_CHANGE_SUFFIX_TRU = "." + _probe_tru.instance_variable_get(:@appendix_no_change)
+NET_NEW_SUFFIX_TRU = "." + _probe_tru.instance_variable_get(:@appendix_net_new)
+
 class FakeRackRequest
   attr_reader :env
   def initialize(env)
@@ -33,7 +39,7 @@ class TestReferrerPreservedBeforeFbclidExtraction < Minitest::Test
     referer = "https://facebook.com/ad?fbclid=IwAR_click123&utm=campaign"
     builder.process_request("example.com", {}, {}, referer)
 
-    assert_equal(referer, builder.get_referrer_url)
+    assert_equal(referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
   end
 
   def test_referrer_url_preserved_when_fbclid_in_both_query_and_referer
@@ -43,7 +49,7 @@ class TestReferrerPreservedBeforeFbclidExtraction < Minitest::Test
       "example.com", { "fbclid" => "fromQuery" }, {}, referer
     )
 
-    assert_equal(referer, builder.get_referrer_url)
+    assert_equal(referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
   end
 
   def test_referrer_url_not_mutated_by_fbclid_extraction
@@ -52,7 +58,7 @@ class TestReferrerPreservedBeforeFbclidExtraction < Minitest::Test
     original_referer = referer.dup
     builder.process_request("example.com", {}, {}, referer)
 
-    assert_equal(original_referer, builder.get_referrer_url)
+    assert_equal(original_referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
     refute_nil(builder.get_fbc)
   end
 end
@@ -98,7 +104,7 @@ class TestReferrerUrlViaProcessRequest < Minitest::Test
       referer
     )
 
-    assert_equal(referer, builder.get_referrer_url)
+    assert_equal(referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
   end
 
   def test_referer_stored_with_empty_query_and_cookies
@@ -106,7 +112,7 @@ class TestReferrerUrlViaProcessRequest < Minitest::Test
     referer = "https://example.com/page"
     builder.process_request("example.com", {}, {}, referer)
 
-    assert_equal(referer, builder.get_referrer_url)
+    assert_equal(referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
   end
 
   def test_referer_stored_with_no_scheme
@@ -114,7 +120,7 @@ class TestReferrerUrlViaProcessRequest < Minitest::Test
     referer = "example.com/some-page?param=value"
     builder.process_request("example.com", {}, {}, referer)
 
-    assert_equal(referer, builder.get_referrer_url)
+    assert_equal(referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
   end
 end
 
@@ -132,7 +138,7 @@ class TestReferrerUrlViaProcessRequestFromContext < Minitest::Test
 
     builder.process_request_from_context(data)
 
-    assert_equal(referer, builder.get_referrer_url)
+    assert_equal(referer + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url)
   end
 
   def test_plain_data_object_without_referer
@@ -154,7 +160,10 @@ class TestReferrerUrlViaProcessRequestFromContext < Minitest::Test
 
     builder.process_request_from_context(env)
 
-    assert_equal("https://facebook.com/ad?ref=rack", builder.get_referrer_url)
+    assert_equal(
+      "https://facebook.com/ad?ref=rack" + NO_CHANGE_SUFFIX_TRU,
+      builder.get_referrer_url
+    )
   end
 
   def test_rack_env_hash_without_referer
@@ -179,7 +188,10 @@ class TestReferrerUrlViaProcessRequestFromContext < Minitest::Test
 
     builder.process_request_from_context(request)
 
-    assert_equal("https://source.example.com/link", builder.get_referrer_url)
+    assert_equal(
+      "https://source.example.com/link" + NO_CHANGE_SUFFIX_TRU,
+      builder.get_referrer_url
+    )
   end
 end
 
@@ -193,7 +205,10 @@ class TestReferrerUrlResetBetweenCalls < Minitest::Test
     builder.process_request(
       "example.com", {}, {}, "https://first-referer.com/page"
     )
-    assert_equal("https://first-referer.com/page", builder.get_referrer_url)
+    assert_equal(
+      "https://first-referer.com/page" + NO_CHANGE_SUFFIX_TRU,
+      builder.get_referrer_url
+    )
 
     builder.process_request("example.com", {}, {}, nil)
     assert_nil(builder.get_referrer_url)
@@ -204,12 +219,16 @@ class TestReferrerUrlResetBetweenCalls < Minitest::Test
     builder.process_request(
       "example.com", {}, {}, "https://first.com"
     )
-    assert_equal("https://first.com", builder.get_referrer_url)
+    assert_equal(
+      "https://first.com" + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url
+    )
 
     builder.process_request(
       "other.example.com", {}, {}, "https://second.com"
     )
-    assert_equal("https://second.com", builder.get_referrer_url)
+    assert_equal(
+      "https://second.com" + NO_CHANGE_SUFFIX_TRU, builder.get_referrer_url
+    )
   end
 
   def test_referrer_resets_via_process_request_from_context
@@ -218,7 +237,10 @@ class TestReferrerUrlResetBetweenCalls < Minitest::Test
       "example.com", {}, {}, "https://has-referer.com", nil, nil
     )
     builder.process_request_from_context(data_with)
-    assert_equal("https://has-referer.com", builder.get_referrer_url)
+    assert_equal(
+      "https://has-referer.com" + NO_CHANGE_SUFFIX_TRU,
+      builder.get_referrer_url
+    )
 
     data_without = PlainDataObject.new("example.com", {}, {}, nil, nil, nil)
     builder.process_request_from_context(data_without)

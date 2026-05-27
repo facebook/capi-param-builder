@@ -187,6 +187,9 @@ class ParamBuilder
     @fbp = pre_process_cookies(cookies, FBP_NAME)
 
     @referrer_url = referer
+    if @referrer_url.is_a?(String) && !@referrer_url.empty?
+      @referrer_url = "#{@referrer_url}.#{@appendix_no_change}"
+    end
 
     # Get new fbc payload
     new_fbc_payload = get_new_fbc_payload_from_url(queries, referer)
@@ -343,6 +346,9 @@ class ParamBuilder
     url = "#{data.scheme.downcase}://#{data.host}"
     if !data.request_uri.nil? && !data.request_uri.empty?
       url += data.request_uri
+    end
+    if url.is_a?(String) && !url.empty?
+      url = "#{url}.#{@appendix_net_new}"
     end
     url
   end
