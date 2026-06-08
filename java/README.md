@@ -175,7 +175,7 @@ for (CookieSetting updatedCookie : paramBuilder.getCookiesToSet()) {
     }
 ```
 
-6. Get fbc and fbp
+6. Get fbc, fbp, eventSourceUrl, and referrerUrl
 
 ```
 String fbc = paramBuilder.getFbc();
@@ -183,6 +183,14 @@ String fbc = paramBuilder.getFbc();
 
 ```
 String fbp = paramBuilder.getFbp();
+```
+
+```
+String eventSourceUrl = paramBuilder.getEventSourceUrl();
+```
+
+```
+String referrerUrl = paramBuilder.getReferrerUrl();
 ```
 
 7. Send fbc and fbp back to the Conversions API.
@@ -217,6 +225,52 @@ Spring jars. It supports out of the box:
 For any other framework, you can build a `PlainDataObject` directly and pass it
 in, or fall back to the original `processRequest(host, queries, cookies, referer)`
 call.
+
+## URL support
+
+The SDK can extract `event_source_url` and `referrer_url` from the incoming
+HTTP request. These values help improve Conversions API event matching and
+attribution quality.
+
+**Using `processRequestFromContext` (recommended):**
+
+```java
+paramBuilder.processRequestFromContext(request);
+
+String eventSourceUrl = paramBuilder.getEventSourceUrl();
+String referrerUrl = paramBuilder.getReferrerUrl();
+```
+
+**Using `processRequest` (deprecated):**
+
+`processRequest` does not construct `eventSourceUrl` — only `referrerUrl`
+is available via the referer parameter. Use `processRequestFromContext` if you
+need `eventSourceUrl`.
+
+<details>
+<summary>How it works</summary>
+
+- `eventSourceUrl` is constructed from the scheme, host, and request URI
+  of the incoming HTTP request.
+- `referrerUrl` is captured from the `Referer` header before any fbclid
+  extraction, with an SDK version appendix added.
+- Both return `null` when the required information is not available.
+
+</details>
+
+**Send them with your Conversions API payload:**
+
+```java
+Map<String, Object> data = new HashMap<>();
+data.put("event_name", "...");
+data.put("event_time", System.currentTimeMillis() / 1000);
+data.put("event_source_url", paramBuilder.getEventSourceUrl());
+
+Map<String, Object> userData = new HashMap<>();
+userData.put("fbc", paramBuilder.getFbc());
+userData.put("fbp", paramBuilder.getFbp());
+data.put("user_data", userData);
+```
 
 ## License
 

@@ -167,7 +167,7 @@ end
 
 ```
 
-6. get correct fbc and fbp.
+6. get correct fbc, fbp, event_source_url, and referrer_url.
 
 ```
 
@@ -178,6 +178,18 @@ fbc = builder.get_fbc()
 ```
 
 fbp = builder.get_fbp()
+
+```
+
+```
+
+event_source_url = builder.get_event_source_url()
+
+```
+
+```
+
+referrer_url = builder.get_referrer_url()
 
 ```
 
@@ -210,6 +222,52 @@ of the box any Rack-based framework:
 For any other framework, you can build a `PlainDataObject` directly and pass it
 in, or fall back to the original `process_request(host, queries, cookies, referer)`
 call.
+
+## URL support
+
+The SDK can extract `event_source_url` and `referrer_url` from the incoming
+HTTP request. These values help improve Conversions API event matching and
+attribution quality.
+
+**Using `process_request_from_context` (recommended):**
+
+```ruby
+builder.process_request_from_context(request)
+
+event_source_url = builder.get_event_source_url()
+referrer_url = builder.get_referrer_url()
+```
+
+**Using `process_request` (deprecated):**
+
+`process_request` does not construct `event_source_url` — only `referrer_url`
+is available via the referer parameter. Use `process_request_from_context` if
+you need `event_source_url`.
+
+<details>
+<summary>How it works</summary>
+
+- `event_source_url` is constructed from the scheme, host, and request URI
+  of the incoming HTTP request.
+- `referrer_url` is captured from the `Referer` header before any fbclid
+  extraction, with an SDK version appendix added.
+- Both return `nil` when the required information is not available.
+
+</details>
+
+**Send them with your Conversions API payload:**
+
+```ruby
+data = {
+  event_name: '...',
+  event_time: Time.now.to_i,
+  event_source_url: builder.get_event_source_url(),
+  user_data: {
+    fbc: builder.get_fbc(),
+    fbp: builder.get_fbp(),
+  },
+}
+```
 
 ## License
 

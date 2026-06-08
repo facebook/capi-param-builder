@@ -122,7 +122,7 @@ for cookie in paramBuilder.get_cookies_to_set():
       f"{cookie.name}={cookie.value};Max-Age={cookie.max_age};path=/;domain={cookie.domain}",)
 ```
 
-6. Get fbc and fbp
+6. Get fbc, fbp, event_source_url, and referrer_url
 
 ```
 fbc = paramBuilder.get_fbc()
@@ -130,6 +130,14 @@ fbc = paramBuilder.get_fbc()
 
 ```
 fbp = paramBuilder.get_fbp()
+```
+
+```
+event_source_url = paramBuilder.get_event_source_url()
+```
+
+```
+referrer_url = paramBuilder.get_referrer_url()
 ```
 
 7. Send fbc and fbp back with Conversion API.
@@ -175,6 +183,52 @@ of the box:
 For any other framework, you can build a `PlainDataObject` directly and pass it
 in, or fall back to the original `process_request(host, queries, cookies, referer)`
 call.
+
+## URL support
+
+The SDK can extract `event_source_url` and `referrer_url` from the incoming
+HTTP request. These values help improve Conversions API event matching and
+attribution quality.
+
+**Using `process_request_from_context` (recommended):**
+
+```python
+paramBuilder.process_request_from_context(request)
+
+event_source_url = paramBuilder.get_event_source_url()
+referrer_url = paramBuilder.get_referrer_url()
+```
+
+**Using `process_request` (deprecated):**
+
+`process_request` does not construct `event_source_url` — only `referrer_url`
+is available via the referer parameter. Use `process_request_from_context` if
+you need `event_source_url`.
+
+<details>
+<summary>How it works</summary>
+
+- `event_source_url` is constructed from the scheme, host, and request URI
+  of the incoming HTTP request.
+- `referrer_url` is captured from the `Referer` header before any fbclid
+  extraction, with an SDK version appendix added.
+- Both return `None` when the required information is not available.
+
+</details>
+
+**Send them with your Conversions API payload:**
+
+```python
+data = {
+    "event_name": "...",
+    "event_time": int(time.time()),
+    "event_source_url": paramBuilder.get_event_source_url(),
+    "user_data": {
+        "fbc": paramBuilder.get_fbc(),
+        "fbp": paramBuilder.get_fbp(),
+    },
+}
+```
 
 ## License
 

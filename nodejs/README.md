@@ -148,7 +148,7 @@ for (const cookie of builder.getCookiesToSet()) {
 res.setHeader('Set-Cookie', responseCookies);
 ```
 
-5.  Get fbc/fbp, client_ip_address, normalized and hashed PII values
+5.  Get fbc/fbp, client_ip_address, event_source_url, referrer_url, normalized and hashed PII values
 
 ```
 
@@ -164,6 +164,16 @@ const fbp = builder.getFbp();
 
 
 const client_ip_address = builder.getClientIpAddress();
+
+
+```
+
+const eventSourceUrl = builder.getEventSourceUrl();
+
+```
+
+
+const referrerUrl = builder.getReferrerUrl();
 
 
 ```
@@ -226,6 +236,53 @@ extracts host / cookies / query / referer for you. It supports out of the box:
 For any other framework, you can build a `PlainDataObject` directly and pass it
 in, or fall back to the original `processRequest(host, queries, cookies, referer)`
 call.
+
+## URL support
+
+The SDK can extract `event_source_url` and `referrer_url` from the incoming
+HTTP request. These values help improve Conversions API event matching and
+attribution quality.
+
+**Using `processRequestFromContext` (recommended):**
+
+```js
+builder.processRequestFromContext(req);
+
+const eventSourceUrl = builder.getEventSourceUrl();
+const referrerUrl = builder.getReferrerUrl();
+```
+
+**Using `processRequest` (deprecated):**
+
+`processRequest` does not construct `eventSourceUrl` — only `referrerUrl`
+is available via the referer parameter. Use `processRequestFromContext` if you
+need `eventSourceUrl`.
+
+<details>
+<summary>How it works</summary>
+
+- `eventSourceUrl` is constructed from the scheme, host, and request URI
+  of the incoming HTTP request.
+- `referrerUrl` is captured from the `Referer` header before any fbclid
+  extraction, with an SDK version appendix added.
+- Both return `null` when the required information is not available.
+
+</details>
+
+**Send them with your Conversions API payload:**
+
+```js
+const data = {
+    event_name: '...',
+    event_time: Math.floor(Date.now() / 1000),
+    event_source_url: builder.getEventSourceUrl(),
+    user_data: {
+        fbc: builder.getFbc(),
+        fbp: builder.getFbp(),
+        client_ip_address: builder.getClientIpAddress(),
+    },
+};
+```
 
 ## License
 

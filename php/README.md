@@ -158,7 +158,7 @@ foreach ($cookie_to_set as $cookie) {
 
 If there is no change to your current cookies, the returned list will be empty.
 
-5. Get fbc/fbp, client_ip_address, normalized and hashed PII values
+5. Get fbc/fbp, client_ip_address, event_source_url, referrer_url, normalized and hashed PII values
 
 ```
 
@@ -174,6 +174,16 @@ $fbp = $param_builder->getFbp();
 
 
 $client_ip_address = $param_builder->getClientIpAddress();
+
+
+```
+
+$event_source_url = $param_builder->getEventSourceUrl();
+
+```
+
+
+$referrer_url = $param_builder->getReferrerUrl();
 
 
 ```
@@ -238,6 +248,53 @@ the box:
 For any other framework, you can build a `PlainDataObject` directly and pass it
 in, or fall back to the original `processRequest($host, $queries, $cookies, $referer)`
 call.
+
+## URL support
+
+The SDK can extract `event_source_url` and `referrer_url` from the incoming
+HTTP request. These values help improve Conversions API event matching and
+attribution quality.
+
+**Using `processRequestFromContext` (recommended):**
+
+```php
+$param_builder->processRequestFromContext(); // reads from $_SERVER automatically
+
+$event_source_url = $param_builder->getEventSourceUrl();
+$referrer_url = $param_builder->getReferrerUrl();
+```
+
+**Using `processRequest` (deprecated):**
+
+`processRequest` does not construct `event_source_url` — only `referrer_url`
+is available via the referer parameter. Use `processRequestFromContext` if you
+need `event_source_url`.
+
+<details>
+<summary>How it works</summary>
+
+- `event_source_url` is constructed from the scheme, host, and request URI
+  of the incoming HTTP request.
+- `referrer_url` is captured from the `Referer` header before any fbclid
+  extraction, with an SDK version appendix added.
+- Both return `null` when the required information is not available.
+
+</details>
+
+**Send them with your Conversions API payload:**
+
+```php
+$data = [
+    'event_name' => '...',
+    'event_time' => time(),
+    'event_source_url' => $param_builder->getEventSourceUrl(),
+    'user_data' => [
+        'fbc' => $param_builder->getFbc(),
+        'fbp' => $param_builder->getFbp(),
+        'client_ip_address' => $param_builder->getClientIpAddress(),
+    ],
+];
+```
 
 ## License
 
