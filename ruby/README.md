@@ -37,7 +37,7 @@ Verify the SDK name and version.
 2. Install the capi_param_builder library, from above #Quick Start. Also install
    optional 3rd party library(sinatra, public_suffix) to run the demo.
 
-2.1 sinatra. Install by running `gem install sinatra`. An easy web framwork.
+2.1 sinatra. Install by running `gem install sinatra`. An easy web framework.
 
 2.2 (optional) public_suffix. Install by running `gem install public_suffix`. It
 will help resolve etld+1, if you'd prefer to use this option to get your etld+1
@@ -142,7 +142,7 @@ Option 1: Save the `cookies_to_be_updated` cookies from
 
 ```
 
-# Get the recoomended saved cookie from step 4 above
+# Get the recommended saved cookie from step 4 above
 
 cookies_to_be_updated = builder.process_request_from_context(request)
 
@@ -162,7 +162,7 @@ response.
 
 ```
 
-# Get the recoomended saved cookie from step 4 above
+# Get the recommended saved cookie from step 4 above
 
 builder.process_request_from_context(request)
 
