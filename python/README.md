@@ -84,7 +84,19 @@ down from your input URL. This may miss some accuracy.
 paramBuilder = ParamBuilder() # Not recommended.
 ```
 
-4. Call `process_request` function to process fbc and fbp
+4. [Recommended] Call `process_request_from_context` to process fbc, fbp,
+   event_source_url and referrer_url. Pass your framework's request object (or
+   WSGI/ASGI environ) directly — the SDK extracts host / cookies / query /
+   referer (and the request URL for `event_source_url`) for you, and returns the
+   recommended cookies to set. See the [Framework support](#framework-support)
+   section for exactly what to pass for your framework.
+
+```
+updated_cookies = paramBuilder.process_request_from_context(request)
+```
+
+**Deprecated:** `process_request` is still supported but deprecated. It does not
+construct `event_source_url`. Prefer `process_request_from_context` above.
 
 ```
 updated_cookies = paramBuilder.process_request(
@@ -99,11 +111,12 @@ updated_cookies = paramBuilder.process_request(
    the save cookie API may vary. Feel free to choose the best fit for your use
    case. Below uses the example from demo application.
 
-Option 1: Get the recommended saved cookie from step 4 `process_request` above.
+Option 1: Get the recommended saved cookie from step 4
+`process_request_from_context` above.
 
 ```
-// Get the recommended saved cookie from step 4 API
-updated_cookies = paramBuilder.process_request(...)
+# Get the recommended saved cookie from step 4 API
+updated_cookies = paramBuilder.process_request_from_context(request)
 
 for cookie in updated_cookies:
   self.send_header( "Set-Cookie",
@@ -114,8 +127,8 @@ Option 2: Get the recommended saved cookie from
 `paramBuilder.get_cookies_to_set()`
 
 ```
-# process_request should be always called
-paramBuilder.process_request(...)
+# process_request_from_context should be always called
+paramBuilder.process_request_from_context(request)
 
 for cookie in paramBuilder.get_cookies_to_set():
   self.send_header( "Set-Cookie",
@@ -144,11 +157,13 @@ referrer_url = paramBuilder.get_referrer_url()
 
 ```
 data=[
-  'event_name: '...',
-  'event_tme': <your_time>,
+  'event_name': '...',
+  'event_time': <your_time>,
+  'event_source_url': event_source_url, # The value provided in step 6
+  'referrer_url': referrer_url, # The value provided in step 6
   'user_data': {
-    'fbc': fbc, // The value provided in step 5
-    'fbp': fbp, // The value provided in step 5
+    'fbc': fbc, # The value provided in step 6
+    'fbp': fbp, # The value provided in step 6
     ...
   }
   ...
@@ -223,6 +238,7 @@ data = {
     "event_name": "...",
     "event_time": int(time.time()),
     "event_source_url": paramBuilder.get_event_source_url(),
+    "referrer_url": paramBuilder.get_referrer_url(),
     "user_data": {
         "fbc": paramBuilder.get_fbc(),
         "fbp": paramBuilder.get_fbp(),

@@ -113,7 +113,20 @@ example.demo.com. This option may be less accurate.
  $param_builder = new FacebookAds\ParamBuilder();
 ```
 
-3. Call `processRequest` to process fbc, fbp and fbi(client_ip_address).
+3. [Recommended] Call `processRequestFromContext` to process fbc, fbp,
+   client_ip_address, event_source_url and referrer_url. Pass your framework's
+   request context (or `null` to read from the `$_SERVER` / `$_COOKIE` / `$_GET`
+   superglobals) — the SDK extracts host / cookies / query / referer (and the
+   request URI for `event_source_url`) for you, and returns the recommended
+   cookies to set. See the [Framework support](#framework-support) section for
+   exactly what to pass for your framework.
+
+```
+$cookie_to_set = $param_builder->processRequestFromContext(); // reads from $_SERVER
+```
+
+**Deprecated:** `processRequest` is still supported but deprecated. It does not
+construct `event_source_url`. Prefer `processRequestFromContext` above.
 
 ```
 $param_builder->processRequest(
@@ -134,7 +147,7 @@ $param_builder->processRequest(
 Recommended: get `$cookie_to_set` from API call in step 3.
 
 ```
-$cookie_to_set = $param_builder->processRequest(...)
+$cookie_to_set = $param_builder->processRequestFromContext();
 ```
 
 Optional: getCookiesToSet API
@@ -212,8 +225,10 @@ API is to get normalized and hashed (sha256) PII from input piiValue, supported 
 
 ```
 data=[
- 'event_name: '...',
+ 'event_name': '...',
  'event_time': <your_time>,
+ 'event_source_url': $event_source_url, // The value provided in step 5
+ 'referrer_url': $referrer_url, // The value provided in step 5
  'user_data': {
    'fbc': $fbc, // The value provided in step 5
    'fbp': $fbp, // The value provided in step 5
@@ -288,6 +303,7 @@ $data = [
     'event_name' => '...',
     'event_time' => time(),
     'event_source_url' => $param_builder->getEventSourceUrl(),
+    'referrer_url' => $param_builder->getReferrerUrl(),
     'user_data' => [
         'fbc' => $param_builder->getFbc(),
         'fbp' => $param_builder->getFbp(),

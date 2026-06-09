@@ -106,7 +106,21 @@ builder = ParamBuilder.new()
 
 ```
 
-4. Call `process_request` function to process fbc and fbp
+4. [Recommended] Call `process_request_from_context` to process fbc, fbp,
+   event_source_url and referrer_url. Pass your framework's request object (or
+   Rack `env` hash) directly — the SDK extracts host / cookies / query / referer
+   (and the request URL for `event_source_url`) for you, and returns the
+   recommended cookies to set. See the [Framework support](#framework-support)
+   section for exactly what to pass for your framework.
+
+```
+
+cookies_to_be_updated = builder.process_request_from_context(request)
+
+```
+
+**Deprecated:** `process_request` is still supported but deprecated. It does not
+construct `event_source_url`. Prefer `process_request_from_context` above.
 
 ```
 
@@ -123,14 +137,14 @@ cookies_to_be_updated = builder.process_request(
    framework, the save cookie API may vary. Feel free to choose the best fit for
    your use case. Below uses the example from demo application.
 
-Option 1: Save the `cookies_to_be_updated` cookies from `process_request` to
-your response.
+Option 1: Save the `cookies_to_be_updated` cookies from
+`process_request_from_context` to your response.
 
 ```
 
 # Get the recoomended saved cookie from step 4 above
 
-cookies_to_be_updated = builder.process_request(...)
+cookies_to_be_updated = builder.process_request_from_context(request)
 
 for cookie in cookies_to_be_updated do response.set_cookie(
     cookie.name,
@@ -150,7 +164,7 @@ response.
 
 # Get the recoomended saved cookie from step 4 above
 
-builder.process_request(...)
+builder.process_request_from_context(request)
 
 # `cookies_to_be_updated` from get_cookies_to_set()
 
@@ -198,11 +212,13 @@ referrer_url = builder.get_referrer_url()
 ```
 
 data=[
-   'event_name: '...',
-   'event_tme': <your_time>,
+   'event_name': '...',
+   'event_time': <your_time>,
+   'event_source_url': event_source_url, # The value provided in step 6
+   'referrer_url': referrer_url, # The value provided in step 6
    'user_data': {
-      'fbc': fbc, // The value provided in step 5
-      'fbp': fbp, // The value provided in step 5 ...
+      'fbc': fbc, # The value provided in step 6
+      'fbp': fbp, # The value provided in step 6 ...
    }
 ...
 ]
@@ -262,6 +278,7 @@ data = {
   event_name: '...',
   event_time: Time.now.to_i,
   event_source_url: builder.get_event_source_url(),
+  referrer_url: builder.get_referrer_url(),
   user_data: {
     fbc: builder.get_fbc(),
     fbp: builder.get_fbp(),

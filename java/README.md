@@ -120,10 +120,23 @@ ParamBuilder paramBuilder = new ParamBuilder(Arrays.asList('example.com', 'yourD
 // ParamBuilder paramBuilder = new ParamBuilder();
 ```
 
-4. Call `processRequest` to process the fbc, fbp
+4. [Recommended] Call `processRequestFromContext` to process fbc, fbp,
+   eventSourceUrl and referrerUrl. Pass your framework's request object (e.g. a
+   Servlet `HttpServletRequest`, Spring WebFlux `ServerHttpRequest`, or a raw
+   environ-style `Map`) directly — the SDK extracts host / cookies / query /
+   referer (and the request URI for `eventSourceUrl`) for you, and returns the
+   recommended cookies to set. See the [Framework support](#framework-support)
+   section for exactly what to pass for your framework.
 
 ```
-// Option 1: recommended - with referer url
+List<CookieSetting> updatedCookieList = paramBuilder.processRequestFromContext(request);
+```
+
+**Deprecated:** `processRequest` is still supported but deprecated. It does not
+construct `eventSourceUrl`. Prefer `processRequestFromContext` above.
+
+```
+// Option 1: with referer url
 List<CookieSetting> updatedCookieList =
         paramBuilder.processRequest(
             request.getHeader("host"),
@@ -144,12 +157,13 @@ List<CookieSetting> updatedCookieList =
    save cookie API may vary. Feel free to choose the best fit for your use case.
    Below uses the example from the demo application.
 
-Option 1: Get the updatedCookieList list from `processRequest` in step 4 above.
+Option 1: Get the `updatedCookieList` list from `processRequestFromContext` in
+step 4 above.
 
 ```
-// Call the processRequest as show in step 4 above.
+// Call the processRequestFromContext as show in step 4 above.
 List<CookieSetting> updatedCookieList =
-        paramBuilder.processRequest(..);
+        paramBuilder.processRequestFromContext(request);
 
 // Save cookies for the list of updated cookie list
 for (CookieSetting updatedCookie : updatedCookieList) {
@@ -164,7 +178,7 @@ Option 2: use `getCookiesToSet` API.
 
 ```
 // Still need process the request.
-paramBuilder.processRequest(..);
+paramBuilder.processRequestFromContext(request);
 
 // Save cookies for the list of updated cookie list
 for (CookieSetting updatedCookie : paramBuilder.getCookiesToSet()) {
@@ -197,11 +211,13 @@ String referrerUrl = paramBuilder.getReferrerUrl();
 
 ```
 data=[
-  'event_name: '...',
-  'event_tme': <your_time>,
+  'event_name': '...',
+  'event_time': <your_time>,
+  'event_source_url': eventSourceUrl, // The value provided in step 6
+  'referrer_url': referrerUrl, // The value provided in step 6
   'user_data': {
-    'fbc': fbc, // The value provided in step 5
-    'fbp': fbp, // The value provided in step 5
+    'fbc': fbc, // The value provided in step 6
+    'fbp': fbp, // The value provided in step 6
     ...
   }
   ...
@@ -265,6 +281,7 @@ Map<String, Object> data = new HashMap<>();
 data.put("event_name", "...");
 data.put("event_time", System.currentTimeMillis() / 1000);
 data.put("event_source_url", paramBuilder.getEventSourceUrl());
+data.put("referrer_url", paramBuilder.getReferrerUrl());
 
 Map<String, Object> userData = new HashMap<>();
 userData.put("fbc", paramBuilder.getFbc());
