@@ -197,8 +197,9 @@ API is to get normalized and hashed (sha256) PII from input piiValue, supported 
 
 ```
 
-6. Send fbc, fbp, client_ip_address, email and phone back through Conversions
-   API under UserData section:
+6. Send the parameters back to the Conversions API. `event_source_url` and
+   `referrer_url` are sent at the event level; `fbc`, `fbp`, `client_ip_address`,
+   `em` (email) and `ph` (phone) are sent inside `user_data`:
 
 ```
 data=[

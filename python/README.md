@@ -153,7 +153,9 @@ event_source_url = paramBuilder.get_event_source_url()
 referrer_url = paramBuilder.get_referrer_url()
 ```
 
-7. Send fbc and fbp back with Conversion API.
+7. Send the parameters back to the Conversions API. `event_source_url` and
+   `referrer_url` are sent at the event level; `fbc` and `fbp` are sent inside
+   `user_data`.
 
 ```
 data=[

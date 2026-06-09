@@ -207,7 +207,9 @@ String eventSourceUrl = paramBuilder.getEventSourceUrl();
 String referrerUrl = paramBuilder.getReferrerUrl();
 ```
 
-7. Send fbc and fbp back to the Conversions API.
+7. Send the parameters back to the Conversions API. `event_source_url` and
+   `referrer_url` are sent at the event level; `fbc` and `fbp` are sent inside
+   `user_data`.
 
 ```
 data=[
