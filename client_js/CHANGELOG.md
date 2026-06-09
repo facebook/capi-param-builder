@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Version v1.3.1
+- Added `umdNamedDefine: true` to the webpack UMD output so the bundle emits a named `define('clientParamBuilder', [], ...)` instead of an anonymous `define([], ...)`. This prevents RequireJS (e.g. on Magento 2 checkout pages) from intercepting the anonymous module and breaking page JavaScript.
+
 ## Version v1.3.0
 - Standardized on yarn as the sole package manager — removed all npm references
 - Switched CI workflow from npm to yarn (`yarn install --frozen-lockfile`, `yarn test`, `yarn build`)

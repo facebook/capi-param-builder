@@ -25,7 +25,7 @@ examples.
 | Python | 1.3.0 | `capi-param-builder-python` | [PyPI](https://pypi.org/project/capi-param-builder-python/) |
 | Java | 1.3.0 | `com.facebook.capi.sdk:capi-param-builder` | [Maven Central](https://mvnrepository.com/artifact/com.facebook.capi.sdk/capi-param-builder) |
 | Ruby | 1.3.0 | `capi_param_builder_ruby` | [RubyGems](https://rubygems.org/gems/capi_param_builder_ruby) |
-| Client JS | 1.2.2 | `meta-capi-param-builder-clientjs` | [npm](https://www.npmjs.com/package/meta-capi-param-builder-clientjs) |
+| Client JS | 1.3.1 | `meta-capi-param-builder-clientjs` | [npm](https://www.npmjs.com/package/meta-capi-param-builder-clientjs) |
 
 ---
 
