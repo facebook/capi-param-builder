@@ -8,6 +8,9 @@
 import {
   processAndCollectParams,
   processAndCollectAllParams,
+  getFbc,
+  getFbp,
+  getClientIpAddress,
 } from '../src/clientParamBuilder.js';
 import {
   setup_android,
@@ -86,6 +89,53 @@ describe('Test clientParamBuilder', () => {
     expect(params[DOMAIN_SCOPED_BROWSER_ID_COOKIE_NAME]).toEqual(
       'fb.1.4567.1234567.Bg'
     );
+  });
+
+  test('getters warn when read before processAndCollectAllParams resolves', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const paramsPromise = processAndCollectAllParams(
+      'http://test.com',
+      async () => '2001:db8:85a3::8a2e:370:7334'
+    );
+
+    getFbc();
+    getClientIpAddress();
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('getFbc()'));
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('getClientIpAddress()')
+    );
+
+    await paramsPromise;
+    warn.mockRestore();
+  });
+
+  test('getFbp does not warn before processAndCollectAllParams resolves', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const paramsPromise = processAndCollectAllParams('http://test.com');
+
+    // _fbp is minted synchronously before the first await, so this read is
+    // already correct and must not produce a false alarm.
+    expect(getFbp()).not.toEqual('');
+    expect(warn).not.toHaveBeenCalled();
+
+    await paramsPromise;
+    warn.mockRestore();
+  });
+
+  test('getters do not warn once processAndCollectAllParams has resolved', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    await processAndCollectAllParams(
+      'http://test.com',
+      async () => '2001:db8:85a3::8a2e:370:7334'
+    );
+
+    getFbc();
+    getFbp();
+    getClientIpAddress();
+
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   test('processAndCollectAllParams android, fetch clickID from ebp', async () => {

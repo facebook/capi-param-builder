@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- `getFbc` and `getClientIpAddress` now warn when called before `processAndCollectAllParams` resolves. Return values are unchanged.
+
 ## Version v1.3.1
 - Added `umdNamedDefine: true` to the webpack UMD output so the bundle emits a named `define('clientParamBuilder', [], ...)` instead of an anonymous `define([], ...)`. This prevents RequireJS (e.g. on Magento 2 checkout pages) from intercepting the anonymous module and breaking page JavaScript.
 
