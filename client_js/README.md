@@ -107,7 +107,7 @@ Supported `dataType` values: `phone`, `email`, `first_name`, `last_name`, `date_
 
 ### Prerequisites
 
-- Node.js >= 18
+- Node.js >= 20
 - yarn (install via `corepack enable` or see [yarnpkg.com](https://yarnpkg.com/getting-started/install))
 
 ### Setup
