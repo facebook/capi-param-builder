@@ -466,12 +466,17 @@ class ParamBuilder {
   }
 
   _removeLanguageToken(input) {
-    // Find the position of the last dot
     const lastDot = input.lastIndexOf('.');
     if (lastDot !== -1) {
       const suffix = input.substring(lastDot + 1);
       if (Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(suffix) || suffix.length === Constants.APPENDIX_LENGTH_V2) {
-        return input.substring(0, lastDot);
+        let value = input.substring(0, lastDot);
+        let previousDot = value.lastIndexOf('.');
+        while (previousDot !== -1 && value.substring(previousDot + 1) === suffix) {
+          value = value.substring(0, previousDot);
+          previousDot = value.lastIndexOf('.');
+        }
+        return value;
       }
     }
     return input;

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Recover client IP addresses from `_fbi` cookies containing repeated appendix values.
+
 ## v1.3.1
 - Adding support for taking request context as input to the SDK.
 - Adding support to get referrer url and event source url from the SDK.

@@ -170,6 +170,17 @@ describe('ParamBuilder _getClientIp', () => {
             expect(result).toBe(`${IPV4_PUBLIC}.${v2Token}`);
         });
 
+        test('should collapse repeated V2 appendices from ClientJS cookies', () => {
+            const cookies = {
+                [Constants.FBI_NAME_STRING]: `${IPV6_PUBLIC}.${DUMMY_APPENDIX_NET_NEW}.${DUMMY_APPENDIX_NET_NEW}.${DUMMY_APPENDIX_NET_NEW}`,
+            };
+
+            expect(paramBuilder._getClientIpFromCookie(cookies)).toBe(IPV6_PUBLIC);
+            expect(paramBuilder._getClientIp(cookies, null, null)).toBe(
+                `${IPV6_PUBLIC}.${DUMMY_APPENDIX_NET_NEW}`
+            );
+        });
+
         test('should handle multiple language tokens in supported list', () => {
             // Test with different supported language tokens
             Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.slice(0, 3).forEach(token => {
