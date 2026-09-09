@@ -22,7 +22,7 @@ yarn add meta-capi-param-builder-clientjs
 Alternatively, include the bundle directly via a script tag:
 
 ```html
-<script src="https://unpkg.com/meta-capi-param-builder-clientjs/dist/clientParamBuilder.bundle.js"></script>
+<script src="https://unpkg.com/meta-capi-param-builder-clientjs@1.3.1/dist/clientParamBuilder.bundle.js"></script>
 ```
 
 Check the latest update from [CHANGELOG](./CHANGELOG.md).
@@ -40,15 +40,20 @@ Type the URL http://localhost:3000/?fbclid=test123 — you'll see `fbc` returned
 
 ### processAndCollectAllParams(url, getIpFn)
 
-Processes and collects `fbc` and `fbp` parameters (saving them into cookies), and also retrieves client IP addresses and backup click IDs from in-app browsers.
+Processes and collects `fbc` and `fbp` parameters (saving them into cookies), and also retrieves client IP addresses. If no `fbc` cookie exists after checking the supplied URL, `window.location.href`, and `document.referrer`, it attempts to retrieve a backup click ID through Extended Browser Properties in supported Facebook and Instagram in-app browsers.
 
 ```javascript
 const params = await clientParamBuilder.processAndCollectAllParams(url, getIpFn);
+const fbc = params['_fbc'];
+const fbp = params['_fbp'];
+const clientIpAddress = params['_fbi'];
 ```
+
+> **Important:** Call and await `processAndCollectAllParams()` once per collection flow, then use its returned object for immediate access to the collected values. Do not call it repeatedly just to retrieve individual values because each call reruns collection and invokes `getIpFn` when provided. While the call is still running, `getFbc()` and `getClientIpAddress()` can return an empty or stale cookie value instead of throwing. `getFbp()` is available immediately because the `_fbp` cookie is written before the first asynchronous operation.
 
 - `url` is optional.
 - `getIpFn` is optional — a user-provided function to retrieve client IP addresses. Prefer IPv6 (more precise than IPv4); fall back to IPv4 if IPv6 is not available.
-- Returns an object with `_fbc`, `_fbp`, and additional parameter values.
+- Returns an object with `_fbc`, `_fbp`, and `_fbi`.
 
 #### `getIpFn`
 
@@ -59,14 +64,17 @@ const params = await clientParamBuilder.processAndCollectAllParams(url, getIpFn)
 const getIpFn = async () =>
   (await fetch('https://api64.ipify.org')).text();
 
-await clientParamBuilder.processAndCollectAllParams(null, getIpFn);
+const params = await clientParamBuilder.processAndCollectAllParams(null, getIpFn);
+const clientIpAddress = params['_fbi'];
 ```
 
 > **Note:** The implementation above is for **demo purposes only**. You should implement your own logic to collect client IPv6 addresses.
 
+The getters below synchronously read the current cookie values. Use them for later reads when the object returned by `processAndCollectAllParams()` is no longer available.
+
 ### getFbc()
 
-Returns the `fbc` value from cookie. Call `processAndCollectAllParams` first.
+Returns the `fbc` value from cookie.
 
 ```javascript
 const fbc = clientParamBuilder.getFbc();
@@ -74,7 +82,7 @@ const fbc = clientParamBuilder.getFbc();
 
 ### getFbp()
 
-Returns the `fbp` value from cookie. Call `processAndCollectAllParams` first.
+Returns the `fbp` value from cookie.
 
 ```javascript
 const fbp = clientParamBuilder.getFbp();
@@ -82,7 +90,7 @@ const fbp = clientParamBuilder.getFbp();
 
 ### getClientIpAddress()
 
-Returns the `client_ip_address` value from cookie. Call `processAndCollectAllParams` with a valid `getIpFn` first, otherwise returns an empty string.
+Returns the `client_ip_address` value from cookie. If an earlier call to `processAndCollectAllParams()` did not use a valid `getIpFn`, this getter returns an empty string.
 
 ```javascript
 const ip = clientParamBuilder.getClientIpAddress();
