@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'python/**'
+      - '.github/workflows/python_ci.yml'
+      - '.github/workflows/python_cd.yml'
     tags-ignore:
       - 'v*'          # Ignores all tag pushes
     branches:
@@ -11,6 +13,8 @@ on:
   pull_request:
     paths:
       - 'python/**'
+      - '.github/workflows/python_ci.yml'
+      - '.github/workflows/python_cd.yml'
   workflow_dispatch:
 
 jobs:
@@ -34,3 +38,80 @@ jobs:
     - name: Unit test
       run: |
         python3 -m unittest discover -s test -t . -p 'test_*.py' -v
+
+  package:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/capi_param_builder
+    name: Validate Python distribution
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install packaging tools
+      run: python -m pip install build twine
+    - name: Build distribution
+      run: python -m build
+    - name: Verify distribution metadata
+      run: |
+        python -m twine check dist/*
+        python - <<'PY'
+        from email.parser import BytesParser
+        from email.policy import default
+        from pathlib import Path
+        import tarfile
+        import zipfile
+
+        project_root = Path.cwd()
+        dist_directory = project_root / 'dist'
+        expected_license = (project_root / 'LICENSE').read_bytes()
+
+        wheels = list(dist_directory.glob('*.whl'))
+        source_distributions = list(dist_directory.glob('*.tar.gz'))
+        assert len(wheels) == 1, wheels
+        assert len(source_distributions) == 1, source_distributions
+
+        with zipfile.ZipFile(wheels[0]) as archive:
+            metadata_name = next(
+                name
+                for name in archive.namelist()
+                if name.endswith('.dist-info/METADATA')
+            )
+            license_name = next(
+                name
+                for name in archive.namelist()
+                if name.endswith('.dist-info/licenses/LICENSE')
+            )
+            metadata = BytesParser(policy=default).parsebytes(
+                archive.read(metadata_name)
+            )
+            assert metadata['License'] == 'LICENSE.txt'
+            assert 'LICENSE' in metadata.get_all('License-File', [])
+            assert archive.read(license_name) == expected_license
+
+        with tarfile.open(source_distributions[0], 'r:gz') as archive:
+            members = {member.name: member for member in archive.getmembers()}
+            metadata_name = next(
+                name
+                for name in members
+                if name.endswith('/PKG-INFO') and name.count('/') == 1
+            )
+            license_name = next(
+                name for name in members if name.endswith('/LICENSE')
+            )
+            metadata_file = archive.extractfile(members[metadata_name])
+            license_file = archive.extractfile(members[license_name])
+            assert metadata_file is not None
+            assert license_file is not None
+            metadata = BytesParser(policy=default).parsebytes(
+                metadata_file.read()
+            )
+            assert metadata['License'] == 'LICENSE.txt'
+            assert 'LICENSE' in metadata.get_all('License-File', [])
+            assert license_file.read() == expected_license
+        PY

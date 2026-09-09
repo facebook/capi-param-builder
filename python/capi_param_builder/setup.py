@@ -36,4 +36,6 @@ setup(
     packages=find_packages(),
     install_requires=[],
     description="Parameter builder SDK for Conversion API events",
+    license="LICENSE.txt",
+    license_files=["LICENSE"],
 )
