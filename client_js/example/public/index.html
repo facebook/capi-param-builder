@@ -14,7 +14,7 @@
 </head>
 
 <body>
-  <script src="https://unpkg.com/meta-capi-param-builder-clientjs/dist/clientParamBuilder.bundle.js"></script>
+  <script src="https://unpkg.com/meta-capi-param-builder-clientjs@1.3.1/dist/clientParamBuilder.bundle.js"></script>
   <script>
     console.log(
       'You need to get user cookie consent first, below processAndCollectAllParams will set cookies.'
@@ -30,21 +30,21 @@
     async function main() {
       // @params url: [optional] string. The full URL you want to collect clickID from.
       // @params getIpFn: [optional] function. The function you implemented to collect client IPv6 addresses from. If IPv6 is not available for clients, you should fallback to IPv4.
-      const processAndCollectAllParams =
+      const params =
         await clientParamBuilder.processAndCollectAllParams(null, getIPfn);
 
-      console.log(processAndCollectAllParams);
+      console.log(params);
 
-      console.log('getFbc:' + clientParamBuilder.getFbc());
-      console.log('getFbp:' + clientParamBuilder.getFbp());
-      console.log('getClientIpAddress:' + clientParamBuilder.getClientIpAddress());
+      console.log('getFbc:' + params['_fbc']);
+      console.log('getFbp:' + params['_fbp']);
+      console.log('getClientIpAddress:' + params['_fbi']);
       console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('     John_Smith@gmail.com    ','email'));
       console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('     +001 (616) 954-78 88   ','phone'));
       console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII(' 62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f ','email'));
       console.log('getNormalizedAndHashedPII:' + clientParamBuilder.getNormalizedAndHashedPII('   62a14e44f765419d10fea99367361a727c12365e2520f32218d505ed9aa0f62f.AQYBAQAA ','email'));
 
       document.getElementById('clientParamBuilder-lib').textContent =
-          JSON.stringify(processAndCollectAllParams);
+          JSON.stringify(params);
 
   }
 
