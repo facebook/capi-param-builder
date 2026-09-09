@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- Fix cookie domains for apex hosts under multi-label public suffixes.
 
 ## v1.3.1
 - Adding support for taking request context as input to the SDK.

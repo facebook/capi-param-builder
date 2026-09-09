@@ -67,7 +67,12 @@ final class ParamBuilder
             foreach ($params as $domain) {
                 array_push(
                     $this->domain_list,
-                    ParamBuilder::extractHostFromHttpHost($domain)
+                    strtolower(
+                        rtrim(
+                            ParamBuilder::extractHostFromHttpHost($domain),
+                            '.'
+                        )
+                    )
                 );
             }
         }
@@ -395,7 +400,9 @@ final class ParamBuilder
                 $this->sub_domain_index = 0;
                 return;
             }
-            $host = ParamBuilder::extractHostFromHttpHost($host);
+            $host = strtolower(
+                rtrim(ParamBuilder::extractHostFromHttpHost($host), '.')
+            );
 
             if (
                 ParamBuilder::isIPAddress($host)
@@ -417,13 +424,15 @@ final class ParamBuilder
             return $this->etld_plus1_resolver->resolveETLDPlus1($host);
         } else if ($this->domain_list !== null) {
             foreach ($this->domain_list as $domain_candidate) {
-                $lastOccurrence = strpos($host, $domain_candidate);
+                $lastOccurrence = strlen($host) - strlen($domain_candidate);
                 if (
-                    $lastOccurrence !== false
-                    && $lastOccurrence ===
-                    strlen($host) - strlen($domain_candidate)
+                    $lastOccurrence >= 0
+                    && substr($host, $lastOccurrence) === $domain_candidate
                 ) {
-                    if ($host[$lastOccurrence - 1] === '.') {
+                    if (
+                        $lastOccurrence === 0
+                        || $host[$lastOccurrence - 1] === '.'
+                    ) {
                         return $domain_candidate;
                     }
                 }

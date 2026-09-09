@@ -672,6 +672,74 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals('test.com', $cookie->domain);
     }
 
+    public function testProcessRequestWithApexDomainInDomainList()
+    {
+        $builder = new ParamBuilder(array('https://example.co.uk'));
+        $cookies_to_set = $builder->processRequest(
+            'example.co.uk',
+            array(
+                'fbclid' => 'test123'
+            ),
+            array(),
+            null
+        );
+        $this->assertEquals(2, count($cookies_to_set));
+        foreach ($cookies_to_set as $cookie) {
+            $this->assertEquals('example.co.uk', $cookie->domain);
+        }
+    }
+
+    public function testProcessRequestWithSubdomainOfApexDomainInDomainList()
+    {
+        $builder = new ParamBuilder(array('https://example.co.uk'));
+        $cookies_to_set = $builder->processRequest(
+            'www.example.co.uk',
+            array(
+                'fbclid' => 'test123'
+            ),
+            array(),
+            null
+        );
+        $this->assertEquals(2, count($cookies_to_set));
+        foreach ($cookies_to_set as $cookie) {
+            $this->assertEquals('example.co.uk', $cookie->domain);
+        }
+    }
+
+    public function testProcessRequestWithUppercaseApexDomainInDomainList()
+    {
+        $builder = new ParamBuilder(array('https://example.co.uk'));
+        $cookies_to_set = $builder->processRequest(
+            'EXAMPLE.CO.UK',
+            array(
+                'fbclid' => 'test123'
+            ),
+            array(),
+            null
+        );
+        $this->assertEquals(2, count($cookies_to_set));
+        foreach ($cookies_to_set as $cookie) {
+            $this->assertEquals('example.co.uk', $cookie->domain);
+        }
+    }
+
+    public function testProcessRequestWithRepeatedDomainLabelsInDomainList()
+    {
+        $builder = new ParamBuilder(array('https://example.co.uk'));
+        $cookies_to_set = $builder->processRequest(
+            'example.co.uk.example.co.uk',
+            array(
+                'fbclid' => 'test123'
+            ),
+            array(),
+            null
+        );
+        $this->assertEquals(2, count($cookies_to_set));
+        foreach ($cookies_to_set as $cookie) {
+            $this->assertEquals('example.co.uk', $cookie->domain);
+        }
+    }
+
     public function testProcessRequestWithEmptyInput()
     {
         $builder = new ParamBuilder();
