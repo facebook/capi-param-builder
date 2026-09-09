@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 - Fix cookie domains for apex hosts under multi-label public suffixes.
+- Recover client IP addresses from `_fbi` cookies containing repeated appendix values.
 
 ## v1.3.1
 - Adding support for taking request context as input to the SDK.

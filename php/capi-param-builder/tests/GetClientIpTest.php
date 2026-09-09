@@ -397,6 +397,24 @@ final class GetClientIpTest extends TestCase
         );
         $this->assertEquals(self::IPV6_PUBLIC, $result);
 
+        $repeatedAppendix = implode('.', array_fill(0, 3, $v2Appendix));
+        $result = $this->invokePrivateStaticMethod(
+            'removeLanguageToken',
+            self::IPV6_PUBLIC . '.' . $repeatedAppendix
+        );
+        $this->assertEquals(self::IPV6_PUBLIC, $result);
+
+        $result = $this->invokePrivateStaticMethod(
+            'getClientIp',
+            [FBI_NAME => self::IPV6_PUBLIC . '.' . $repeatedAppendix],
+            null,
+            null
+        );
+        $this->assertEquals(
+            self::IPV6_PUBLIC . '.' . $v2Appendix,
+            $result
+        );
+
         // Test with 7-character suffix (should NOT be recognized as V2)
         $sevenChar = '1234567';
         $result = $this->invokePrivateStaticMethod(

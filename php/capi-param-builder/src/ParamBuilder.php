@@ -557,7 +557,6 @@ final class ParamBuilder
 
     private static function removeLanguageToken($input)
     {
-        // Find the position of the last dot
         $lastDot = strrpos($input, '.');
         if ($lastDot !== false) {
             $suffix = substr($input, $lastDot + 1);
@@ -565,7 +564,16 @@ final class ParamBuilder
                 in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true) ||
                 mb_strlen($suffix) == APPENDIX_LENGTH_V2
             ) {
-                return substr($input, 0, $lastDot);
+                $value = substr($input, 0, $lastDot);
+                $previousDot = strrpos($value, '.');
+                while (
+                    $previousDot !== false &&
+                    substr($value, $previousDot + 1) === $suffix
+                ) {
+                    $value = substr($value, 0, $previousDot);
+                    $previousDot = strrpos($value, '.');
+                }
+                return $value;
             }
         }
         return $input;
