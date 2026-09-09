@@ -247,6 +247,7 @@ function writeCookieWithToken(name, value, needEncoding, ttlInMs, appendix) {
 
   const fullHostname = window.location.hostname;
   const domainParts = fullHostname.split('.');
+  const valueWithAppendix = [value, appendix].join('.');
 
   // Attempt to write to the highest level domain we can
   for (
@@ -255,15 +256,14 @@ function writeCookieWithToken(name, value, needEncoding, ttlInMs, appendix) {
     subdomainIndex++
   ) {
     const domain = getSubdomainAtIndex(domainParts, subdomainIndex);
-    value = [value, appendix].join('.');
 
     if (needEncoding) {
-      writeCookieRaw(name, value, domain, ttlInMs);
+      writeCookieRaw(name, valueWithAppendix, domain, ttlInMs);
     } else {
-      writeCookieRawWithoutEncoding(name, value, domain, ttlInMs);
+      writeCookieRawWithoutEncoding(name, valueWithAppendix, domain, ttlInMs);
     }
 
-    if (readCookieRaw(name) === value) {
+    if (readCookieRaw(name) === valueWithAppendix) {
       return true;
     }
   }

@@ -13,6 +13,7 @@ import {
   mintDomainScopedBrowserIDCookieValue,
   updateClickIdCookieIfNecessary,
   updateDomainScopedBrowserIdCookieIfNecessary,
+  writeCookieWithToken,
 } from '../utils/cookieUtil.js';
 
 jest.mock('../version.js', () => ({
@@ -125,6 +126,35 @@ describe('Test cookieUtil', () => {
     expect(write_existing_cookie).toEqual(
       expect.stringContaining('fb.1.4567.testCookie.' + APPENDIX_NO_CHANGE_STR)
     );
+  });
+
+  test('writeCookieWithToken appends the appendix once after a domain retry', () => {
+    const attemptedCookies = [];
+    let storedCookie = '';
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => storedCookie,
+      set: (cookie) => {
+        attemptedCookies.push(cookie);
+        if (!cookie.includes('domain=.com;')) {
+          storedCookie = cookie.split(';')[0];
+        }
+      },
+    });
+    window.location.hostname = 'www.example.com';
+
+    const ipAddress = '2001:4860:4860::8888';
+    const result = writeCookieWithToken(
+      '_fbi',
+      ipAddress,
+      false,
+      1000,
+      APPENDIX_NET_NEW_STR
+    );
+
+    expect(result).toBe(true);
+    expect(attemptedCookies).toHaveLength(2);
+    expect(storedCookie).toBe(`_fbi=${ipAddress}.${APPENDIX_NET_NEW_STR}`);
   });
 
   test('mintDomainScopedBrowserIDCookieValue', () => {
