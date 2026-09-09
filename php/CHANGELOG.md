@@ -3,7 +3,10 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- Fix cookie domains for apex hosts under multi-label public suffixes.
+
+## v1.3.2
+
+- Fixed PHP cookie domain resolution for apex and subdomain hosts under multi-label public suffixes (for example, `example.co.uk` and `www.example.co.uk`), so cookies are scoped to `example.co.uk` instead of the invalid public suffix `co.uk`.
 - Recover client IP addresses from `_fbi` cookies containing repeated appendix values.
 
 ## v1.3.1

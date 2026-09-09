@@ -22,7 +22,7 @@ yarn add meta-capi-param-builder-clientjs
 Alternatively, include the bundle directly via a script tag:
 
 ```html
-<script src="https://unpkg.com/meta-capi-param-builder-clientjs@1.3.1/dist/clientParamBuilder.bundle.js"></script>
+<script src="https://unpkg.com/meta-capi-param-builder-clientjs@1.3.2/dist/clientParamBuilder.bundle.js"></script>
 ```
 
 Check the latest update from [CHANGELOG](./CHANGELOG.md).

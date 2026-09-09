@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v1.3.2
+
 - Recover client IP addresses from `_fbi` cookies containing repeated appendix values.
 
 ## v1.3.1

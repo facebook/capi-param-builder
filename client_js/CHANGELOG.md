@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Version v1.3.2
+
 - `getFbc` and `getClientIpAddress` now warn when called before `processAndCollectAllParams` resolves. Return values are unchanged.
 - Fixed repeated appendix values in `_fbi` cookies when domain-scoped cookie writes require retries.
 
