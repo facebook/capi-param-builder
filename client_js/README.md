@@ -90,7 +90,7 @@ const fbp = clientParamBuilder.getFbp();
 
 ### getClientIpAddress()
 
-Returns the `client_ip_address` value from cookie. If an earlier call to `processAndCollectAllParams()` did not use a valid `getIpFn`, this getter returns an empty string.
+Returns the `client_ip_address` value from cookie. If no existing `_fbi` cookie is available and an earlier call to `processAndCollectAllParams()` did not use a valid `getIpFn`, this getter returns an empty string.
 
 ```javascript
 const ip = clientParamBuilder.getClientIpAddress();

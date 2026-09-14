@@ -88,7 +88,17 @@ class ParamBuilder {
 
     // V2 format: 8-character appendix
     if (appendix_length === Constants.APPENDIX_LENGTH_V2) {
-      return true;
+      if (!/^[A-Za-z0-9_-]+$/.test(appendix_value)) {
+        return false;
+      }
+
+      const base64 = appendix_value.replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = Buffer.from(base64, 'base64');
+      const languageIndex = decoded[1];
+      return decoded.length === 6 &&
+        decoded[0] === Constants.DEFAULT_FORMAT &&
+        languageIndex >= 1 &&
+        languageIndex <= Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.length;
     }
     return false;
   }
@@ -469,7 +479,7 @@ class ParamBuilder {
     const lastDot = input.lastIndexOf('.');
     if (lastDot !== -1) {
       const suffix = input.substring(lastDot + 1);
-      if (Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(suffix) || suffix.length === Constants.APPENDIX_LENGTH_V2) {
+      if (this._validateAppendix(suffix)) {
         let value = input.substring(0, lastDot);
         let previousDot = value.lastIndexOf('.');
         while (previousDot !== -1 && value.substring(previousDot + 1) === suffix) {
@@ -496,7 +506,7 @@ class ParamBuilder {
     const lastDot = input.lastIndexOf('.');
     if (lastDot !== -1) {
       const suffix = input.substring(lastDot + 1);
-      if (Constants.SUPPORTED_PARAM_BUILDER_LANGUAGES_TOKEN.includes(suffix) || suffix.length === Constants.APPENDIX_LENGTH_V2) {
+      if (this._validateAppendix(suffix)) {
         return suffix;
       }
     }

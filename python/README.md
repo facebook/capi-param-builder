@@ -1,7 +1,7 @@
 # Conversions API parameter builder for Python
 
 [![PyPI](https://img.shields.io/pypi/v/capi-param-builder-python)](https://pypi.org/project/capi-param-builder-python/)
-[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/python/LICENSE)
+[![License](https://img.shields.io/badge/license-Facebook%20Platform-blue.svg?style=flat-square)](https://github.com/facebook/capi-param-builder/blob/main/python/capi_param_builder/LICENSE)
 
 ## Introduction
 

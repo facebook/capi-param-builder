@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Fixed PHP cookie domain resolution for apex and subdomain hosts under multi-label public suffixes (for example, `example.co.uk` and `www.example.co.uk`), so cookies are scoped to `example.co.uk` instead of the invalid public suffix `co.uk`.
 - Recover client IP addresses from `_fbi` cookies containing repeated appendix values.
+- Reject malformed V2 appendices instead of treating arbitrary eight-character suffixes as valid.
+- Include all SDK classes in the Packagist-facing Composer autoloader.
 
 ## v1.3.1
 - Adding support for taking request context as input to the SDK.

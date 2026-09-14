@@ -353,6 +353,15 @@ final class GetClientIpTest extends TestCase
         );
         $this->assertEquals(self::IPV4_PUBLIC, $result);
 
+        $repeatedLangToken = implode('.', array_fill(0, 2, $langToken));
+        $result = $this->invokePrivateStaticMethod(
+            'getClientIp',
+            [FBI_NAME => self::IPV4_PUBLIC . '.' . $repeatedLangToken],
+            null,
+            null
+        );
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $langToken, $result);
+
         $result = $this->invokePrivateStaticMethod(
             'removeLanguageToken',
             self::IPV4_PUBLIC . '.XX'  // Invalid token, should not remove
@@ -369,7 +378,7 @@ final class GetClientIpTest extends TestCase
     public function testLanguageTokenHelpersV2Format()
     {
         // Test getLanguageToken with V2 format (8-character appendix)
-        $v2Appendix = '12345678'; // 8 characters
+        $v2Appendix = $this->appendix_no_change;
         $result = $this->invokePrivateStaticMethod(
             'getLanguageToken',
             self::IPV4_PUBLIC . '.' . $v2Appendix
@@ -443,19 +452,31 @@ final class GetClientIpTest extends TestCase
         );
         $this->assertEquals(self::IPV4_PUBLIC . '.' . $nineChar, $result);
 
-        // Test with mixed alphanumeric V2 appendix
-        $mixedV2 = 'a1b2c3d4'; // 8 characters
+        // Test with malformed 8-character appendix
+        $mixedV2 = 'a1b2c3d4';
         $result = $this->invokePrivateStaticMethod(
             'getLanguageToken',
             self::IPV4_PUBLIC . '.' . $mixedV2
         );
-        $this->assertEquals($mixedV2, $result);
+        $this->assertNull($result);
 
         $result = $this->invokePrivateStaticMethod(
             'removeLanguageToken',
             self::IPV4_PUBLIC . '.' . $mixedV2
         );
-        $this->assertEquals(self::IPV4_PUBLIC, $result);
+        $this->assertEquals(self::IPV4_PUBLIC . '.' . $mixedV2, $result);
+
+        $repeatedMalformedV2 = implode('.', array_fill(0, 2, $mixedV2));
+        $result = $this->invokePrivateStaticMethod(
+            'getClientIp',
+            [FBI_NAME => '1.1.1.1' . '.' . $repeatedMalformedV2],
+            self::IPV4_PUBLIC,
+            null
+        );
+        $this->assertEquals(
+            self::IPV4_PUBLIC . '.' . $this->appendix_no_change,
+            $result
+        );
 
         // Test that actual appendix values are recognized
         $result = $this->invokePrivateStaticMethod(

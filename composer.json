@@ -12,7 +12,12 @@
   "autoload": {
     "psr-4": {
       "FacebookAds\\": "php/capi-param-builder/src/"
-    }
+    },
+    "classmap": [
+      "php/capi-param-builder/src/model/",
+      "php/capi-param-builder/src/util/",
+      "php/capi-param-builder/src/piiUtil/"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

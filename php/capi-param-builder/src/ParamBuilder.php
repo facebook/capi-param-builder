@@ -78,7 +78,7 @@ final class ParamBuilder
         }
     }
 
-    private function validateAppendix($appendix_value)
+    private static function validateAppendix($appendix_value)
     {
         $appendix_length = strlen($appendix_value);
 
@@ -89,7 +89,22 @@ final class ParamBuilder
 
         // V2 format: 8-character appendix
         if ($appendix_length == APPENDIX_LENGTH_V2) {
-            return true;
+            if (!preg_match('/^[A-Za-z0-9_-]+$/D', $appendix_value)) {
+                return false;
+            }
+
+            $decoded = base64_decode(
+                strtr($appendix_value, '-_', '+/'),
+                true
+            );
+            if ($decoded === false || strlen($decoded) !== 6) {
+                return false;
+            }
+
+            $language_index = ord($decoded[1]);
+            return ord($decoded[0]) === DEFAULT_FORMAT &&
+                $language_index >= 1 &&
+                $language_index <= count(SUPPORTED_LANGUAGES_TOKEN);
         }
 
         return false;
@@ -125,7 +140,7 @@ final class ParamBuilder
         // Cookie exist, contains language token. Validate it
         if (
             $slice_length == PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN &&
-            !$this->validateAppendix(
+            !self::validateAppendix(
                 $slices[PAYLOAD_SPLIT_LENGTH_WITH_LANGUAGE_TOKEN - 1]
             )
         ) {
@@ -561,8 +576,7 @@ final class ParamBuilder
         if ($lastDot !== false) {
             $suffix = substr($input, $lastDot + 1);
             if (
-                in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true) ||
-                mb_strlen($suffix) == APPENDIX_LENGTH_V2
+                self::validateAppendix($suffix)
             ) {
                 $value = substr($input, 0, $lastDot);
                 $previousDot = strrpos($value, '.');
@@ -586,8 +600,7 @@ final class ParamBuilder
         if ($lastDot !== false) {
             $suffix = substr($input, $lastDot + 1);
             if (
-                in_array($suffix, SUPPORTED_LANGUAGES_TOKEN, true) ||
-                mb_strlen($suffix) == APPENDIX_LENGTH_V2
+                self::validateAppendix($suffix)
             ) {
                 return $suffix;
             }
