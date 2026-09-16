@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write  # Required for OIDC
   contents: read
 
 jobs:
@@ -23,6 +24,8 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+      - name: Install npm with trusted publishing support
+        run: npm install --global npm@11.19.1
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Run tests
@@ -31,5 +34,3 @@ jobs:
         run: yarn build
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
