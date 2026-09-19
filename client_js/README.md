@@ -22,7 +22,16 @@ yarn add meta-capi-param-builder-clientjs
 Alternatively, include the bundle directly via a script tag:
 
 ```html
-<script src="https://unpkg.com/meta-capi-param-builder-clientjs@1.3.2/dist/clientParamBuilder.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meta-capi-param-builder-clientjs/dist/clientParamBuilder.bundle.js"></script>
+```
+
+The unversioned URL follows the latest npm release so integrations receive SDK updates automatically. For resilience, integrations can retry `https://unpkg.com/meta-capi-param-builder-clientjs/dist/clientParamBuilder.bundle.js` if jsDelivr fails. Sites using this fallback should allow both origins in their Content Security Policy. The included example demonstrates this pattern.
+
+Integrations that prefer to control upgrades can pin both CDNs to the same release:
+
+```text
+https://cdn.jsdelivr.net/npm/meta-capi-param-builder-clientjs@1.3.2/dist/clientParamBuilder.bundle.js
+https://unpkg.com/meta-capi-param-builder-clientjs@1.3.2/dist/clientParamBuilder.bundle.js
 ```
 
 Check the latest update from [CHANGELOG](./CHANGELOG.md).
