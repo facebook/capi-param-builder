@@ -28,6 +28,7 @@ param_sdk/
 ├── LICENSE                # License file
 ├── composer.json          # PHP root composer file
 ├── .github/workflows/     # CI/CD workflows for all languages
+├── client_js/             # Client-side JavaScript implementation
 ├── java/                  # Java implementation
 ├── nodejs/                # Node.js implementation
 ├── php/                   # PHP implementation
@@ -35,8 +36,8 @@ param_sdk/
 └── ruby/                  # Ruby implementation
 ```
 
-**Note:** The `client_js/` directory is **not open-sourced** yet, the dir only
-contains examples.
+The `client_js/` directory is open sourced with the rest of the project and is
+published to npm as `meta-capi-param-builder-clientjs`.
 
 Each language directory follows a consistent structure:
 
@@ -187,9 +188,7 @@ When bumping versions, update the version number in these files:
 - **PHP**: `php/capi-param-builder/composer.json` and `composer.json`
 - **Ruby**: `ruby/capi_param_builder/capi_param_builder.gemspec` with
   `ruby/capi_param_builder/lib/release_config.rb`
-
-**Note:** For Client-side JavaScript (Meta Internal Only), see the dedicated
-section above.
+- **Client-side JavaScript**: `client_js/package.json`
 
 ### Workflow for Fixing Bugs
 
