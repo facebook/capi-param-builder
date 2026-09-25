@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Version v1.3.3
+
+- Fixed `window.clientParamBuilder` being left `undefined` when an AMD loader (e.g. RequireJS) is present on the page. The webpack UMD build now registers the AMD module and assigns the global in the same step, so `<script src="...">` inclusion works whether or not an AMD loader is on the page.
+
 ## Version v1.3.2
 
 - `getFbc` and `getClientIpAddress` now warn when called before `processAndCollectAllParams` resolves. Return values are unchanged.

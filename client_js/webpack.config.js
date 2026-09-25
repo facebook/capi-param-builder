@@ -9,6 +9,45 @@ const path = require('path');
 const webpack = require('webpack');
 const packageJson = require('./package.json');
 
+/**
+ * Webpack plugin to ensure that when the bundle is loaded in an AMD environment
+ * (such as Magento 2 with RequireJS), the module is registered as an AMD module
+ * AND simultaneously exposed on the global scope (window/self).
+ *
+ * This prevents TypeError exceptions when clientParamBuilder methods are called
+ * globally on pages where an AMD loader is present.
+ */
+class DualUmdGlobalPlugin {
+  apply(compiler) {
+    compiler.hooks.thisCompilation.tap('DualUmdGlobalPlugin', (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: 'DualUmdGlobalPlugin',
+          stage: webpack.Compilation.PROCESS_ASSETS_STAGE_DEV_TOOLING,
+        },
+        (assets) => {
+          for (const assetName of Object.keys(assets)) {
+            if (assetName.endsWith('.bundle.js')) {
+              const originalSource = assets[assetName].source().toString();
+              const oldAmd =
+                '"function"==typeof define&&define.amd?define("clientParamBuilder",[],t)';
+              const newAmd =
+                '"function"==typeof define&&define.amd?(define("clientParamBuilder",[],t),r.clientParamBuilder=t())';
+
+              if (originalSource.includes(oldAmd)) {
+                const newSource = originalSource.replace(oldAmd, newAmd);
+                const { RawSource } =
+                  webpack.sources || require('webpack-sources');
+                assets[assetName] = new RawSource(newSource);
+              }
+            }
+          }
+        }
+      );
+    });
+  }
+}
+
 module.exports = {
   entry: {
     clientParamBuilder: `./capiParamBuilder/src/clientParamBuilder.js`,
@@ -68,5 +107,6 @@ https://github.com/facebook/capi-param-builder/blob/main/LICENSE`,
       raw: false,
       entryOnly: true,
     }),
+    new DualUmdGlobalPlugin(),
   ],
 };
