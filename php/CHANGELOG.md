@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Resolve ambiguous click-ID inputs the same way as Client JS ([#45](https://github.com/facebook/capi-param-builder/issues/45)): the first `fbclid` query parameter and the first `_fbc` cookie win, array-style parameters such as `fbclid[0]` are ignored instead of becoming the string `Array`, and `_fbc` / `_fbp` cookies must have the `fb.<digits>.<digits>.<payload>` structure.
+
 ## v1.3.2
 
 - Fixed PHP cookie domain resolution for apex and subdomain hosts under multi-label public suffixes (for example, `example.co.uk` and `www.example.co.uk`), so cookies are scoped to `example.co.uk` instead of the invalid public suffix `co.uk`.

@@ -1799,5 +1799,36 @@ final class RequestContextAdaptorTest extends TestCase
         $result = RequestContextAdaptor::extract(['HTTPS' => 'on']);
         $this->assertSame('https', $result->scheme);
     }
-}
 
+    // Issue #45: resolve ambiguous inputs the same way as Client JS.
+
+    public function testDuplicateQueryParamUsesFirstValue(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'QUERY_STRING' => 'fbclid=A&fbclid=B',
+        ]);
+        $this->assertSame(['fbclid' => 'A'], $result->query_params);
+    }
+
+    public function testArrayStyleQueryParamIsKeptLiterally(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'QUERY_STRING' => 'fbclid%5B0%5D=B&q=a+b',
+        ]);
+        $this->assertSame(
+            ['fbclid[0]' => 'B', 'q' => 'a b'],
+            $result->query_params
+        );
+    }
+
+    public function testDuplicateCookieUsesFirstValue(): void
+    {
+        $this->resetGlobals();
+        $result = RequestContextAdaptor::extract([
+            'HTTP_COOKIE' => '_fbc=fb.1.123.A; _fbc=fb.2.456.B',
+        ]);
+        $this->assertSame('fb.1.123.A', $result->cookies['_fbc']);
+    }
+}

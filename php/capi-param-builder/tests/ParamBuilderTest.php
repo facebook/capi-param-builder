@@ -472,8 +472,11 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals('_fbp', $result[0]->name);
         $this->assertNull($builder->getFbc());
         $this->assertIsString($builder->getFbp());
+        // An empty payload is invalid (as in Client JS), so a new _fbp
+        // is minted.
+        $this->assertStringStartsWith('fb.2.', $builder->getFbp());
         $this->assertStringEndsWith(
-            '.'.$this->appendix_no_change,
+            '.'.$this->appendix_net_new,
             $builder->getFbp()
         );
     }
@@ -774,5 +777,50 @@ final class ParamBuilderTest extends TestCase
         $this->assertEquals(2, count($cookies_to_set));
         $cookie = $cookies_to_set[0];
         $this->assertEquals('balabla.123test.com', $cookie->domain);
+    }
+
+
+    // Issue #45: inputs Client JS rejects must not produce a server FBC.
+
+    public function testArrayFbclidIsIgnored()
+    {
+        $builder = new ParamBuilder();
+        $builder->processRequest(
+            'walmart.com',
+            array('fbclid' => array('B')),
+            [],
+            'https://walmart.com/?fbclid[0]=B'
+        );
+        $this->assertNull($builder->getFbc());
+    }
+
+    public function testDuplicateFbclidInRefererUsesFirstValue()
+    {
+        $builder = new ParamBuilder();
+        $builder->processRequest(
+            'walmart.com',
+            [],
+            [],
+            'https://walmart.com/?fbclid=A&fbclid=B'
+        );
+        $this->assertStringEndsWith(
+            '.A.'.$this->appendix_net_new,
+            $builder->getFbc()
+        );
+    }
+
+    public function testFbcCookieWithMalformedPrefixIsRejected()
+    {
+        foreach (array(
+            'xx.1.123.abc',
+            'fb.x.123.abc',
+            'fb.1.12a.abc',
+            'fb.1.123.abc.'.$this->appendix_no_change.'x',
+            'xx.1.123.abc.'.$this->appendix_no_change,
+        ) as $fbc) {
+            $builder = new ParamBuilder();
+            $builder->processRequest('walmart.com', [], array('_fbc' => $fbc));
+            $this->assertNull($builder->getFbc(), $fbc);
+        }
     }
 }

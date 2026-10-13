@@ -129,12 +129,20 @@ final class ParamBuilder
             return null;
         }
 
+        // Invalid core structure, as in Client JS and Node:
+        // fb.<subdomain index>.<creation time>.<payload>
+        if (
+            $slices[0] !== FB_PREFIX
+            || !ctype_digit($slices[1])
+            || !ctype_digit($slices[2])
+            || $slices[MIN_PAYLOAD_SPLIT_LENGTH - 1] === ''
+        ) {
+            return null;
+        }
+
         // Cookie exist, but not contains language token
         if ($slice_length == MIN_PAYLOAD_SPLIT_LENGTH) {
-            $contains_extra_dot = empty($slices[MIN_PAYLOAD_SPLIT_LENGTH - 1]);
-            $updated_cookie = $cookie_value
-                . ($contains_extra_dot ? '' : '.')
-                . $this->appendix_no_change;
+            $updated_cookie = $cookie_value . '.' . $this->appendix_no_change;
         }
 
         // Cookie exist, contains language token. Validate it
@@ -197,18 +205,21 @@ final class ParamBuilder
         }
 
         if (!empty($referer_component)) {
-            parse_str($referer_component, $referer_queries);
+            $referer_queries =
+                RequestContextAdaptor::parseQueryString($referer_component);
         }
 
         foreach ($this->fbc_param_configs as $param_config) {
-            if (!empty($queries[$param_config->query])) {
+            if (self::isNonEmptyString($queries, $param_config->query)) {
                 $param_value = ParamBuilder::buildParamConfigs(
                     $param_value,
                     $param_config->query,
                     $param_config->prefix,
                     $queries[$param_config->query]
                 );
-            } else if (!empty($referer_queries[$param_config->query])) {
+            } else if (
+                self::isNonEmptyString($referer_queries, $param_config->query)
+            ) {
                 $param_value = ParamBuilder::buildParamConfigs(
                     $param_value,
                     $param_config->query,
@@ -221,6 +232,15 @@ final class ParamBuilder
             return $param_value;
         }
         return null;
+    }
+
+    // Array-style params (fbclid[0]=...) are rejected, as in Client JS.
+    private static function isNonEmptyString($params, $key)
+    {
+        return is_array($params)
+            && isset($params[$key])
+            && is_string($params[$key])
+            && $params[$key] !== '';
     }
 
     private function shouldUpdateFbc($new_fbc_payload)

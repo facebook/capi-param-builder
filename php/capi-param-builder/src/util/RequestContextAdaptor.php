@@ -21,6 +21,26 @@ class RequestContextAdaptor
      * * @param array|null $server_overrides
      * @return PlainDataObject
      */
+    /**
+     * Parse a query string so the first occurrence of a key wins and keys are
+     * kept literally (no `a[0]` arrays), matching Client JS getURLParameter.
+     * parse_str() keeps the last occurrence and builds arrays, which let the
+     * same request resolve to different click IDs in the browser and server.
+     */
+    public static function parseQueryString(string $query): array
+    {
+        $params = [];
+        foreach (explode('&', $query) as $pair) {
+            $parts = explode('=', $pair, 2);
+            $key = urldecode($parts[0]);
+            if ($key === '' || array_key_exists($key, $params)) {
+                continue;
+            }
+            $params[$key] = urldecode($parts[1] ?? '');
+        }
+        return $params;
+    }
+
     public static function extract($server_overrides = null): PlainDataObject
     {
         // 1. Initialize Defaults (matching PlainDataObject types)
@@ -75,7 +95,8 @@ class RequestContextAdaptor
                 // $_GET as a last-resort fallback. This honors the documented
                 // "overrides take priority" contract.
                 if (!empty($server['QUERY_STRING'])) {
-                    parse_str($server['QUERY_STRING'], $query_params);
+                    $query_params =
+                        self::parseQueryString($server['QUERY_STRING']);
                 } elseif (!empty($_GET)) {
                     $query_params = $_GET;
                 }
@@ -94,7 +115,8 @@ class RequestContextAdaptor
                             continue;
                         }
                         $key = trim($parts[0]);
-                        if ($key === '') {
+                        // First occurrence wins, as in Client JS / $_COOKIE.
+                        if ($key === '' || array_key_exists($key, $cookies)) {
                             continue;
                         }
                         // rawurldecode preserves literal `+`; urldecode does not.
