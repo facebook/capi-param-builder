@@ -67,6 +67,13 @@ function createMetadataConfigLoader({
       // Keep serving the last good config until it expires.
       return cached;
     }
+    // Not modified: the cached rules are still current, so keep them for
+    // another TTL. Without a cached copy there is nothing to keep.
+    if (config?.not_modified === true && config.enabled === true) {
+      config = cached?.config
+        ? { ...cached.config, ttl_seconds: config.ttl_seconds }
+        : null;
+    }
     // Kill switch: anything but an enabled, non-empty config clears the cache.
     const entry = {
       config: isUsable(config) ? config : null,

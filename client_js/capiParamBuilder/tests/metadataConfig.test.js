@@ -71,6 +71,39 @@ describe('metadataConfig', () => {
     expect(localStorage.getItem('_fbmeta_cfg:' + ORIGIN)).toBeNull();
   });
 
+  test('not_modified keeps the cached rules for another ttl', async () => {
+    const config = {
+      enabled: true,
+      rules: RULES,
+      ttl_seconds: 60,
+      config_version: 'v1',
+    };
+    const { loader, fetchConfig, advance } = makeLoader([
+      config,
+      {
+        enabled: true,
+        not_modified: true,
+        config_version: 'v1',
+        ttl_seconds: 60,
+      },
+      { enabled: true, rules: [], ttl_seconds: 60 },
+    ]);
+    await loader.getConfig(ORIGIN);
+    advance(61 * 1000);
+    expect((await loader.getConfig(ORIGIN)).rules).toEqual(RULES);
+    expect(fetchConfig).toHaveBeenLastCalledWith(ORIGIN, 'v1');
+    advance(59 * 1000);
+    expect((await loader.getConfig(ORIGIN)).rules).toEqual(RULES);
+    expect(fetchConfig).toHaveBeenCalledTimes(2);
+  });
+
+  test('not_modified without a cached copy fails closed', async () => {
+    const { loader } = makeLoader([
+      { enabled: true, not_modified: true, config_version: 'v1' },
+    ]);
+    expect(await loader.getConfig(ORIGIN)).toBeNull();
+  });
+
   test('missing enabled flag fails closed', async () => {
     const { loader } = makeLoader([{ rules: RULES }]);
     expect(await loader.getConfig(ORIGIN)).toBeNull();
