@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ## Version v1.3.3
 
-- Fixed `window.clientParamBuilder` being left `undefined` when an AMD loader (e.g. RequireJS) is present on the page. The webpack UMD build now registers the AMD module and assigns the global in the same step, so `<script src="...">` inclusion works whether or not an AMD loader is on the page.
+- Fixed `window.clientParamBuilder` being left `undefined` when an AMD loader (e.g. RequireJS) is present on the page. The webpack UMD build now assigns the global and registers an AMD module that returns that same instance, so `<script src="...">` inclusion works whether or not an AMD loader is on the page.
 
 ## Version v1.3.2
 

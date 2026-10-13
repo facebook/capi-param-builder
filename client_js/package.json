@@ -55,6 +55,7 @@
     "version": "echo $npm_package_version",
     "lint": "eslint --fix .",
     "format": "prettier --write .",
+    "pretest": "yarn build",
     "test": "jest",
     "clear_jest": "jest --clearCache",
     "prepublishOnly": "yarn test && yarn build"

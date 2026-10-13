@@ -68,6 +68,9 @@ describe('Bundle AMD / Global Compatibility Tests', () => {
     );
     expect(typeof context.clientParamBuilder.getFbc).toBe('function');
     expect(typeof context.clientParamBuilder.getFbp).toBe('function');
+
+    // 3. AMD consumers get the same instance as window.clientParamBuilder
+    expect(amdRegisteredFactory()).toBe(context.clientParamBuilder);
   });
 
   test('Bundle exposes clientParamBuilder on global window in non-AMD browser environment', () => {
