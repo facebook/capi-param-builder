@@ -1,6 +1,6 @@
 {
   "name": "meta-capi-param-builder-clientjs",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Conversions API parameter builder for Client-side JavaScript",
   "author": "Facebook",
   "license": "SEE LICENSE IN LICENSE",
@@ -55,6 +55,7 @@
     "version": "echo $npm_package_version",
     "lint": "eslint --fix .",
     "format": "prettier --write .",
+    "pretest": "yarn build",
     "test": "jest",
     "clear_jest": "jest --clearCache",
     "prepublishOnly": "yarn test && yarn build"

@@ -9,6 +9,61 @@ const path = require('path');
 const webpack = require('webpack');
 const packageJson = require('./package.json');
 
+/**
+ * Webpack plugin to ensure that when the bundle is loaded in an AMD environment
+ * (such as Magento 2 with RequireJS), the module is registered as an AMD module
+ * AND simultaneously exposed on the global scope (window/self).
+ *
+ * This prevents TypeError exceptions when clientParamBuilder methods are called
+ * globally on pages where an AMD loader is present.
+ */
+class DualUmdGlobalPlugin {
+  constructor(libraryName) {
+    this.libraryName = libraryName;
+  }
+
+  apply(compiler) {
+    const { Compilation, WebpackError, sources } = compiler.webpack;
+    const name = JSON.stringify(this.libraryName);
+    // Patched before terser (OPTIMIZE_SIZE) so the UMD template still uses the
+    // fixed `root`/`factory` names in both production and development builds.
+    const amdDefine = `define(${name}, [], factory);`;
+    // Call the factory once and hand AMD consumers the same instance.
+    const dualDefine =
+      `{ root[${name}] = factory(); ` +
+      `define(${name}, [], function () { return root[${name}]; }); }`;
+
+    compiler.hooks.thisCompilation.tap('DualUmdGlobalPlugin', (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: 'DualUmdGlobalPlugin',
+          stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE,
+        },
+        (assets) => {
+          for (const assetName of Object.keys(assets)) {
+            if (!assetName.endsWith('.bundle.js')) {
+              continue;
+            }
+            const source = assets[assetName].source().toString();
+            if (!source.includes(amdDefine)) {
+              compilation.errors.push(
+                new WebpackError(
+                  `DualUmdGlobalPlugin: \`${amdDefine}\` not found in ${assetName}`
+                )
+              );
+              continue;
+            }
+            compilation.updateAsset(
+              assetName,
+              new sources.RawSource(source.replace(amdDefine, dualDefine))
+            );
+          }
+        }
+      );
+    });
+  }
+}
+
 module.exports = {
   entry: {
     clientParamBuilder: `./capiParamBuilder/src/clientParamBuilder.js`,
@@ -68,5 +123,6 @@ https://github.com/facebook/capi-param-builder/blob/main/LICENSE`,
       raw: false,
       entryOnly: true,
     }),
+    new DualUmdGlobalPlugin('clientParamBuilder'),
   ],
 };
