@@ -9,7 +9,7 @@ import { looksLikeHashed, trim } from './piiUtil.js';
 
 // good approximation of RFC 2822
 const EMAIL_RE =
-  /^[\w!#\$%&'\*\+\/\=\?\^`\{\|\}~\-]+(:?\.[\w!#\$%&'\*\+\/\=\?\^`\{\|\}~\-]+)*@(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?$/i;
+  /^[\w!#\$%&\x27\*\+\/\=\?\^`\{\|\}~\-]+(:?\.[\w!#\$%&\x27\*\+\/\=\?\^`\{\|\}~\-]+)*@(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?$/i;
 
 function isEmail(email) {
   return EMAIL_RE.test(email);

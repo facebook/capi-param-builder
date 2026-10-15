@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ## Version v1.3.3
 
 - Fixed `window.clientParamBuilder` being left `undefined` when an AMD loader (e.g. RequireJS) is present on the page. The webpack UMD build now assigns the global and registers an AMD module that returns that same instance, so `<script src="...">` inclusion works whether or not an AMD loader is on the page.
+- Encoded quote characters equivalently in normalization regular expressions so the production bundle can be mirrored byte-for-byte to the Connect static-resource pipeline.
+- Made release builds reproducible by pinning and verifying the embedded build timestamp and bundle digest.
 
 ## Version v1.3.2
 

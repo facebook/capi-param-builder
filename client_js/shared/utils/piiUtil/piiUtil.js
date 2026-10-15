@@ -33,7 +33,7 @@ const SHA_256_OR_MD5_REGEX = /^[A-Fa-f0-9]{64}$|^[A-Fa-f0-9]{32}$/;
 const STRIP_WHITESPACE_REGEX = /\s+/g;
 // Punctuation characters: !"#$%&'()*+,-./:;<=>?@ [\]^_`{|}~
 const STRIP_WHITESPACE_AND_PUNCTUATION_REGEX =
-  /[!"#\$%&'\(\)\*\+,\-\.\/:;<=>\?@ \[\\\]\^_`\{\|\}~\s]+/g;
+  /[!\x22#\$%&\x27\(\)\*\+,\-\.\/:;<=>\?@ \[\\\]\^_`\{\|\}~\s]+/g;
 const STRIP_NON_LATIN_ALPHA_NUMERIC_REGEX = /[^a-zA-Z0-9]+/g;
 
 function getNormalizedAndHashedPII(piiValue, dataType) {
@@ -42,7 +42,9 @@ function getNormalizedAndHashedPII(piiValue, dataType) {
   }
 
   if (SHA_256_OR_MD5_REGEX.test(piiValue.trim())) {
-    return piiValue.trim().toLowerCase() + '.' + getAppendix(APPENDIX_NO_CHANGE);
+    return (
+      piiValue.trim().toLowerCase() + '.' + getAppendix(APPENDIX_NO_CHANGE)
+    );
   } else if (isAlreadyNormalizedAndHashedByParamBuilder(piiValue.trim())) {
     return piiValue.trim();
   } else {
