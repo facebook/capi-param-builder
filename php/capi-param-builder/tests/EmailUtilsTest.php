@@ -235,6 +235,11 @@ final class EmailUtilsTest extends TestCase
     }
 
     $invalidCases = array(
+      'test@example[.com',
+      'test@example].com',
+      'test,@example.com',
+      'test;@example.com',
+      'test"@example.com',
       'test@example..com',
       '.test@example.com',
       'test.@example.com',
@@ -260,12 +265,10 @@ final class EmailUtilsTest extends TestCase
     $this->assertNull($result);
   }
 
-  public function testGetNormalizedEmailWithInternationalDomain()
+  public function testGetNormalizedEmailRejectsInternationalDomain()
   {
     $email = 'User@Example.中国';
     $result = EmailUtils::getNormalizedEmail($email);
-    // This test depends on PHP's filter_var behavior with international domains
-    // It may return null or the normalized email depending on PHP configuration
-    $this->assertTrue($result === null || is_string($result));
+    $this->assertNull($result);
   }
 }

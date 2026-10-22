@@ -136,6 +136,7 @@ describe('getNormalizedEmail', () => {
 
         test('should return null for invalid email addresses', () => {
             const invalidEmails = [
+                '"test user"@example.com',
                 'invalid-email',
                 '@example.com',
                 'test@',
