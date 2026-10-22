@@ -129,6 +129,8 @@ describe('getNormalizedPII', () => {
         '.test@example.com',
         'test.@example.com',
         'test@example.com.',
+        'foo:.bar@example.com',
+        'a:.b:.c@example.com',
       ];
 
       invalidEmails.forEach((email) => {

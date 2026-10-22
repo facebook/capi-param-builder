@@ -132,6 +132,8 @@ describe('getNormalizedEmail', () => {
                 'test@com',
                 'test space@example.com',
                 'test@example .com',
+                'foo:.bar@example.com',
+                'a:.b:.c@example.com',
             ];
 
             invalidEmails.forEach((email) => {

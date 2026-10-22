@@ -205,6 +205,17 @@ final class EmailUtilsTest extends TestCase
     $this->assertNull($result);
   }
 
+  public function testGetNormalizedEmailRejectsColonBeforeDot()
+  {
+    $invalidCases = array(
+      'foo:.bar@example.com',
+      'a:.b:.c@example.com',
+    );
+    foreach ($invalidCases as $email) {
+      $this->assertNull(EmailUtils::getNormalizedEmail($email));
+    }
+  }
+
   public function testGetNormalizedEmailWithQuotedEmail()
   {
     // PHP's filter_var may not handle quoted local parts correctly in all PHP versions
