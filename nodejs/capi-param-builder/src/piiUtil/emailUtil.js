@@ -10,7 +10,7 @@ const { looksLikeHashed, trim } = require('./commonUtil');
 
 // good approximation of RFC 2822
 const EMAIL_RE =
-    /^[\w!#\$%&'\*\+\/\=\?\^`\{\|\}~\-]+(:?\.[\w!#\$%&'\*\+\/\=\?\^`\{\|\}~\-]+)*@(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?$/i;
+    /^[\w!#\$%&'\*\+\/\=\?\^`\{\|\}~\-]+(?:\.[\w!#\$%&'\*\+\/\=\?\^`\{\|\}~\-]+)*@(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?$/i;
 
 function isEmail(email) {
     return EMAIL_RE.test(email);
