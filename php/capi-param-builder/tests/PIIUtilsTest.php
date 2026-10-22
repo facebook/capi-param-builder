@@ -423,4 +423,153 @@ final class PIIUtilsTest extends TestCase
     $result = PIIUtils::getNormalizedAndHashedPII($email, PII_DATA_TYPE::EMAIL);
     $this->assertEquals($expectedHash, $result);
   }
+
+  public function testGetNormalizedAndHashedPIIEmailGoldenDigest()
+  {
+    // Independent golden from sha256sum, not a runtime hash() echo.
+    $email = '  Test.User@Example.COM  ';
+    $expected =
+      'a97d7a4513204a9cc7cb2f11d72d41a59b18d1ba633d22e58d53c625518f5203' .
+      '.' . $this->appendix_net_new;
+    $this->assertEquals(
+      $expected,
+      PIIUtils::getNormalizedAndHashedPII($email, PII_DATA_TYPE::EMAIL)
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIPaddedHashTrimsAndLowercases()
+  {
+    // Dispatcher trims/lowercases before hash check; raw helper differs.
+    $expectedSha =
+      'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3' .
+      '.' . $this->appendix_no_change;
+    $this->assertEquals(
+      $expectedSha,
+      PIIUtils::getNormalizedAndHashedPII(
+        '  A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3  ',
+        PII_DATA_TYPE::EMAIL
+      )
+    );
+    $this->assertEquals(
+      'd41d8cd98f00b204e9800998ecf8427e.' . $this->appendix_no_change,
+      PIIUtils::getNormalizedAndHashedPII(
+        '  D41D8CD98F00B204E9800998ECF8427E  ',
+        PII_DATA_TYPE::EMAIL
+      )
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIOutputFeedbackIsIdempotent()
+  {
+    // Feeding a hashed output back must not rehash or double-append.
+    $email = '  Test.User@Example.COM  ';
+    $first = PIIUtils::getNormalizedAndHashedPII($email, PII_DATA_TYPE::EMAIL);
+    $second = PIIUtils::getNormalizedAndHashedPII($first, PII_DATA_TYPE::EMAIL);
+    $this->assertEquals($first, $second);
+    $this->assertEquals(
+      1,
+      substr_count($second, '.' . $this->appendix_net_new)
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIAcceptsLegacySuffix()
+  {
+    $hashed =
+      'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
+    $this->assertEquals(
+      $hashed . '.AQ',
+      PIIUtils::getNormalizedAndHashedPII($hashed . '.AQ', PII_DATA_TYPE::EMAIL)
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIAcceptsAnyLength8Suffix()
+  {
+    // Eight-character suffixes pass through without content validation.
+    $hashed =
+      'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
+    $this->assertEquals(
+      $hashed . '.ZZZZZZZZ',
+      PIIUtils::getNormalizedAndHashedPII(
+        $hashed . '.ZZZZZZZZ', PII_DATA_TYPE::EMAIL
+      )
+    );
+    $this->assertEquals(
+      $hashed . '.12345678',
+      PIIUtils::getNormalizedAndHashedPII(
+        $hashed . '.12345678', PII_DATA_TYPE::EMAIL
+      )
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIRejectsInvalidSuffixBoundary()
+  {
+    $hashed =
+      'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
+    $this->assertNull(
+      PIIUtils::getNormalizedAndHashedPII(
+        $hashed . '.1234567', PII_DATA_TYPE::EMAIL
+      )
+    );
+    $this->assertNull(
+      PIIUtils::getNormalizedAndHashedPII(
+        $hashed . '.123456789', PII_DATA_TYPE::EMAIL
+      )
+    );
+    $this->assertNull(
+      PIIUtils::getNormalizedAndHashedPII($hashed . '.XX', PII_DATA_TYPE::EMAIL)
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIRejectsInvalidPrefixBoundary()
+  {
+    $prefix63 = substr(
+      'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 0, 63
+    );
+    $this->assertNull(
+      PIIUtils::getNormalizedAndHashedPII(
+        $prefix63 . '.' . $this->appendix_no_change, PII_DATA_TYPE::EMAIL
+      )
+    );
+    $this->assertNull(
+      PIIUtils::getNormalizedAndHashedPII(
+        'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.' .
+          $this->appendix_no_change,
+        PII_DATA_TYPE::EMAIL
+      )
+    );
+  }
+
+  public function testGetNormalizedAndHashedPIIAppendixBytes()
+  {
+    // Wire bytes: format 0x01, PHP 0x01, net-new 0x02 / no-change 0x00.
+    $net = AppendixProvider::getAppendix(APPENDIX_NET_NEW);
+    $no = AppendixProvider::getAppendix(APPENDIX_NO_CHANGE);
+    $this->assertEquals(1, preg_match('/^[A-Za-z0-9_-]{8}$/', $net));
+    $this->assertEquals(1, preg_match('/^[A-Za-z0-9_-]{8}$/', $no));
+    $decodedNet = base64_decode(strtr($net, '-_', '+/'), true);
+    $decodedNo = base64_decode(strtr($no, '-_', '+/'), true);
+    $this->assertEquals(6, strlen($decodedNet));
+    $this->assertEquals(6, strlen($decodedNo));
+    $package = json_decode(
+      file_get_contents(__DIR__ . '/../composer.json'), true
+    );
+    $version = array_map('intval', explode('.', $package['version']));
+    $this->assertEquals(
+      array_merge(array(0x01, 0x01, 0x02), $version),
+      array_values(unpack('C*', $decodedNet))
+    );
+    $this->assertEquals(
+      array_merge(array(0x01, 0x01, 0x00), $version),
+      array_values(unpack('C*', $decodedNo))
+    );
+  }
+
+  public function testGetNormalizedPIIWithInvalidTypeValues()
+  {
+    foreach (array(new stdClass(), false, array()) as $input) {
+      $this->assertNull(
+        PIIUtils::getNormalizedPII($input, PII_DATA_TYPE::EMAIL)
+      );
+    }
+  }
 }

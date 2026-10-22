@@ -217,6 +217,78 @@ describe('getNormalizedAndHashedPII', () => {
     });
   });
 
+  describe('Email output contracts', () => {
+    it('uses the real version module for exact email hash and appendix output', () => {
+      try {
+        jest.isolateModules(() => {
+          jest.dontMock('../version.js');
+          const { getVersionInfo } = require('../version.js');
+          const { getNormalizedAndHashedPII: normalizeAndHash } =
+            require('../utils/piiUtil/piiUtil.js');
+          const version = getVersionInfo().version.split('.').map(Number);
+          const suffix = Buffer.from([0x01, 0x06, 0x02, ...version])
+            .toString('base64url');
+          expect(
+            normalizeAndHash('  Test.User@Example.COM  ', PII_DATA_TYPE.EMAIL)
+          ).toEqual(
+            'a97d7a4513204a9cc7cb2f11d72d41a59b18d1ba633d22e58d53c625518f5203.' +
+              suffix
+          );
+        });
+      } finally {
+        jest.doMock('../version.js', () => ({
+          getVersionInfo: () => ({ version: '1.0.0' }),
+        }));
+      }
+    });
+
+    const sha =
+      'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
+
+    it('hashes normalized email to an independent digest golden', () => {
+      // SHA-256 fixture computed independently with Node crypto.
+      expect(
+        getNormalizedAndHashedPII('  Test.User@Example.COM  ', PII_DATA_TYPE.EMAIL)
+      ).toEqual(
+        'a97d7a4513204a9cc7cb2f11d72d41a59b18d1ba633d22e58d53c625518f5203.' +
+          APPENDIX_NET_NEW_STR
+      );
+    });
+
+    it('preserves one appendix when output is fed back', () => {
+      const expected =
+        'a97d7a4513204a9cc7cb2f11d72d41a59b18d1ba633d22e58d53c625518f5203.' +
+        APPENDIX_NET_NEW_STR;
+      expect(getNormalizedAndHashedPII(expected, PII_DATA_TYPE.EMAIL)).toEqual(
+        expected
+      );
+    });
+
+    it('trims and lowercases padded SHA and MD5 prehashes', () => {
+      [sha, '5d41402abc4b2a76b9719d911017c592'].forEach((hash) => {
+        expect(
+          getNormalizedAndHashedPII(' ' + hash.toUpperCase() + ' ', PII_DATA_TYPE.EMAIL)
+        ).toEqual(hash + '.' + APPENDIX_NO_CHANGE_STR);
+      });
+    });
+
+    it('preserves legacy and eight-character suffixed prehashes', () => {
+      [sha + '.BA', sha.toUpperCase() + '.ZZZZZZZZ',
+        '5d41402abc4b2a76b9719d911017c592.AQYCAQAA'].forEach((input) => {
+        expect(
+          getNormalizedAndHashedPII(' ' + input + ' ', PII_DATA_TYPE.EMAIL)
+        ).toEqual(input);
+      });
+    });
+
+    it('rejects invalid suffix lengths and hash prefixes', () => {
+      [sha + '.XX', sha + '.1234567', sha + '.123456789',
+        sha.slice(1) + '.AQYCAQAA', 'g' + sha.slice(1) + '.AQYCAQAA'].forEach((input) => {
+        expect(getNormalizedAndHashedPII(input, PII_DATA_TYPE.EMAIL)).toBeNull();
+      });
+    });
+  });
+
   describe('Fallback to getNormalizedPII and hashing', () => {
     it('should call getNormalizedPII and hash the result for non-hash strings', () => {
       const testCases = [
@@ -547,9 +619,7 @@ describe('getNormalizedAndHashedPII', () => {
       testCases.forEach((input) => {
         const result = getNormalizedAndHashedPII(input, PII_DATA_TYPE.EMAIL);
 
-        // Should not be treated as hash - result might be null if email is invalid
-        expect(result).not.toEqual(input.toLowerCase());
-        // Don't expect result to be non-null since some of these may be invalid emails
+        expect(result).toBeNull();
       });
     });
 
@@ -657,7 +727,7 @@ describe('getNormalizedAndHashedPII', () => {
         '\r\r\r', // carriage returns only - should return null
         ' \t\n\r ', // mixed whitespace - should return null
         '  test@example.com  ', // whitespace around content - should be processed
-        ' a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3 ', // whitespace around hash - should not be treated as hash
+        ' a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3 ', // Prehash detection trims whitespace.
       ];
 
       testCases.forEach((input) => {
@@ -666,19 +736,13 @@ describe('getNormalizedAndHashedPII', () => {
         if (input.trim() === '') {
           expect(result).toBeNull(); // Whitespace-only should return null
         } else {
-          // Non-empty content should be processed, but result may be null if invalid for the data type
-          expect(typeof result === 'string' || result === null).toBe(true);
-
-          // If input contained a hash but had whitespace, it shouldn't be treated as hash
-          if (
-            input.includes(
-              'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3'
-            )
-          ) {
-            expect(result).not.toEqual(
-              'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3.' +
+          if (input.trim() === 'test@example.com') {
+            expect(result).toEqual(
+              '973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b.' +
                 APPENDIX_NET_NEW_STR
             );
+          } else {
+            expect(result).toEqual(input.trim() + '.' + APPENDIX_NO_CHANGE_STR);
           }
         }
       });

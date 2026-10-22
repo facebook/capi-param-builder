@@ -437,6 +437,50 @@ describe('getNormalizedEmail', () => {
         });
     });
 
+    describe('Unicode, punycode, IP-literal and length boundaries', () => {
+        test('should reject Unicode local part and domain', () => {
+            const unicodeEmails = [
+                't\u00e9st.check@example.org',
+                'boundary.check@m\u00fcnchen.example.org',
+            ];
+
+            unicodeEmails.forEach((email) => {
+                expect(getNormalizedEmail(email)).toBeNull();
+            });
+        });
+
+        test('should accept punycode domain', () => {
+            const punycodeEmail = 'boundary.check@xn--nxasmq6b.example.org';
+            expect(getNormalizedEmail(punycodeEmail)).toEqual(punycodeEmail);
+        });
+
+        test('should reject bracketed IP-literal domain but accept numeric dotted domain', () => {
+            expect(getNormalizedEmail('boundary.check@[192.168.1.1]')).toBeNull();
+            const numericDomain = 'boundary.check@192.168.1.1';
+            expect(getNormalizedEmail(numericDomain)).toEqual(numericDomain);
+        });
+
+        test('should impose no local-part length limit', () => {
+            const local64 = 'a'.repeat(64) + '@boundary-check.example.org';
+            const local65 = 'a'.repeat(65) + '@boundary-check.example.org';
+            expect(getNormalizedEmail(local64)).toEqual(local64);
+            expect(getNormalizedEmail(local65)).toEqual(local65);
+        });
+
+        test('should impose no domain-label length limit', () => {
+            const label63 = 'boundary.check@' + 'b'.repeat(63) + '.example.org';
+            const label64 = 'boundary.check@' + 'b'.repeat(64) + '.example.org';
+            expect(getNormalizedEmail(label63)).toEqual(label63);
+            expect(getNormalizedEmail(label64)).toEqual(label64);
+        });
+
+        test('should impose no total length limit', () => {
+            const longEmail = 'a'.repeat(64) + '@' + 'b'.repeat(190) + '.example.org';
+            expect(longEmail.length).toBeGreaterThan(254);
+            expect(getNormalizedEmail(longEmail)).toEqual(longEmail.toLowerCase());
+        });
+    });
+
     describe('Performance and edge input handling', () => {
         test('should handle very long invalid inputs gracefully', () => {
             const veryLongInvalid = 'a'.repeat(1000); // No @ symbol

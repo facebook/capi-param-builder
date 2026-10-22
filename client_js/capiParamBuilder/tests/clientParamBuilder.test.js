@@ -11,6 +11,7 @@ import {
   getFbc,
   getFbp,
   getClientIpAddress,
+  getNormalizedAndHashedPII,
 } from '../src/clientParamBuilder.js';
 import {
   setup_android,
@@ -19,6 +20,7 @@ import {
 import {
   CLICKTHROUGH_COOKIE_NAME,
   DOMAIN_SCOPED_BROWSER_ID_COOKIE_NAME,
+  PII_DATA_TYPE,
 } from '../../shared/model/constants.js';
 jest.mock('../../shared/version.js', () => ({
   getVersionInfo: () => ({
@@ -56,6 +58,19 @@ describe('Test clientParamBuilder', () => {
   afterEach(() => {
     jest.resetModules();
     jest.resetAllMocks();
+  });
+
+  test('public email API returns exact normalized, rejected and prehashed outputs', () => {
+    expect(
+      getNormalizedAndHashedPII('  Test.User@Example.COM  ', PII_DATA_TYPE.EMAIL)
+    ).toEqual(
+      'a97d7a4513204a9cc7cb2f11d72d41a59b18d1ba633d22e58d53c625518f5203.' +
+        APPENDIX_NET_NEW_STR
+    );
+    expect(getNormalizedAndHashedPII('invalid-email', PII_DATA_TYPE.EMAIL)).toBeNull();
+    expect(
+      getNormalizedAndHashedPII(' 5D41402ABC4B2A76B9719D911017C592 ', PII_DATA_TYPE.EMAIL)
+    ).toEqual('5d41402abc4b2a76b9719d911017c592.AQYAAQAA');
   });
 
   test('processAndCollectParams with fbp only, no fbc pass in from url', () => {

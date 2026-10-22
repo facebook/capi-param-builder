@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { getNormalizedPII } from '../utils/piiUtil/piiUtil.js';
+import { getNormalizedEmail } from '../utils/piiUtil/emailUtil.js';
 import { PII_DATA_TYPE } from '../model/constants.js';
 
 describe('getNormalizedPII', () => {
@@ -23,6 +24,15 @@ describe('getNormalizedPII', () => {
 
       nonStringValues.forEach((value) => {
         expect(getNormalizedPII(value, PII_DATA_TYPE.EMAIL)).toBeNull();
+      });
+    });
+
+    it('direct email helper throws TypeError for non-string input', () => {
+      // The dispatcher guards types; the direct helper does not.
+      const nonStringValues = [123, {}, [], true, false, null, undefined];
+
+      nonStringValues.forEach((value) => {
+        expect(() => getNormalizedEmail(value)).toThrow(TypeError);
       });
     });
 
@@ -199,6 +209,51 @@ describe('getNormalizedPII', () => {
       expect(result).toEqual(longEmail.toLowerCase());
     });
 
+    it('should reject non-ASCII local and domain parts', () => {
+      // The JS validator only accepts ASCII email components.
+      const nonAsciiEmails = [
+        'Jos\u00e9@example.com',
+        '\u7528\u6237@example.com',
+        'test@m\u00fcnchen.de',
+        'test@\u{1F389}.com',
+      ];
+
+      nonAsciiEmails.forEach((email) => {
+        expect(getNormalizedPII(email, PII_DATA_TYPE.EMAIL)).toBeNull();
+      });
+    });
+
+    it('should accept ASCII punycode while rejecting IPv4 literals', () => {
+      // JS validator rejects bracketed IP literals but the dotted-quad shape
+      // passes as a normal domain; there is no RFC length limit here either.
+      expect(
+        getNormalizedPII('test@xn--mnchen-3ya.de', PII_DATA_TYPE.EMAIL)
+      ).toEqual('test@xn--mnchen-3ya.de');
+      expect(
+        getNormalizedPII('user@[192.168.0.1]', PII_DATA_TYPE.EMAIL)
+      ).toBeNull();
+    });
+
+    it('should preserve JS absence of RFC length limits', () => {
+      // JS regex has no 64/63/254 limits, unlike stricter validators.
+      const localBoundary = 'a'.repeat(64) + '@example.com';
+      const domainBoundary = 'test@' + 'b'.repeat(63) + '.com';
+      const totalBoundary =
+        'a'.repeat(100) +
+        '@' +
+        'b'.repeat(100) +
+        '.' +
+        'c'.repeat(100) +
+        '.com';
+
+      [localBoundary, 'a'.repeat(65) + '@example.com', domainBoundary,
+        'test@' + 'b'.repeat(64) + '.com', totalBoundary].forEach((email) => {
+        expect(getNormalizedPII(email, PII_DATA_TYPE.EMAIL)).toEqual(
+          email.toLowerCase()
+        );
+      });
+    });
+
     it('should handle emails with leading/trailing spaces correctly', () => {
       const testCases = [
         {
@@ -223,6 +278,15 @@ describe('getNormalizedPII', () => {
   });
 
   describe('Hashed email handling', () => {
+    it('rejects MD5 and padded SHA inputs before dispatcher prehash handling', () => {
+      const md5 = '5d41402abc4b2a76b9719d911017c592';
+      const paddedSha =
+        ' a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3 ';
+      expect(getNormalizedEmail(md5)).toBeNull();
+      expect(getNormalizedPII(md5, PII_DATA_TYPE.EMAIL)).toBeNull();
+      expect(getNormalizedEmail(paddedSha)).toBeNull();
+    });
+
     it('should return SHA-256 hash as-is when it looks like a hash', () => {
       const validHashes = [
         'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', // 'hello' hashed

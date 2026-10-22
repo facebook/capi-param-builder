@@ -271,4 +271,80 @@ final class EmailUtilsTest extends TestCase
     $result = EmailUtils::getNormalizedEmail($email);
     $this->assertNull($result);
   }
+
+  public function testGetNormalizedEmailAcceptsIpLiteralDomain()
+  {
+    // JS rejects IP-literal domains; PHP filter_var accepts valid IPv4.
+    $this->assertEquals(
+      'test@[127.0.0.1]',
+      EmailUtils::getNormalizedEmail('Test@[127.0.0.1]')
+    );
+  }
+
+  public function testGetNormalizedEmailAcceptsPunycodeDomain()
+  {
+    $this->assertEquals(
+      'test@xn--bcher-kva.example',
+      EmailUtils::getNormalizedEmail('Test@xn--bcher-kva.example')
+    );
+  }
+
+  public function testGetNormalizedEmailRejectsUnicodeLocalPart()
+  {
+    // filter_var rejects non-ASCII local parts.
+    $email = "t\u{00E9}st@example.com";
+    $this->assertNull(EmailUtils::getNormalizedEmail($email));
+  }
+
+  public function testGetNormalizedEmailLocalPartLengthBoundary()
+  {
+    // RFC 5321: local part max 64 octets.
+    $local64 = str_repeat('a', 64) . '@example.com';
+    $this->assertEquals($local64, EmailUtils::getNormalizedEmail($local64));
+    $this->assertNull(
+      EmailUtils::getNormalizedEmail(str_repeat('a', 65) . '@example.com')
+    );
+  }
+
+  public function testGetNormalizedEmailDomainLabelLengthBoundary()
+  {
+    // RFC 1035: domain label max 63 octets.
+    $label63 = 'user@' . str_repeat('b', 63) . '.com';
+    $this->assertEquals(
+      $label63, EmailUtils::getNormalizedEmail($label63)
+    );
+    $this->assertNull(
+      EmailUtils::getNormalizedEmail('user@' . str_repeat('b', 64) . '.com')
+    );
+  }
+
+  public function testGetNormalizedEmailTotalLengthBoundary()
+  {
+    // RFC 5321: total address max 254 octets.
+    $local = str_repeat('a', 64);
+    $domain254 = str_repeat('b', 63) . '.' . str_repeat('c', 63) . '.' .
+      str_repeat('d', 57) . '.com';
+    $email254 = $local . '@' . $domain254;
+    $this->assertEquals(254, strlen($email254));
+    $this->assertEquals($email254, EmailUtils::getNormalizedEmail($email254));
+    $domain255 = str_repeat('b', 63) . '.' . str_repeat('c', 63) . '.' .
+      str_repeat('d', 58) . '.com';
+    $email255 = $local . '@' . $domain255;
+    $this->assertEquals(255, strlen($email255));
+    $this->assertNull(EmailUtils::getNormalizedEmail($email255));
+  }
+
+  public function testGetNormalizedEmailPaddedHashReturnsNull()
+  {
+    // Raw hash check runs before trim, so padded hashes miss passthrough.
+    $padded = array(
+      '  a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3  ',
+      '  A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3  ',
+      '  d41d8cd98f00b204e9800998ecf8427e  ',
+      '  D41D8CD98F00B204E9800998ECF8427E  ',
+    );
+    foreach ($padded as $input) {
+      $this->assertNull(EmailUtils::getNormalizedEmail($input));
+    }
+  }
 }
