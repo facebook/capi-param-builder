@@ -76,6 +76,30 @@ describe('getNormalizedEmail', () => {
                     expected: 'user123@subdomain.example.org',
                 },
                 {
+                    input: 'first.last@sub.domain.com',
+                    expected: 'first.last@sub.domain.com',
+                },
+                {
+                    input: 'user-name@example-domain.com',
+                    expected: 'user-name@example-domain.com',
+                },
+                {
+                    input: 'test.email.with+symbol@example.com',
+                    expected: 'test.email.with+symbol@example.com',
+                },
+                {
+                    input: 'x@y.co',
+                    expected: 'x@y.co',
+                },
+                {
+                    input: '123@example.com',
+                    expected: '123@example.com',
+                },
+                {
+                    input: 'test@123.com',
+                    expected: 'test@123.com',
+                },
+                {
                     input: 'user_name@example.com',
                     expected: 'user_name@example.com',
                 },

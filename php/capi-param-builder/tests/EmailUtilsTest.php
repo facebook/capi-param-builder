@@ -216,6 +216,42 @@ final class EmailUtilsTest extends TestCase
     }
   }
 
+  public function testGetNormalizedEmailPortableUnionReference()
+  {
+    $validCases = array(
+      array('first.last@sub.domain.com', 'first.last@sub.domain.com'),
+      array('user-name@example-domain.com', 'user-name@example-domain.com'),
+      array(
+        'test.email.with+symbol@example.com',
+        'test.email.with+symbol@example.com',
+      ),
+      array('x@y.co', 'x@y.co'),
+      array('123@example.com', '123@example.com'),
+      array('test@123.com', 'test@123.com'),
+      array("test'name@example.com", "test'name@example.com"),
+    );
+    foreach ($validCases as $case) {
+      $this->assertEquals($case[1], EmailUtils::getNormalizedEmail($case[0]));
+    }
+
+    $invalidCases = array(
+      'test@example..com',
+      '.test@example.com',
+      'test.@example.com',
+      'test@example.com.',
+      'test@example',
+      'test@com',
+      '@test.com',
+      'userexample.com',
+      'user@@example.com',
+      'test name@example.com',
+      'test@example .com',
+    );
+    foreach ($invalidCases as $email) {
+      $this->assertNull(EmailUtils::getNormalizedEmail($email));
+    }
+  }
+
   public function testGetNormalizedEmailWithQuotedEmail()
   {
     // PHP's filter_var may not handle quoted local parts correctly in all PHP versions
