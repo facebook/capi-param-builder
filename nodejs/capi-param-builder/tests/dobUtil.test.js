@@ -710,21 +710,19 @@ describe('getNormalizedDOB', () => {
     });
 
     describe('Error handling', () => {
-        test('should handle malformed input gracefully', () => {
+        test('should return exact results for malformed input', () => {
             const testCases = [
-                'not-a-date',
-                '12--31--1990',
-                '12-31-',
-                '-12-31-1990',
-                '12-31-1990-',
-                '12.31.1990.extra',
-                '12/31/1990/extra',
+                { input: 'not-a-date', expected: null },
+                { input: '12--31--1990', expected: '19901231' },
+                { input: '12-31-', expected: null },
+                { input: '-12-31-1990', expected: '19901231' },
+                { input: '12-31-1990-', expected: '19901231' },
+                { input: '12.31.1990.extra', expected: '19901231' },
+                { input: '12/31/1990/extra', expected: '19901231' },
             ];
 
-            testCases.forEach((input) => {
-                const result = getNormalizedDOB(input);
-                // These should either return null or a valid date if parseable
-                expect(result === null || /^\d{8}$/.test(result)).toBe(true);
+            testCases.forEach(({ input, expected }) => {
+                expect(getNormalizedDOB(input)).toEqual(expected);
             });
         });
 
